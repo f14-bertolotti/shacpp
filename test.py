@@ -1,34 +1,42 @@
-from Engine import Engine
-
-import torch
-
-device = "cuda:0"
-modelsd = torch.load("engine.pkl")["modelsd"]
-engine = Engine(batch_size=1, agents=25, device=device)
-engine.load_state_dict(modelsd)
-result = engine(
-        torch. rand((1, 25, 2), device=device, requires_grad=False)*10-5, 
-        1000
-    )
-
-losses = engine.lossfn(result)
-print(" ".join(f"{l.item():5.3f}" for l in losses))
-
-trace = [{"pos":pos.detach().cpu().numpy()} for pos in result["trace"]]
-
+from ppo4 import Agent, Environment 
+import numpy, torch
 import matplotlib.pyplot as plt
-import numpy as np
 import matplotlib.animation as animation
+from matplotlib.patches import Rectangle
+
+envs=1
+seed=1
+device="cuda:0"
+steps=1024
+
+agent       = Agent(agents=9).to(device)
+environment = Environment(envs=envs, agents=9, device=device)
+agent.load_state_dict(torch.load("agent.pkl")["agentsd"])
+
+
+obss, rews = [], []
+for step in range(0, steps):
+
+   with torch.no_grad():
+       action, lp, ent, val = agent.get_action_and_value(environment.observation)
+
+   obs,rew = environment.step(action)
+   obss.append(obs.cpu().squeeze(0))
+   rews.append(rew.cpu().squeeze(0))
+
+obss = torch.stack(obss)
+rews = torch.stack(rews)
+print(rews)
 
 fig, ax = plt.subplots()
-ax.scatter(
-    x = [p[0].item() for p in engine.points],
-    y = [p[1].item() for p in engine.points],
+scatterplot = ax.scatter(
+    x = environment.points[:,0].cpu().numpy(),
+    y = environment.points[:,1].cpu().numpy(),
     color = "red"
 )
 scatterplot = ax.scatter(
-    x     = trace[0]["pos"][0,:,0],
-    y     = trace[0]["pos"][0,:,1],
+    x = obss[0,:,0].numpy(),
+    y = obss[0,:,1].numpy(),
     color = "black"
 )
 
@@ -36,12 +44,11 @@ ax.set_xlim(-30,30)
 ax.set_ylim(-30,30)
 
 def update(frame):
-    x = trace[frame]["pos"][0,:,0]
-    y = trace[frame]["pos"][0,:,1]
-    data = np.stack([x, y]).T
+    x = obss[frame,:,0]
+    y = obss[frame,:,1]
+    data = numpy.stack([x, y]).T
     scatterplot.set_offsets(data)
     return scatterplot
 
-
-ani = animation.FuncAnimation(fig=fig, func=update, frames=len(trace), interval=10)
+ani = animation.FuncAnimation(fig=fig, func=update, frames=obss.size(0), interval=60)
 plt.show()
