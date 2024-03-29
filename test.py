@@ -1,4 +1,4 @@
-from ppo4 import Agent, Environment 
+from shac2 import Agent, Environment 
 import numpy, torch
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -9,24 +9,24 @@ seed=1
 device="cuda:0"
 steps=1024
 
-agent       = Agent(agents=9).to(device)
+agent       = Agent().to(device)
 environment = Environment(envs=envs, agents=9, device=device)
 agent.load_state_dict(torch.load("agent.pkl")["agentsd"])
 
 
 obss, rews = [], []
+obs = environment.reset()
 for step in range(0, steps):
 
    with torch.no_grad():
-       action, lp, ent, val = agent.get_action_and_value(environment.observation)
+       action = agent.get_action(environment.observation)
 
-   obs,rew = environment.step(action)
-   obss.append(obs.cpu().squeeze(0))
-   rews.append(rew.cpu().squeeze(0))
+   obs,rew = environment.step(obs,action)
+   obss.append(obs.cpu().squeeze(0).detach())
+   rews.append(rew.cpu().squeeze(0).detach())
 
 obss = torch.stack(obss)
 rews = torch.stack(rews)
-print(rews)
 
 fig, ax = plt.subplots()
 scatterplot = ax.scatter(
