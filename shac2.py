@@ -6,19 +6,22 @@ def layer_init(layer, std=1.141, bias_const=0.0):
     return layer
 
 class Actor(torch.nn.Module):
-    def __init__(self, layers=3, device="cuda:0"):
+    def __init__(self, layers=3, observations=2, actions=2, first=None, hidden=None, device="cuda:0"):
         super().__init__()
-        self.logstd = torch.nn.Parameter(torch.ones(2, requires_grad=True, dtype=torch.float32, device=device) * -1)
+        self.logstd = torch.nn.Parameter(torch.ones(actions, requires_grad=True, dtype=torch.float32, device=device) * -1)
+
+        self.first   = layer_init(torch.nn.Linear(observations, 64, device=device)) if first is None else first
+        self.hiddens = [layer_init(torch.nn.Linear(64, 64, device=device),std=.01) for _ in range(layers)] if hidden is None else hidden
 
         self.actor = torch.nn.Sequential(
-            layer_init(torch.nn.Linear(2, 64, device=device)),
-            *[layer_init(torch.nn.Linear(64, 64, device=device),std=.01) for _ in range(layers)],
-            layer_init(torch.nn.Linear(64, 2, device=device),std=.01),
+            self.first,
+            *self.hiddens,
+            layer_init(torch.nn.Linear(64, actions, device=device),std=.01),
             torch.nn.Tanh()
         )
 
     def forward(self, state, deterministic = False):
-        mu = self.actor(state)
+        mu = self.actor(state.view(state.size(0),-1))
         if deterministic: return mu
 
         std = self.logstd.exp() 
@@ -27,15 +30,20 @@ class Actor(torch.nn.Module):
         return action
 
 class Critic(torch.nn.Module):
-    def __init__(self, layers=3, device="cuda:0"):
+    def __init__(self, layers=3, observations=2, first=None, hidden=None, device="cuda:0"):
         super().__init__()
+
+        self.first   = layer_init(torch.nn.Linear(observations, 64, device=device)) if first is None else first
+        self.hiddens = [layer_init(torch.nn.Linear(64, 64, device=device),std=.01) for _ in range(layers)] if hidden is None else hidden
+
         self.critic = torch.nn.Sequential(
-            layer_init(torch.nn.Linear(2, 64, device=device)),
-            *[layer_init(torch.nn.Linear(64, 64, device=device),std=.01) for _ in range(layers)],
+            self.first,
+            *self.hiddens,
             layer_init(torch.nn.Linear(64, 1, device=device),std=.01)
         )
 
     def forward(self, state):
+        state = state.view(state.size(0),-1)
         return self.critic(state).squeeze()
 
 def seed_everything(seed):
@@ -44,54 +52,71 @@ def seed_everything(seed):
     torch.manual_seed(seed)
 
 class Environment:
-    def __init__(self, envs, agents, device="cuda:0"):
-        self.envs, self.agents, self.device = envs, agents, device
-        self.obj = torch.tensor([[-5,10]],requires_grad=True,device=self.device,dtype=torch.float32)
+    def __init__(self, envs, actor, agents, device="cuda:0"):
+        self.envs, self.agents, self.actor, self.device = envs, agents, actor, device
+        self.points = torch.tensor([[(i/9)*20-10,(j/9)*20-10] for j in range(10) for i in range(10)],dtype=torch.float32,device=device)
+
+    def reset(self, state, p=.1):
+        mask = torch.randperm(state.size(0)) < p * state.size(0)
+        with torch.no_grad(): state[mask] = self.init_state()[mask]
+        return state
 
     def init_state(self):
-        return torch.zeros((self.envs,2), requires_grad=True, dtype=torch.float32, device=self.device)
+        #return torch.zeros((self.envs,self.agents,2), requires_grad=True, dtype=torch.float32, device=self.device)
+        return torch.rand((self.envs,self.agents,2), requires_grad=True, dtype=torch.float32, device=self.device)*20-10
 
     def step(self, state, action):
-        print(state[0],action[0])
-        return (next := state + action), self.reward(next)
+        agents_actions = torch.stack([torch.zeros(state.size(0),2,device=self.device)] + [self.actor(torch.cat([state,state[:,[i]]],dim=1)) for i in range(1,self.agents)],dim=1).detach()
+        state = state + agents_actions.detach()
+        new_state = state.clone()
+        new_state[:,0] = new_state[:,0] + action
+        new_state = torch.clamp(new_state, -20, 20)
+        return new_state, self.reward(new_state)
 
     def reward(self, state):
-        dist = 1/(torch.cdist(state, self.obj)+1)
-        return dist.mean(-1)
+        #dist = torch.cdist(state, self.points)
+        dist = torch.cdist(state, state)
+        dist0 = torch.cdist(state, torch.zeros(1,2,device=self.device,dtype=torch.float32))
+        dist0 = dist0.mean(-2).squeeze(-1)
+        #reward = (dist < 3.333).float().sum(-1).sum(-1) / self.points.size(0)
+        reward = 1/(dist.mean(-1).mean(-1)+1)
+        reward[dist0>10] -= dist0[dist0>10] 
+        return reward
 
 
-def run_actor(steps, envs, actor, critic, environment, sgamma, device="cuda:0"):
+def run_actor(steps, envs, actor, critic, environment, sgamma, state=None, device="cuda:0"):
 
-        state = environment.init_state()
-
-        rewards = torch.zeros((steps+1, envs), dtype = torch.float32, device = device)
-        values  = torch.zeros((steps+1, envs), dtype = torch.float32, device = device)
-
-        buffer = {
-            "observations" : torch.zeros((steps, envs, 2), dtype = torch.float32, device = device),
-            "rewards"      : torch.zeros((steps, envs)   , dtype = torch.float32, device = device),
-            "values"       : torch.zeros((steps, envs)   , dtype = torch.float32, device = device)
-        }
-
-        gamma = 1
-
-        for step in range(steps):
-            action = actor(state)
-            next_state, reward = environment.step(state, action)
-            rewards[step+1] = rewards[step] + gamma * reward
-            values [step+1] = critic(next_state)
-            gamma = gamma * sgamma
-
-            with torch.no_grad():
-                buffer[      "values"][step] = values[step+1].clone()
-                buffer["observations"][step] = state         .clone()
-                buffer[     "rewards"][step] = reward        .clone()
-            
-            state = next_state
-
-        loss = -((rewards[steps,:]).mean() + gamma * values[steps,:]).sum() / (steps * envs)
-
-        return { "loss" : loss, "buffer" : buffer }
+    if state is None: state = environment.init_state()
+    else: state = state.clone().detach().requires_grad_(True)
+    
+    rewards = torch.zeros((steps+1, envs), dtype = torch.float32, device = device)
+    values  = torch.zeros((steps+1, envs), dtype = torch.float32, device = device)
+    
+    buffer = {
+        "observations" : torch.zeros((steps, envs, 9,2), dtype = torch.float32, device = device),
+        "rewards"      : torch.zeros((steps, envs)     , dtype = torch.float32, device = device),
+        "values"       : torch.zeros((steps, envs)     , dtype = torch.float32, device = device)
+    }
+    
+    gamma = 1
+    
+    for step in range(steps):
+        action = actor(torch.cat([state,state[:,[0]]],dim=1))
+        next_state, reward = environment.step(state, action)
+        rewards[step+1] = rewards[step] + gamma * reward
+        values [step+1] = critic(next_state)
+        gamma = gamma * sgamma
+    
+        with torch.no_grad():
+            buffer[      "values"][step] = values[step+1].clone()
+            buffer["observations"][step] = state         .clone()
+            buffer[     "rewards"][step] = reward    .clone()
+        
+        state = next_state
+    
+    loss = -((rewards[steps,:]).mean() + gamma * values[steps,:]).sum() / (steps * envs)
+    
+    return { "loss" : loss, "buffer" : buffer }
 
 @torch.no_grad()
 def compute_target_values(steps, envs, values, rewards, slam, gamma, device="cuda:0"):
@@ -107,7 +132,6 @@ def compute_target_values(steps, envs, values, rewards, slam, gamma, device="cud
         Bi = Bi + rewards[i]
         target_values[i] = (1.0 - slam) * Ai + lam * Bi
     ###########################################################################
-
     return target_values
 
             
@@ -118,8 +142,8 @@ def train(
         batch_size    = 512,
         agent_epochs  = 10000,
         critic_epochs = 16,
-        actor_lr      = 2e-3,
-        critic_lr     = 2e-3,
+        actor_lr      = .001,
+        critic_lr     = .001,
         alpha         = .4,
         lam           = .95,
         gamma         = .99,
@@ -127,25 +151,37 @@ def train(
         device        = "cuda:0"
     ):
 
-    environment = Environment(envs=envs, agents=agents, device=device)
-    actor = Actor(device=device)
-    critic = Critic(device=device)
-    target_critic = copy.deepcopy(critic)
-    actor_optimizer  = torch.optim.Adam(actor .parameters(), lr=actor_lr)
-    critic_optimizer = torch.optim.Adam(critic.parameters(), lr=critic_lr)
+    actor              = Actor(device=device, observations=(agents+1)*2, actions=2)
+    critic             = Critic(device=device, observations=agents*2)
+    target_critic      = copy.deepcopy(critic)
+    actor_optimizer    = torch.optim.Adam(actor .parameters(), lr=actor_lr)
+    critic_optimizer   = torch.optim.Adam(critic.parameters(), lr=critic_lr)
+
+    environment = Environment(envs=envs, agents=agents, actor=actor, device=device)
 
     # main training process
+    state = None
     for agent_epoch in (tbar:=tqdm.tqdm(range(agent_epochs))):
 
         # train actor
         actor_optimizer.zero_grad()
-        actor_result = run_actor(steps=steps, envs=envs, actor=actor, critic=target_critic, sgamma=gamma, environment=environment, device=device)
+        actor_result = run_actor(
+            steps       = steps,
+            envs        = envs,
+            actor       = actor,
+            critic      = target_critic,
+            sgamma      = gamma,
+            environment = environment,
+            device      = device,
+            state       = state
+        )
+        state = actor_result["buffer"]["observations"][-1]
         actor_result["loss"].backward()
         actor_optimizer.step()
 
         dataloader = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(
-                actor_result["buffer"]["observations"].view(envs*steps,2),
+                actor_result["buffer"]["observations"].view(envs*steps,9,2),
                 compute_target_values(
                     steps   = steps,
                     envs    = envs,
@@ -154,13 +190,13 @@ def train(
                     slam    = lam,
                     gamma   = gamma,
                     device  = device
-                ).view(envs*steps),
+                ).view(envs*steps)
             ), 
             batch_size = batch_size,
             drop_last  = False,
             shuffle    = True
         )
-
+        
         for critic_epoch in range(critic_epochs):
             for step, (observation, value) in enumerate(dataloader):
                 critic_optimizer.zero_grad()
@@ -177,8 +213,12 @@ def train(
                 for param, param_targ in zip(critic.parameters(), target_critic.parameters()):
                     param_targ.data.mul_(alpha)
                     param_targ.data.add_((1. - alpha) * param.data)
+
+
+        # reset some states
+        environment.reset(state, .1)
         
         if agent_epoch % etc == 0: torch.save({"actor" : actor.state_dict()}, "actor.pkl")
 
 if __name__=="__main__":
-    train(envs=512, batch_size=2048, actor_lr=1e-4, critic_lr=1e-4, critic_epochs=4)
+    train(envs=1024, batch_size=5096, actor_lr=1e-4, critic_lr=1e-4, critic_epochs=4)
