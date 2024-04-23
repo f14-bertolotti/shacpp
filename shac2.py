@@ -1,4 +1,5 @@
-import random, numpy, tqdm, copy, torch
+import jsonlines, random, pickle, numpy, tqdm, copy, torch
+from RunningMeanStd import RunningMeanStd
 
 def layer_init(layer, std=1.141, bias_const=0.0):
     torch.nn.init.orthogonal_(layer.weight, std)
@@ -21,7 +22,7 @@ class Actor(torch.nn.Module):
         )
 
     def forward(self, state, deterministic = False):
-        mu = self.actor(state.view(state.size(0),-1))
+        mu = self.actor(state.view(state.size(0),-1))/20
         if deterministic: return mu
 
         std = self.logstd.exp() 
@@ -52,9 +53,10 @@ def seed_everything(seed):
     torch.manual_seed(seed)
 
 class Environment:
-    def __init__(self, envs, actor, agents, device="cuda:0"):
+    def __init__(self, envs, actor, agents, deterministic=False, device="cuda:0"):
         self.envs, self.agents, self.actor, self.device = envs, agents, actor, device
-        self.points = torch.tensor([[(i/9)*20-10,(j/9)*20-10] for j in range(10) for i in range(10)],dtype=torch.float32,device=device)
+        self.points = torch.tensor([[(i/9)*2-1,(j/9)*2-1] for j in range(10) for i in range(10)],dtype=torch.float32,device=device)
+        self.deterministic = deterministic
 
     def reset(self, state, p=.1):
         mask = torch.randperm(state.size(0)) < p * state.size(0)
@@ -63,10 +65,11 @@ class Environment:
 
     def init_state(self):
         #return torch.zeros((self.envs,self.agents,2), requires_grad=True, dtype=torch.float32, device=self.device)
-        return torch.rand((self.envs,self.agents,2), requires_grad=True, dtype=torch.float32, device=self.device)*20-10
+        return torch.rand((self.envs,self.agents,2), requires_grad=True, dtype=torch.float32, device=self.device)*2-1
 
     def step(self, state, action):
-        agents_actions = torch.stack([torch.zeros(state.size(0),2,device=self.device)] + [self.actor(torch.cat([state,state[:,[i]]],dim=1)) for i in range(1,self.agents)],dim=1).detach()
+        agents_actions = torch.stack([torch.zeros(state.size(0),2,device=self.device)] + [self.actor(torch.cat([state,state[:,[i]]],dim=1), deterministic=True) for i in range(1,self.agents)],dim=1).detach()
+
         state = state + agents_actions.detach()
         new_state = state.clone()
         new_state[:,0] = new_state[:,0] + action
@@ -74,21 +77,25 @@ class Environment:
         return new_state, self.reward(new_state)
 
     def reward(self, state):
-        #dist = torch.cdist(state, self.points)
+        # redevouz reward
         dist = torch.cdist(state, state)
         dist0 = torch.cdist(state, torch.zeros(1,2,device=self.device,dtype=torch.float32))
         dist0 = dist0.mean(-2).squeeze(-1)
-        #reward = (dist < 3.333).float().sum(-1).sum(-1) / self.points.size(0)
         reward = 1/(dist.mean(-1).mean(-1)+1)
-        reward[dist0>10] -= dist0[dist0>10] 
+        reward[dist0>1] -= dist0[dist0>1] 
+        
+        ## scatter loss
+        #dist = torch.cdist(self.points,state)
+        #reward = (1/(1+dist.min(-1).values)).mean(-1)
+    
         return reward
 
 
 def run_actor(steps, envs, actor, critic, environment, sgamma, state=None, device="cuda:0"):
 
     if state is None: state = environment.init_state()
-    else: state = state.clone().detach().requires_grad_(True)
-    
+    state.clone().detach().requires_grad_(True)
+
     rewards = torch.zeros((steps+1, envs), dtype = torch.float32, device = device)
     values  = torch.zeros((steps+1, envs), dtype = torch.float32, device = device)
     
@@ -110,7 +117,7 @@ def run_actor(steps, envs, actor, critic, environment, sgamma, state=None, devic
         with torch.no_grad():
             buffer[      "values"][step] = values[step+1].clone()
             buffer["observations"][step] = state         .clone()
-            buffer[     "rewards"][step] = reward    .clone()
+            buffer[     "rewards"][step] = reward        .clone()
         
         state = next_state
     
@@ -148,8 +155,11 @@ def train(
         lam           = .95,
         gamma         = .99,
         etc           = 10,
+        metrics_path  = "data.jsonl",
         device        = "cuda:0"
     ):
+
+    seed_everything(42)
 
     actor              = Actor(device=device, observations=(agents+1)*2, actions=2)
     critic             = Critic(device=device, observations=agents*2)
@@ -161,6 +171,8 @@ def train(
 
     # main training process
     state = None
+
+    file, file_step = jsonlines.open(metrics_path, mode="w", flush=True), 0
     for agent_epoch in (tbar:=tqdm.tqdm(range(agent_epochs))):
 
         # train actor
@@ -197,6 +209,7 @@ def train(
             shuffle    = True
         )
         
+        critic_sum_loss, critic_steps = 0, 0
         for critic_epoch in range(critic_epochs):
             for step, (observation, value) in enumerate(dataloader):
                 critic_optimizer.zero_grad()
@@ -206,6 +219,8 @@ def train(
 
                 actor_loss, actor_rewards = actor_result["loss"], actor_result["buffer"]["rewards"]
                 tbar.set_description(f"{agent_epoch:0>3}-{critic_epoch:0>3}-{step:0>3}, cls:{critic_loss.item():8.5f}, als:{actor_loss.item():8.5f}, rew:{actor_rewards.mean().item():8.5f}")
+
+                critic_sum_loss, critic_steps = critic_sum_loss + critic_loss.item(), critic_steps + 1
 
 
             # update target critic
@@ -217,8 +232,16 @@ def train(
 
         # reset some states
         environment.reset(state, .1)
+        file.write({"id"          : file_step,
+                    "actor_loss"  : actor_result["loss"].item(),
+                    "actor_reward": actor_result["buffer"]["rewards"].mean().item(),
+                    "critic_loss" : critic_sum_loss/critic_steps })
+        file_step += 1
         
-        if agent_epoch % etc == 0: torch.save({"actor" : actor.state_dict()}, "actor.pkl")
+        if agent_epoch % etc == 0: 
+            torch.save({"actor" : actor.state_dict()}, "actor.pkl")
+
+    file.close()
 
 if __name__=="__main__":
-    train(envs=1024, batch_size=5096, actor_lr=1e-4, critic_lr=1e-4, critic_epochs=4)
+    train(envs=1024, batch_size=5096, actor_lr=1e-3, critic_lr=1e-3, critic_epochs=4)

@@ -3,27 +3,34 @@ import numpy, torch
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.patches import Rectangle
+from RunningMeanStd import RunningMeanStd
+import pickle
 
-envs=1
+envs=2
 seed=1
 device="cuda:0"
 steps=1024
 
 actor       = Actor(actions=2,observations=10*2).to(device)
-environment = Environment(envs=envs, actor=actor, agents=9, device=device)
+environment = Environment(envs=envs, actor=actor, agents=9, device=device, deterministic=True)
 actor.load_state_dict(torch.load("actor.pkl")["actor"])
 
 obss, rews = [], []
 obs = environment.init_state()
+
+obss.append(obs[[0]].clone().cpu().squeeze(0).detach())
+
 for step in range(0, steps):
 
-
     with torch.no_grad():
-        action = actor(torch.cat([obs,obs[:,[0]]],dim=1))
+        action = actor(torch.cat([obs,obs[:,[0]]],dim=1), deterministic=True)
     
     obs,rew = environment.step(obs,action)
-    obss.append(obs.cpu().squeeze(0).detach())
-    rews.append(rew.cpu().squeeze(0).detach())
+
+    obss.append(obs[[0]].clone().cpu().squeeze(0).detach())
+    rews.append(rew[[0]].clone().cpu().squeeze(0).detach())
+
+
 
 obss = torch.stack(obss)
 rews = torch.stack(rews)
@@ -40,8 +47,8 @@ scatterplot = ax.scatter(
     color = "black"
 )
 
-ax.set_xlim(-30,30)
-ax.set_ylim(-30,30)
+ax.set_xlim(-3,3)
+ax.set_ylim(-3,3)
 
 def update(frame):
     x = obss[frame,:,0]
@@ -50,5 +57,5 @@ def update(frame):
     scatterplot.set_offsets(data)
     return scatterplot
 
-ani = animation.FuncAnimation(fig=fig, func=update, frames=obss.size(0), interval=60)
+ani = animation.FuncAnimation(fig=fig, func=update, frames=obss.size(0), interval=120)
 plt.show()
