@@ -3,6 +3,7 @@ from environments import environment
 from trajectories import  trajectory
 from optimizers   import   optimizer
 from schedulers   import   scheduler
+from callbacks    import    callback
 from storages     import     storage
 from loggers      import      logger
 from losses       import        loss
@@ -20,6 +21,7 @@ cli.add_command(environment)
 cli.add_command(trajectory)
 cli.add_command(optimizer)
 cli.add_command(scheduler)
+cli.add_command(callback)
 cli.add_command(storage)
 cli.add_command(logger)
 cli.add_command(agent)

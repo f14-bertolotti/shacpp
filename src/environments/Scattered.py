@@ -4,21 +4,25 @@ import torch, click
 class Scattered:
     def __init__(self, envs=64, agents=9, device="cuda:0"):
         self.envs, self.agents, self.device = envs, agents, device
-        self.points = torch.tensor([[(i/9)*20-10,(j/9)*20-10] for j in range(10) for i in range(10)],dtype=torch.float32,device=device)
+        self.points = torch.tensor([[(i/9)*2-1,(j/9)*2-1] for j in range(10) for i in range(10)],dtype=torch.float32,device=device)
 
     def reset(self):
-        return torch.rand((self.envs,self.agents,2), device=self.device)*20-10
+        return torch.rand((self.envs,self.agents,2), device=self.device)*2-1
 
     def step(self, observation, action):
         next_observation = observation + action
-        return next_observation, self.reward(next_observation)
+        return {
+            "observations"      : observation, 
+            "next_observations" : next_observation, 
+            "rewards"           : self.reward(next_observation),
+        }
 
     def reward(self, observation):
         dists = torch.cdist(self.points, observation)
-        return (dists.min(-1).values  < 3.333).float().mean(-1) - \
-               (dists.min(-1).values >= 3.333).float().mean(-1)
+        return (dists.min(-1).values  < 0.333).float().mean(-1) - \
+               (dists.min(-1).values >= 0.333).float().mean(-1)
 
-
+    def train_step(self, **kwargs): return None
 
 @environment.group(invoke_without_command=True)
 @click.option("--envs"   , "envs"   , type=int , default=64)

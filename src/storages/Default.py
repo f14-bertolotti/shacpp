@@ -3,25 +3,37 @@ import click, torch
 
 
 class Default:
-    def __init__(self, steps=64, envs=64, agents=9, observations=2, device="cuda:0"):
-        self.observations = torch.zeros(steps, envs, agents, observations).to(device)
-        self.actions      = torch.zeros(steps, envs, agents, observations).to(device)
-        self.logprobs     = torch.zeros(steps, envs).to(device)
-        self.rewards      = torch.zeros(steps, envs).to(device)
-        self.values       = torch.zeros(steps, envs).to(device)
-        self.returns      = torch.zeros(steps, envs).to(device)
-        self.advantages   = torch.zeros(steps, envs).to(device)
+    def __init__(self):
+        self.clear()
+    def clear(self):
+        self.dictionary = dict()
+        self.length = 0
+
+    def append(self,dictionary):
+        for k,v in dictionary.items():
+            if k in self.dictionary: self.dictionary[k].append(v)
+            else: self.dictionary[k] = [v]
+        
+    def __len__(self):
+        return self.dictionary["observations"].size(0)
+
+    def stack(self):
+        for k,v in self.dictionary.items():
+            self.dictionary[k] = torch.stack(v)
+
+    def flatten(self):
+        for k,v in self.dictionary.items():
+            self.dictionary[k] = v.flatten(0,1)
+
+    def __getitem__(self, idx):
+        return {k:v[idx] for k,v in self.dictionary.items()}
+
+    def collate_fn(self, data):
+        return { k:torch.stack([d[k] for d in data]) for k in data[0].keys() }
+
+    
 
 @storage.group(invoke_without_command=True)
-@click.option("--observations", "observations", type=int, default=2)
 @click.pass_obj
-def default(trainer, observations):
-    trainer.set_storage(
-        Default(
-            steps        = trainer.trajectory.steps,
-            envs         = trainer.environment.envs,
-            agents       = trainer.environment.agents,
-            observations = observations,
-            device       = trainer.agent.device
-        )
-    )
+def default(trainer):
+    trainer.set_storage(Default())

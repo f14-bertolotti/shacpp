@@ -1,0 +1,81 @@
+version: '3'
+
+env:
+  PYTHON: /usr/bin/python3
+  SHOW: True
+
+tasks:
+
+  dependencies: 
+    sources:
+      - requirements.txt
+    generates:
+      - venv/.builded
+    cmds:
+      - rm -rf venv
+      - $PYTHON -m venv venv
+      - venv/bin/python3 -m pip install -r requirements.txt
+      - touch venv/.builded
+
+  ppo:
+    deps: 
+      - dependencies
+    sources:
+      - src/**/*.py
+    generates:
+      - models/ppo/.trained
+    cmds:
+      - mkdir -p models/ppo
+      - venv/bin/python3 src/cli.py
+        cli agent transformer-agent
+        cli environment scattered
+        cli loss ppo
+        cli optimizer adam
+        cli scheduler cosine
+        cli trajectory ppo
+        cli storage default
+        cli logger file --path models/ppo/train.log
+        cli callback base
+        cli callback checkpointer --path models/ppo-learnable/agent.pkl 
+        cli train 
+      - touch models/ppo/.trained
+
+  ppo-learnable-reward:
+    deps: 
+      - dependencies
+    sources:
+      - src/**/*.py
+    generates:
+      - models/ppo-lernable/.trained
+    cmds:
+      - mkdir -p models/ppo-learnable
+      - venv/bin/python3 src/cli.py
+        cli agent transformer-agent
+        cli environment scattered-learnable-reward
+        cli loss ppo-learnable-reward
+        cli optimizer adam
+        cli scheduler cosine
+        cli trajectory ppo
+        cli storage default
+        cli logger file --path models/ppo-learnable/train.log
+        cli callback base-learnable-reward
+        cli callback checkpointer --path models/ppo-learnable/agent.pkl 
+        cli train
+      - touch models/ppo-learnable/.trained
+
+
+  ppo-fig:
+    deps:
+      - ppo
+    sources:
+      - models/ppo/train.log
+    generates:
+      - models/ppo/reward.pdf
+    cmds:
+      - jet init --shape 1 1
+        jet line --input-path models/ppo/train.log --x id --y message/reward --label ppo
+        jet plot --output-path models/ppo/reward.pdf --show $SHOW
+
+  clean-ppo:
+    cmds:
+      - rm -rf models/ppo

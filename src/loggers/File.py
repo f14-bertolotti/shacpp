@@ -4,7 +4,7 @@ import logging, click
 
 class File:
     def __init__(self, path):
-        self.format = "{\"lebel\":\"%(levelname)s\", \"id\": %(record_number)s, \"time\":\"%(asctime)s\", \"message\":{%(message)s}}"
+        self.format = "{\"lebel\":\"%(levelname)s\", \"id\": %(record_number)s, \"time\":\"%(asctime)s\", \"message\":%(message)s}"
         self.logger = logging.getLogger(path)
         self.logger.addFilter(ContextFilter())
         handler = logging.FileHandler(path)

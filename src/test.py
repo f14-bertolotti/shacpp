@@ -2,7 +2,6 @@ import numpy, torch
 import agents, environments
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from matplotlib.patches import Rectangle
 
 envs=1
 seed=1
@@ -11,7 +10,7 @@ steps=1024
 
 agent       = agents.TransformerAgent().to(device)
 environment = environments.Scattered(envs=envs, agents=9, device=device)
-agent.load_state_dict(torch.load("agent.pkl")["agentsd"])
+agent.load_state_dict(torch.load("models/ppo-learnable/agent.pkl")["agentsd"])
 
 obss, rews = [], []
 obs = environment.reset()
@@ -20,7 +19,8 @@ for step in range(0, steps):
    with torch.no_grad():
        result = agent.get_action(obs)
 
-   obs,rew = environment.step(obs,result["action"])
+   res = environment.step(obs,result["actions"])
+   obs,rew = res["next_observations"], res["rewards"]
    obss.append(obs.cpu().squeeze(0).detach())
    rews.append(rew.cpu().squeeze(0).detach())
 
@@ -39,8 +39,8 @@ scatterplot = ax.scatter(
     color = "black"
 )
 
-ax.set_xlim(-30,30)
-ax.set_ylim(-30,30)
+ax.set_xlim(-3,3)
+ax.set_ylim(-3,3)
 
 def update(frame):
     x = obss[frame,:,0]
