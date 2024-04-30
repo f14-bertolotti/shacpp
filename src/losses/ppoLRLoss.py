@@ -1,7 +1,7 @@
 from losses import policy_loss, value_loss, loss
 import click
 
-class PPOLoss:
+class PPOLRLoss:
     def __init__(self, clipcoef=.2, vfcoef=.5, entcoef=.1):
         self.clipcoef, self.vfcoef, self.entcoef = clipcoef, vfcoef, entcoef
 
@@ -23,9 +23,9 @@ class PPOLoss:
 @click.option("--vf-coef"   , "vfcoef"   , type=float , default=.5)
 @click.option("--ent-coef"  , "entcoef"  , type=float , default=.1)
 @click.pass_obj
-def ppo(trainer, clipcoef, vfcoef, entcoef):
+def ppo_learnable_reward(trainer, clipcoef, vfcoef, entcoef):
     trainer.set_loss(
-        PPOLoss(
+        PPOLRLoss(
             clipcoef = clipcoef,
             vfcoef   =   vfcoef,
             entcoef  =  entcoef

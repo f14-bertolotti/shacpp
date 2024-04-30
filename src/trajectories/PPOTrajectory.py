@@ -6,34 +6,36 @@ class PPOTrajectory:
         self.steps, self.gamma, self.gaelambda = steps, gamma, gaelambda
     
     def __call__(self, agent, environment, storage):
+        storage.clear()
         observation = environment.reset()
-        for step in range(0, self.steps):
-        
-            storage.observations[step] = observation
+        for _ in range(0, self.steps):
         
             with torch.no_grad():
-                result = agent.get_action_and_value(observation = observation)
-                storage.values[step] = result["value"]
+                agent_result = agent.get_action_and_value(observation = observation)
             
-            observation, reward = environment.step(observation, result["action"])
-            storage.actions  [step] = result["action"]
-            storage.logprobs [step] = result["logprobs"]
-            storage.rewards  [step] = reward
+            envir_result = environment.step(observation, agent_result["actions"])
+            observation = envir_result["next_observations"]
+            storage.append(envir_result)
+            storage.append(agent_result)
+
+        storage.stack()
         
-        storage.advantages[:] = utils.compute_advantages(
+        storage.dictionary["advantages"] = utils.compute_advantages(
             observation = observation,
-            values      = storage.values,
-            rewards     = storage.rewards,
+            values      = storage.dictionary["values"],
+            rewards     = storage.dictionary["rewards"],
             agent       = agent,
             gamma       = self.gamma,
             gaelambda   = self.gaelambda
         )
         
-        storage.returns[:] = utils.compute_returns(
-            values     = storage.values, 
-            advantages = storage.advantages
+        storage.dictionary["returns"] = utils.compute_returns(
+            values     = storage.dictionary["values"], 
+            advantages = storage.dictionary["advantages"]
         )
-        
+
+        storage.flatten()
+
         return storage
 
 

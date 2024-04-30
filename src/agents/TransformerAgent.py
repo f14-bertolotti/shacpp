@@ -15,11 +15,10 @@ class TransformerAgent(torch.nn.Module):
         ):
         super().__init__()
         self.device = device
-        self.cov_var = torch.full(size=(observation_size,), fill_value=0.5, device=device)
+        self.cov_var = torch.full(size=(observation_size,), fill_value=0.005, device=device)
         self.cov_mat = torch.diag(self.cov_var)
 
         self.agent_position = utils.layer_init(torch.nn.Linear(observation_size, embedding_size, device=device))
-        #self.agent_type     = torch.nn.Embedding(observation_size, embedding_size, device=device)
 
         self.encoder = torch.nn.TransformerEncoder(
             torch.nn.TransformerEncoderLayer(
@@ -44,11 +43,12 @@ class TransformerAgent(torch.nn.Module):
             utils.Lambda(lambda x: self.agent_position(x[0])),
             self.encoder,
             utils.layer_init(torch.nn.Linear(embedding_size, action_size, device=device),std=.01),
-            torch.nn.Tanh()
+            torch.nn.Tanh(),
+            utils.Lambda(lambda x: x/30)
         )
 
     def get_value(self, x):
-        return {"value" : self.critic(x).squeeze(-1).squeeze(-1)}
+        return {"values" : self.critic(x).squeeze(-1).squeeze(-1)}
 
     def get_action(self, observation, agent_type=None, action=None):
         if agent_type is None: 
@@ -59,7 +59,7 @@ class TransformerAgent(torch.nn.Module):
         probs  = torch.distributions.MultivariateNormal(logits[:,:,:2], self.cov_mat)
         action = probs.sample() if action is None else action
         return {
-            "action"   : action,
+            "actions"  : action,
             "logprobs" : probs.log_prob(action).sum(-1),
             "entropy"  : probs.entropy()
         }

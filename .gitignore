@@ -1,5 +1,8 @@
 __pycache__
+models
+data
 venv
+.task
 *.pyc
 *.pkl
 

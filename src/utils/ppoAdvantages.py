@@ -6,7 +6,7 @@ def compute_advantages(observation, values, rewards, agent, gamma, gaelambda):
     steps      = rewards.size(0)
 
     lastgaelam = 0
-    next_value = agent.get_value(observation)["value"].reshape(1, -1)
+    next_value = agent.get_value(observation)["values"].reshape(1, -1)
     for t in reversed(range(steps)):
         nextvalues = next_value if t == steps - 1 else values[t + 1]
         delta = rewards[t] + gamma * nextvalues - values[t]

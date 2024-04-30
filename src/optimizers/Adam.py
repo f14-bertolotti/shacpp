@@ -9,4 +9,3 @@ def adam(trainer, lr, betas):
     trainer.set_optimizer(
         torch.optim.Adam(trainer.agent.parameters(), lr=lr, betas=betas)
     )
-
