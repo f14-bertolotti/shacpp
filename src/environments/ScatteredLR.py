@@ -41,7 +41,7 @@ class ScatteredLR:
         return {
             "observations"      : observation, 
             "next_observations" : next_observation, 
-            "rewards"           : self.rewardnn(next_observation).detach(),
+            "rewards"           : self.rewardnn(next_observation),
             "real_rewards"      : self.reward(next_observation),
         }
 
@@ -50,12 +50,18 @@ class ScatteredLR:
         return (dists.min(-1).values  < 0.333).float().mean(-1) - \
                (dists.min(-1).values >= 0.333).float().mean(-1)
 
-    def train_step(self, next_observations, **kwargs):
-        self.optimizer.zero_grad()
-        loss = self.loss(self.reward(next_observations), self.rewardnn(next_observations))
-        loss.backward()
-        self.optimizer.step()
-        return loss
+    def train_step(self, next_observations, epochs=1, **kwargs):
+        losses = []
+        for epoch in range(epochs):
+            self.optimizer.zero_grad()
+            mask = (torch.randperm(next_observations.size(0)) < int(next_observations.size(0) * .2)).to(self.device)
+            batch = next_observations.clone().to(self.device)
+            batch[mask] = torch.rand(int(next_observations.size(0) * .2), self.agents, 2, device=self.device)*2-1
+            loss = self.loss(self.reward(batch), self.rewardnn(batch))
+            loss.backward()
+            losses.append(loss.item())
+            self.optimizer.step()
+        return sum(losses)/len(losses)
 
 
 

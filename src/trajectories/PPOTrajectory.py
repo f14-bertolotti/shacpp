@@ -5,7 +5,7 @@ class PPOTrajectory:
     def __init__(self, steps=64, gamma=.99, gaelambda=.95):
         self.steps, self.gamma, self.gaelambda = steps, gamma, gaelambda
     
-    def __call__(self, agent, environment, storage):
+    def __call__(self, agent, environment, storage, prev_trajectories=None):
         storage.clear()
         observation = environment.reset()
         for _ in range(0, self.steps):
@@ -34,9 +34,7 @@ class PPOTrajectory:
             advantages = storage.dictionary["advantages"]
         )
 
-        storage.flatten()
-
-        return storage
+        return {"storage" : storage.flatten().detach()}
 
 
 @trajectory.group(invoke_without_command=True)
