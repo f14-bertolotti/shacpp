@@ -2,7 +2,7 @@ version: '3'
 
 env:
   PYTHON: /usr/bin/python3
-  SHOW: True
+  DEVICE: cuda:0
 
 tasks:
 
@@ -36,9 +36,34 @@ tasks:
         cli storage default
         cli logger file --path models/ppo/train.log
         cli callback base
-        cli callback checkpointer --path models/ppo-learnable/agent.pkl 
+        cli callback checkpointer --path models/ppo/agent.pkl 
         cli train 
       - touch models/ppo/.trained
+
+  shac-learnable-reward:
+    deps: 
+      - dependencies
+    sources:
+      - src/**/*.py
+    generates:
+      - models/shac-learnable/.trained
+    cmds:
+      - mkdir -p models/shac-learnable
+      - venv/bin/python3 src/cli.py
+        cli agent transformer-agent --shared False --device $DEVICE
+        cli environment scattered-learnable-reward --device $DEVICE
+        cli loss shac
+        cli optimizer adam
+        cli scheduler cosine
+        cli trajectory shac --device $DEVICE
+        cli storage default
+        cli logger file --path models/shac-learnable/train.log
+        cli callback base-shac-learnable-reward
+        cli callback checkpointer --path models/shac-learnable/agent.pkl 
+        cli train 
+      - touch models/shac-learnable/.trained
+
+
 
   ppo-learnable-reward:
     deps: 
@@ -64,17 +89,17 @@ tasks:
       - touch models/ppo-learnable/.trained
 
 
-  ppo-fig:
+  fig:
     deps:
-      - ppo
-    sources:
-      - models/ppo/train.log
-    generates:
-      - models/ppo/reward.pdf
+      - dependencies
     cmds:
       - jet init --shape 1 1
-        jet line --input-path models/ppo/train.log --x id --y message/reward --label ppo
-        jet plot --output-path models/ppo/reward.pdf --show $SHOW
+        jet line --samples 1000 --input-path models/ppo/train.log --x id --y message/reward --label ppo
+        jet line --samples 1000 --input-path models/ppo-learnable-0/train.log --x id --y message/real_reward --label ppo-learnable
+        jet line --samples 1000 --input-path models/ppo-learnable/train.log --x id --y message/real_reward --label ppo-learnable-2
+        jet line --samples 1000 --input-path models/shac-learnable-0/train.log --x id --y message/real_reward --label shac-learnable-0
+        jet line --samples 1000 --input-path models/shac-learnable/train.log --x id --y message/real_reward --label shac-learnable-1
+        jet plot --show True
 
   clean-ppo:
     cmds:

@@ -15,9 +15,9 @@ class Checkpointer():
 def checkpointer(trainer, path, utc):
     trainer.add_callback(
         Checkpointer(
+            trainer = trainer,
             path    = path,
-            utc     = utc,
-            trainer = trainer
+            utc     = utc
         )
     )
 
