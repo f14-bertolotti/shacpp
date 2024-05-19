@@ -10,7 +10,7 @@ steps=1024
 
 agent       = agents.TransformerAgent().to(device)
 environment = environments.Scattered(envs=envs, agents=9, device=device)
-agent.load_state_dict(torch.load("models/shac-learnable/agent.pkl")["agentsd"])
+agent.load_state_dict(torch.load("models/ppo/agent.pkl")["agentsd"])
 
 obss, rews = [], []
 obs = environment.reset()

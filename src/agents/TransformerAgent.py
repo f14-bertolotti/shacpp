@@ -57,6 +57,7 @@ class TransformerAgent(torch.nn.Module):
         probs  = torch.distributions.MultivariateNormal(logits, self.cov_mat)
         action = probs.rsample() if action is None else action
         return {
+            "logits"   : logits,
             "actions"  : action,
             "logprobs" : probs.log_prob(action).sum(-1),
             "entropy"  : probs.entropy()

@@ -10,7 +10,7 @@ class Base():
         avg_reward = batch["rewards"].mean().item()
         tbar.set_description(f"{update}-{epoch}-{step}, lr:{self.trainer.scheduler.get_last_lr()[0]:7.6f}, l:{loss:7.4f}, r:{avg_reward:7.4f}")
         self.trainer.logger.log({
-            "loss"   : loss.item(),
+            "loss"   : loss,
             "reward" : avg_reward,
             "update" : update,
             "epoch"  : epoch,
