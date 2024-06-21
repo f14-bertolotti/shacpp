@@ -1,4 +1,5 @@
 from Trainer import Trainer
+from Vizualize import viz
 from environments import environment
 from trajectories import  trajectory
 from optimizers   import   optimizer
@@ -17,6 +18,8 @@ def cli(context):
     if not context.obj: context.obj = Trainer()
 
 
+# node commands, can be called in chain by navigating upwards
+# in the command tree
 cli.add_command(environment)
 cli.add_command(trajectory)
 cli.add_command(optimizer)
@@ -37,8 +40,10 @@ for grp in visit(cli): grp.add_command(cli)
 
 cli.add_command(cli)
 
-
+# leaf commands, these are final
 cli.add_command(Trainer.train)
+cli.add_command(viz)
+
 if __name__ == "__main__":
     cli()
 

@@ -76,8 +76,9 @@ class TransformerAgent(torch.nn.Module):
 @click.option("--activation"       , "activation"       , type=str , default="gelu")
 @click.option("--shared"           , "shared"           , type=bool, default=True)
 @click.option("--device"           , "device"           , type=str , default="cuda:0")
+@click.option("--state-dict-path"  , "state_dict_path"  , type=click.Path(), default=None)
 @click.pass_obj
-def transformer_agent(trainer, observation_size, action_size, layers, embedding_size, feedforward_size, heads, activation, shared, device):
+def transformer_agent(trainer, observation_size, action_size, layers, embedding_size, feedforward_size, heads, activation, shared, device, state_dict_path):
     trainer.set_agent(
         TransformerAgent(
             observation_size = observation_size,
@@ -91,3 +92,5 @@ def transformer_agent(trainer, observation_size, action_size, layers, embedding_
             device           = device
         )
     )
+
+    trainer.agent.load_state_dict(torch.load(state_dict_path)["agentsd"])
