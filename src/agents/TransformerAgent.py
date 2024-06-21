@@ -93,4 +93,4 @@ def transformer_agent(trainer, observation_size, action_size, layers, embedding_
         )
     )
 
-    trainer.agent.load_state_dict(torch.load(state_dict_path)["agentsd"])
+    if state_dict_path: trainer.agent.load_state_dict(torch.load(state_dict_path)["agentsd"])

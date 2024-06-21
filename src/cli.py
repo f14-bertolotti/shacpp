@@ -1,5 +1,6 @@
 from Trainer import Trainer
 from Vizualize import viz
+from environments.rewards import reward
 from environments import environment
 from trajectories import  trajectory
 from optimizers   import   optimizer
