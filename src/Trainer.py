@@ -14,16 +14,18 @@ class Trainer:
     def set_logger     (self, value): self.logger      = value
     def add_callback   (self, value): self.callbacks.append(value)
 
+
     @click.command()
     @click.option("--detect-anomaly"         , "detect_anamaly" , type=bool         , default=False)
     @click.option("--batch-size"             , "batch_size"     , type=int          , default=256)
-    @click.option("--max-grad-norm"          , "max_grad_norm"  , type=float        , default=.5)
+    @click.option("--max-grad-norm"          , "max_grad_norm"  , type=float        , default=1)
     @click.option("--updates"                , "updates"        , type=int          , default=1000)
     @click.option("--epochs"                 , "epochs"         , type=int          , default=4)
     @click.option("--seed"                   , "seed"           , type=int          , default=42)
     @click.pass_obj
     @staticmethod
     def train(trainer, seed, updates, epochs, batch_size, max_grad_norm, detect_anamaly):
+
         torch.autograd.set_detect_anomaly(detect_anamaly)
         utils.seed_everything(seed)
 
@@ -53,7 +55,7 @@ class Trainer:
                     losses = trainer.loss(new = result, old = batch)
 
                     losses["loss"].backward()
-                    torch.nn.utils.clip_grad_norm_(trainer.agent.parameters(), max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(trainer.agent.critic.parameters(), max_grad_norm)
                     trainer.optimizer.step()
 
                     for callback in trainer.callbacks: callback(**locals())

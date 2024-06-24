@@ -4,7 +4,7 @@ import click, utils, torch
 class PPOTrajectory:
     def __init__(self, steps=64, gamma=.99, gaelambda=.95):
         self.steps, self.gamma, self.gaelambda = steps, gamma, gaelambda
-    
+
     def __call__(self, agent, environment, storage, prev_trajectories=None):
         storage.clear()
         observation = environment.reset()

@@ -10,6 +10,7 @@ from storages     import     storage
 from loggers      import      logger
 from losses       import        loss
 from agents       import       agent
+import jsonpickle
 import click
 
 
@@ -18,6 +19,12 @@ import click
 def cli(context):
     if not context.obj: context.obj = Trainer()
 
+@staticmethod
+@cli.group(invoke_without_command=True)
+@click.option("--path", "path", type=click.Path(), default="")
+@click.pass_obj
+def save_configuration(trainer, path):
+    with open(path, "w") as file: file.write(str(jsonpickle.encode(trainer,indent=4)))
 
 # node commands, can be called in chain by navigating upwards
 # in the command tree
