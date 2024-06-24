@@ -8,6 +8,8 @@ class SHACLoss:
     def __call__(self, new, old, **kwargs):
         return {"loss" : ((new["values"] - old["target_values"])**2).mean()}
 
+    def __str__(self): return "SHACLoss()"
+
 
 @loss.group(invoke_without_command=True)
 @click.pass_obj

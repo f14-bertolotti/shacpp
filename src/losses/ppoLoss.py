@@ -18,6 +18,13 @@ class PPOLoss:
             "eloss" : eloss,
         }
 
+    def __str__(self):
+        return f"""PPOLoss(
+            clipcoef = {str(self.clipcoef)},
+            vfcoef   = {str(self.vfcoef  )},
+            entcoef  = {str(self.entcoef )},
+        )"""
+
 @loss.group(invoke_without_command=True)
 @click.option("--clip-coef" , "clipcoef" , type=float , default=.2)
 @click.option("--vf-coef"   , "vfcoef"   , type=float , default=.5)

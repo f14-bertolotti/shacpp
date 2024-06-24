@@ -1,3 +1,4 @@
+jsonpickle
 matplotlib
 click
 numpy

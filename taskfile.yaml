@@ -37,7 +37,9 @@ tasks:
         cli logger file --path models/ppo/train.log
         cli callback base
         cli callback checkpointer --path models/ppo/agent.pkl 
+        cli save-configuration --path models/ppo/configuration.json
         cli train 
+      - cp ./taskfile.yaml models/ppo/
       - touch models/ppo/.trained
 
   shac-learnable-reward:
@@ -50,18 +52,20 @@ tasks:
     cmds:
       - mkdir -p models/shac-learnable-reward
       - venv/bin/python3 src/cli.py
-        cli agent transformer-agent
-        cli environment scattered-learnable-reward
+        cli agent transformer-agent --shared False
+        cli environment scattered-learnable-reward --envs 128
         cli environment reward transformer-reward
         cli loss shac
         cli optimizer adam
         cli scheduler cosine
-        cli trajectory shac --device $DEVICE
+        cli trajectory shac --device $DEVICE --learning-rate 0.001
         cli storage default
         cli logger file --path models/shac-learnable-reward/train.log
         cli callback base-shac-learnable-reward
         cli callback checkpointer --path models/shac-learnable-reward/agent.pkl 
-        cli train 
+        cli save-configuration --path models/shac-learnable-reward/configuration.json
+        cli train --batch-size 512
+      - cp ./taskfile.yaml models/shac-learnable-reward/
       - touch models/shac-learnable-reward/.trained
 
   ppo-learnable-reward:
@@ -77,7 +81,7 @@ tasks:
         cli agent transformer-agent
         cli environment scattered-learnable-reward
         cli environment reward transformer-reward 
-        cli loss ppo-learnable-reward
+        cli loss ppo
         cli optimizer adam
         cli scheduler cosine
         cli trajectory ppo
@@ -85,7 +89,9 @@ tasks:
         cli logger file --path models/ppo-learnable-reward/train.log
         cli callback base-learnable-reward
         cli callback checkpointer --path models/ppo-learnable-reward/agent.pkl 
+        cli save-configuration --path models/ppo-learnable-reward/configuration.json
         cli train
+      - cp ./taskfile.yaml models/ppo-learnable-reward/
       - touch models/ppo-learnable-reward/.trained
 
   viz:
