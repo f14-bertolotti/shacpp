@@ -27,17 +27,17 @@ tasks:
     cmds:
       - mkdir -p models/ppo
       - venv/bin/python3 src/cli.py
-        cli agent transformer-agent
+        cli storage     default
+        cli agent       transformer-agent
         cli environment scattered
-        cli loss ppo
-        cli optimizer adam
-        cli scheduler cosine
-        cli trajectory ppo
-        cli storage default
-        cli logger file --path models/ppo/train.log
-        cli callback base
-        cli callback checkpointer --path models/ppo/agent.pkl 
-        cli save-configuration --path models/ppo/configuration.json
+        cli algorithm   ppo 
+        cli algorithm   ppo trajectory default 
+        cli algorithm   ppo optimizer  adam
+        cli algorithm   ppo scheduler  cosine
+        cli logger      file --path models/ppo/train.log
+        cli callback    base
+        cli callback    checkpointer --path models/ppo/agent.pkl 
+        cli save-configuration    --path models/ppo/configuration.json
         cli train 
       - cp ./taskfile.yaml models/ppo/
       - touch models/ppo/.trained
@@ -52,19 +52,23 @@ tasks:
     cmds:
       - mkdir -p models/shac-learnable-reward
       - venv/bin/python3 src/cli.py
-        cli agent transformer-agent --shared False
-        cli environment scattered-learnable-reward --envs 128
-        cli environment reward transformer-reward
-        cli loss shac
-        cli optimizer adam
-        cli scheduler cosine
-        cli trajectory shac --device $DEVICE --learning-rate 0.001
-        cli storage default
-        cli logger file --path models/shac-learnable-reward/train.log
-        cli callback base-shac-learnable-reward
-        cli callback checkpointer --path models/shac-learnable-reward/agent.pkl 
+        cli storage     default
+        cli agent       transformer-agent
+        cli environment scattered-learnable-reward --envs 256
+        cli environment scattered-learnable-reward reward transformer-reward
+        cli environment scattered-learnable-reward optimizer adam --learning-rate 0.0001
+        cli environment scattered-learnable-reward scheduler constant
+        cli algorithm   shac --batch-size 1024 
+        cli algorithm   shac trajectory default 
+        cli algorithm   shac trajectory optimizer adam --learning-rate 0.0005
+        cli algorithm   shac trajectory scheduler constant 
+        cli algorithm   shac optimizer  adam --learning-rate 0.0001
+        cli algorithm   shac scheduler  cosine --lrmin 0.000001
+        cli logger      file --path models/shac-learnable-reward/train.log
+        cli callback    base-shac-learnable-reward
+        cli callback    checkpointer --path models/shac-learnable-reward/agent.pkl 
         cli save-configuration --path models/shac-learnable-reward/configuration.json
-        cli train --batch-size 512
+        cli train 
       - cp ./taskfile.yaml models/shac-learnable-reward/
       - touch models/shac-learnable-reward/.trained
 

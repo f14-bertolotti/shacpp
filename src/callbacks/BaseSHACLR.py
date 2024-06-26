@@ -5,16 +5,14 @@ import click
 class BaseSHACLR():
     def __init__(self, trainer):
         self.trainer = trainer
-    def __call__(self, tbar, batch, update, epoch, step, losses, trajectory_result, **kwargs):
+    def __call__(self, tbar, batch, update, epoch, step, lossval, trajectory_loss, **kwargs):
         environment_loss = self.trainer.environment.train_step(**batch)
-        loss = losses["loss"].item()
         avg_reward = batch["rewards"].mean().item()
         avg_real_reward = batch["real_rewards"].mean().item()
-        trajectory_loss = trajectory_result["loss"].item()
-        tbar.set_description(f"{update}-{epoch}-{step}, lr:{self.trainer.scheduler.get_last_lr()[0]:7.6f}, l:{loss:7.4f}, tl:{trajectory_loss:7.4f}, el:{environment_loss:7.4f}, rr:{avg_real_reward:7.4f}, r:{avg_reward:7.4f}")
+        tbar.set_description(f"{update}-{epoch}-{step}, lr:{self.trainer.algorithm.scheduler.get_last_lr()[0]:7.6f}, l:{lossval.item():7.4f}, tl:{trajectory_loss.item():7.4f}, el:{environment_loss:7.4f}, rr:{avg_real_reward:7.4f}, r:{avg_reward:7.4f}")
         self.trainer.logger.log({
-            "loss"             : loss,
-            "trajectory_loss"  : trajectory_loss,
+            "loss"             : lossval.item(),
+            "rajectory_loss"   : trajectory_loss.item(),
             "environment_loss" : environment_loss,
             "reward"           : avg_reward,
             "real_reward"      : avg_real_reward,

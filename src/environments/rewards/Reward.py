@@ -1,4 +1,4 @@
-from environments.Environment import environment
+import click
 
-@environment.group()
+@click.group()
 def reward(): pass
