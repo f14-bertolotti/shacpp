@@ -5,10 +5,10 @@ import click
 class Base():
     def __init__(self, trainer):
         self.trainer = trainer
-    def __call__(self, tbar, batch, update, epoch, step, losses, **kwargs):
-        loss = losses["loss"].item()
+    def __call__(self, tbar, batch, update, epoch, step, lossval, **kwargs):
+        loss = lossval.item()
         avg_reward = batch["rewards"].mean().item()
-        tbar.set_description(f"{update}-{epoch}-{step}, lr:{self.trainer.scheduler.get_last_lr()[0]:7.6f}, l:{loss:7.4f}, r:{avg_reward:7.4f}")
+        tbar.set_description(f"{update}-{epoch}-{step}, lr:{self.trainer.algorithm.scheduler.get_last_lr()[0]:7.6f}, l:{loss:7.4f}, r:{avg_reward:7.4f}")
         self.trainer.logger.log({
             "loss"   : loss,
             "reward" : avg_reward,

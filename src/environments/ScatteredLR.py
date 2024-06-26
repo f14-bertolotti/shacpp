@@ -1,7 +1,8 @@
-from environments.rewards import DummyReward
+from environments.rewards import reward, DummyReward
 from environments import environment
 import torch, click
-
+from optimizers import add_adam_command
+from schedulers import add_constant_command, add_cosine_command
 
 
 class ScatteredLR:
@@ -11,10 +12,9 @@ class ScatteredLR:
         self.loss = torch.nn.MSELoss()
         self.rewardnn = DummyReward()
 
-    def set_reward_nn(self, value):
-        self.rewardnn = value
-        self.optimizer = torch.optim.Adam(self.rewardnn.parameters(), lr=0.0001)
-
+    def set_reward_nn(self, value):self.rewardnn  = value
+    def set_optimizer(self, value):self.optimizer = value
+    def set_scheduler(self, value):self.scheduler = value
 
     def reset(self):
         return torch.rand((self.envs,self.agents,2), device=self.device)*2-1
@@ -44,6 +44,7 @@ class ScatteredLR:
             loss.backward()
             losses.append(loss.item())
             self.optimizer.step()
+        self.scheduler.step()
         return sum(losses)/len(losses)
 
 
@@ -54,12 +55,23 @@ class ScatteredLR:
 @click.option("--device" , "device" , type=str , default="cuda:0")
 @click.pass_obj
 def scattered_learnable_reward(trainer, envs, agents, device):
-    trainer.set_environment(
+    if not hasattr(trainer, "environment"): trainer.set_environment(
         ScatteredLR(
             envs   =   envs,
             agents = agents,
             device = device
         )
     )
+
+scattered_learnable_reward.add_command(reward)
+
+@scattered_learnable_reward.group()
+def optimizer(): pass
+add_adam_command(optimizer, srcnav=lambda x:x.environment, tgtnav=lambda x:x.environment.rewardnn)
+
+@scattered_learnable_reward.group()
+def scheduler(): pass
+add_cosine_command(scheduler, srcnav=lambda x:x.environment, tgtnav=lambda x:x.environment)
+add_constant_command(scheduler, srcnav=lambda x:x.environment, tgtnav=lambda x:x.environment)
 
 

@@ -1,2 +1,1 @@
-from optimizers.Optimizer import optimizer
-from optimizers.Adam      import adam
+from optimizers.Adam import add_adam_command
