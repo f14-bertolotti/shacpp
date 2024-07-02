@@ -12,7 +12,7 @@ class PPO(Algorithm):
         batch_size    = 64,
         clipcoef      = .2, 
         vfcoef        = .5, 
-        entcoef       = .1
+        entcoef       = .0
     ): 
         self.trainer       = trainer
         self.max_grad_norm = max_grad_norm
@@ -49,10 +49,13 @@ class PPO(Algorithm):
                 self.optimizer.zero_grad()
         
                 result  = self.trainer.agent.get_action_and_value(observation = batch["observations"], action = batch["actions"])
+                result  = {"actions" : result[0], "logprobs":result[1], "entropy":result[2], "values":result[3].squeeze(-1)}
+                
+        
                 lossval = loss(new = result, old = batch, clipcoef = self.clipcoef, vfcoef = self.vfcoef, entcoef = self.entcoef)
                 lossval.backward()
 
-                torch.nn.utils.clip_grad_norm_(self.trainer.agent.critic.parameters(), self.max_grad_norm)
+                torch.nn.utils.clip_grad_norm_(self.trainer.agent.parameters(), self.max_grad_norm)
                 self.optimizer.step()
         
                 for callback in self.trainer.callbacks: callback(**{k:v for k,v in locals().items() if k != "self"})
@@ -62,11 +65,11 @@ class PPO(Algorithm):
 
 @algorithm.group(invoke_without_command=True)
 @click.option("--batch-size"    , "batch_size"    , type=int   , default=256)
-@click.option("--max-grad-norm" , "max_grad_norm" , type=float , default=1)
+@click.option("--max-grad-norm" , "max_grad_norm" , type=float , default=.5)
 @click.option("--epochs"        , "epochs"        , type=int   , default=4)
 @click.option("--clip-coef"     , "clipcoef"      , type=float , default=.2)
 @click.option("--vf-coef"       , "vfcoef"        , type=float , default=.5)
-@click.option("--ent-coef"      , "entcoef"       , type=float , default=.1)
+@click.option("--ent-coef"      , "entcoef"       , type=float , default=.0)
 @click.pass_obj
 def ppo(trainer, batch_size, epochs, max_grad_norm, clipcoef, vfcoef, entcoef):
     if not hasattr(trainer, "algorithm"):

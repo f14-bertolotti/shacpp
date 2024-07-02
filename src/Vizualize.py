@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation
 import matplotlib, numpy, torch, click
+import tqdm
+
+from moviepy.editor import ImageSequenceClip
 
 @click.command()
 @click.pass_obj
@@ -15,39 +18,46 @@ import matplotlib, numpy, torch, click
 def viz(trainer, steps, uselogits, xlim, ylim, interval, show, outputpath):
 
     # get test trajectory 
-    observations, current_observation = [], trainer.environment.reset() 
-    for step in range(0, steps):
-        with torch.no_grad(): agent_result = trainer.agent.get_action(current_observation)
+    frames, observations, current_observation = [], [], torch.stack(trainer.environment.reset()).transpose(0,1) 
 
-        environment_result  = trainer.environment.step(current_observation,agent_result["logits"] if uselogits else agent_result["actions"])
-        current_observation = environment_result["next_observations"]
+    for step in tqdm.tqdm(range(0, steps)):
+        with torch.no_grad(): agent_result = trainer.agent.get_action(trainer.environment.normalize(current_observation.unsqueeze(0)).squeeze(0))
+        
+        actions = agent_result["logits"] if uselogits else agent_result["actions"]
+        actions = actions.transpose(0,1)
+
+        next_observations, rewards, done, info  = trainer.environment.step(actions)
+        current_observation = torch.stack(next_observations).transpose(0,1)
+        frames.append(trainer.environment.render(mode="rgb_array"))
         observations.append(current_observation.cpu().squeeze(0).detach())
-    
-    observations = torch.stack(observations)
+   
+    clip = ImageSequenceClip(frames, fps=30)
+    clip.write_gif(f'play.gif', fps=30)
+    #observations = torch.stack(observations)
 
-    # plot said trajectory
-    fig, ax = plt.subplots()
+    ## plot said trajectory
+    #fig, ax = plt.subplots()
 
-    # this is highly specific for the environment, should be refactored
-    scatterplot = ax.scatter(
-        x = observations[0,:,0].numpy(),
-        y = observations[0,:,1].numpy(),
-        color = "black"
-    )
-    
-    ax.set_xlim(*xlim)
-    ax.set_ylim(*ylim)
-    
-    def update(frame):
-        x = observations[frame,:,0]
-        y = observations[frame,:,1]
-        data = numpy.stack([x, y]).T
-        scatterplot.set_offsets(data)
-        return scatterplot
-    
-    animation = matplotlib.animation.FuncAnimation(fig=fig, func=update, frames=observations.size(0), interval=interval)
-    if outputpath: animation.save(outputpath)
-    if show: plt.show()
+    ## this is highly specific for the environment, should be refactored
+    #scatterplot = ax.scatter(
+    #    x = observations[0,:,0].numpy(),
+    #    y = observations[0,:,1].numpy(),
+    #    color = "black"
+    #)
+    #
+    #ax.set_xlim(*xlim)
+    #ax.set_ylim(*ylim)
+    #
+    #def update(frame):
+    #    x = observations[frame,:,0]
+    #    y = observations[frame,:,1]
+    #    data = numpy.stack([x, y]).T
+    #    scatterplot.set_offsets(data)
+    #    return scatterplot
+    #
+    #animation = matplotlib.animation.FuncAnimation(fig=fig, func=update, frames=observations.size(0), interval=interval)
+    #if outputpath: animation.save(outputpath)
+    #if show: plt.show()
 
 
 

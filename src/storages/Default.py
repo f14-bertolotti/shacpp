@@ -3,11 +3,11 @@ import click, torch
 
 
 class Default:
-    def __init__(self):
-        self.clear()
+    def __init__(self, dictionary=dict()):
+        self.dictionary = dictionary
+
     def clear(self):
-        self.dictionary = dict()
-        self.length = 0
+        self.dictionary.clear()
 
     def append(self,dictionary):
         for k,v in dictionary.items():
@@ -15,7 +15,7 @@ class Default:
             else: self.dictionary[k] = [v]
 
     def __len__(self):
-        return self.dictionary["observations"].size(0)
+        return list(self.dictionary.items()).pop()[1].size(0)
 
     def stack(self):
         for k,v in self.dictionary.items(): self.dictionary[k] = torch.stack(v)
@@ -25,8 +25,8 @@ class Default:
         for k,v in self.dictionary.items(): self.dictionary[k] = torch.cat(v, dim=0)
         return self
 
-    def flatten(self):
-        for k,v in self.dictionary.items(): self.dictionary[k] = v.flatten(0,1)
+    def flatten(self,*args):
+        for k,v in self.dictionary.items(): self.dictionary[k] = v.flatten(*args)
         return self
 
     def detach(self):

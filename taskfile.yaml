@@ -1,7 +1,7 @@
 version: '3'
 
 env:
-  PYTHON: /usr/bin/python3
+  PYTHON: /usr/bin/python3.11
   DEVICE: cuda:0
 
 tasks:
@@ -17,7 +17,7 @@ tasks:
       - venv/bin/python3 -m pip install -r requirements.txt
       - touch venv/.builded
 
-  ppo:
+  ppo-scattered:
     deps: 
       - dependencies
     sources:
@@ -31,7 +31,7 @@ tasks:
         cli agent       transformer-agent
         cli environment scattered
         cli algorithm   ppo 
-        cli algorithm   ppo trajectory default 
+        cli algorithm   ppo trajectory default --steps 32
         cli algorithm   ppo optimizer  adam
         cli algorithm   ppo scheduler  cosine
         cli logger      file --path models/ppo/train.log
@@ -54,11 +54,11 @@ tasks:
       - venv/bin/python3 src/cli.py
         cli storage     default
         cli agent       transformer-agent
-        cli environment scattered-learnable-reward --envs 256
+        cli environment scattered-learnable-reward 
         cli environment scattered-learnable-reward reward transformer-reward
         cli environment scattered-learnable-reward optimizer adam --learning-rate 0.0001
         cli environment scattered-learnable-reward scheduler constant
-        cli algorithm   shac --batch-size 1024 
+        cli algorithm   shac 
         cli algorithm   shac trajectory default 
         cli algorithm   shac trajectory optimizer adam --learning-rate 0.0005
         cli algorithm   shac trajectory scheduler constant 
@@ -71,6 +71,33 @@ tasks:
         cli train 
       - cp ./taskfile.yaml models/shac-learnable-reward/
       - touch models/shac-learnable-reward/.trained
+
+  ppo-dispersion:
+    deps: 
+      - dependencies
+    sources:
+      - src/**/*.py
+    generates:
+      - models/ppo-dispersion/.trained
+    cmds:
+      - mkdir -p models/ppo-dispersion
+      - venv/bin/python3 src/cli.py
+        cli storage     default
+        cli agent       mlp-agent --observation-size 13 --action-size 2 
+        cli environment dispersion --envs 512 --grad-enabled False --agents 3
+        cli algorithm   ppo --batch-size 2048 --epochs 4
+        cli algorithm   ppo trajectory default --steps 64
+        cli algorithm   ppo optimizer  adam --learning-rate 0.001
+        cli algorithm   ppo scheduler  constant
+        cli logger      file --path models/ppo-dispersion/train.log
+        cli callback    dispersion
+        cli callback    checkpointer --path models/ppo-dispersion/agent.pkl --utc 10
+        cli save-configuration --path models/ppo-dispersion/configuration.json
+        cli train --epochs 1000000
+      - cp ./taskfile.yaml models/ppo-dispersion/
+      - touch models/ppo-dispersion/.trained
+
+
 
   ppo-learnable-reward:
     deps: 
