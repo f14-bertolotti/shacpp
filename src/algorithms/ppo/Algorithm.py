@@ -49,6 +49,9 @@ class PPO(Algorithm):
                 self.optimizer.zero_grad()
         
                 result  = self.trainer.agent.get_action_and_value(observation = batch["observations"], action = batch["actions"])
+                result  = {"actions" : result[0], "logprobs":result[1], "entropy":result[2], "values":result[3].squeeze(-1)}
+                
+        
                 lossval = loss(new = result, old = batch, clipcoef = self.clipcoef, vfcoef = self.vfcoef, entcoef = self.entcoef)
                 lossval.backward()
 
@@ -66,7 +69,7 @@ class PPO(Algorithm):
 @click.option("--epochs"        , "epochs"        , type=int   , default=4)
 @click.option("--clip-coef"     , "clipcoef"      , type=float , default=.2)
 @click.option("--vf-coef"       , "vfcoef"        , type=float , default=.5)
-@click.option("--ent-coef"      , "entcoef"       , type=float , default=.1)
+@click.option("--ent-coef"      , "entcoef"       , type=float , default=0)
 @click.pass_obj
 def ppo(trainer, batch_size, epochs, max_grad_norm, clipcoef, vfcoef, entcoef):
     if not hasattr(trainer, "algorithm"):

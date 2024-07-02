@@ -1,17 +1,20 @@
 import torch
 
 @torch.no_grad()
-def compute_advantages(observation, values, rewards, agent, gamma, gaelambda):
+def compute_advantages(next_obs, next_done, values, rewards, dones, agent, gamma, gaelambda, steps):
+    next_value = agent.get_value(next_obs)["values"].flatten()
     advantages = torch.zeros_like(rewards)
-    steps      = rewards.size(0)
-
     lastgaelam = 0
-    next_value = agent.get_value(observation)["values"].reshape(1, -1)
+
     for t in reversed(range(steps)):
-        nextvalues = next_value if t == steps - 1 else values[t + 1]
-        delta = rewards[t] + gamma * nextvalues - values[t]
-        advantages[t] = lastgaelam = delta + gamma * gaelambda  * lastgaelam
 
+        if t == steps - 1:
+            nextnonterminal = 1.0 - next_done.float()
+            nextvalues = next_value
+        else:
+            nextnonterminal = 1.0 - dones[t + 1].float()
+            nextvalues = values[t + 1]
+    
+        delta = rewards[t] + gamma * nextvalues * nextnonterminal - values[t]
+        advantages[t] = lastgaelam = delta + gamma * gaelambda * nextnonterminal * lastgaelam
     return advantages
-
-
