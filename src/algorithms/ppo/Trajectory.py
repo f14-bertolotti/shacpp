@@ -6,8 +6,8 @@ obs_size = 13
 envs = 512
 
 class Trajectory:
-    def __init__(self, gamma=.99, gaelambda=.95, steps=64):
-        self.gamma, self.gaelambda, self.steps = gamma, gaelambda, steps
+    def __init__(self, gamma=.99, gaelambda=.95, steps=64, feedback=False):
+        self.gamma, self.gaelambda, self.steps, self.feedback = gamma, gaelambda, steps, feedback
 
         self.obs      = torch.zeros((self.steps, agents, envs, obs_size)).to("cuda:0")
         self.actions  = torch.zeros((self.steps, agents, envs, 2)).to("cuda:0")
@@ -19,7 +19,7 @@ class Trajectory:
     def __call__(self, environment, agent, storage):
 
         # TRY NOT TO MODIFY: start the game
-        next_obs = environment.reset(prev=self.obs[-1], dones=self.dones[-1])
+        next_obs = environment.reset(prev=self.obs[-1], dones=self.dones[-1]) if self.feedback else environment.reset()
         next_done = torch.zeros(envs).to("cuda:0")
 
         for step in range(0, self.steps):
@@ -34,11 +34,13 @@ class Trajectory:
             self.actions[step] = action
             self.logprobs[step] = logprob
 
-            next_obs, reward, done, info = environment.env.step(action)
+            next_obs, reward, done, info = environment.step(action)
             self.rewards[step] = torch.stack(reward)
             print(self.rewards.sum())
             next_obs, next_done = next_obs, done
 
+        environment.compute_statistics(self.obs)
+        self.obs = environment.normalize(self.obs)
 
         obs      = self.obs       .reshape ((self.steps, agents * envs, obs_size))
         actions  = self.actions   .reshape ((self.steps, agents * envs, 2))
@@ -78,50 +80,6 @@ class Trajectory:
         return storage
 
 
-
-        #storage.clear()
-        #observation = environment.reset()
-        #for _ in range(0, self.steps):
-        #
-        #    with torch.no_grad():
-        #        agent_result = agent.get_action_and_value(observation = observation)
-        #    
-        #    envir_result = environment.step(observation, agent_result["actions"])
-        #    next_obs  = envir_result["next_observations"]
-        #    next_done = envir_result["done"]
-        #    
-        #    storage.append(envir_result)
-        #    storage.append(agent_result)
-
-        #    print(sum(list(map(lambda x:x.mean(), storage.dictionary["rewards"])))/self.steps)
-    
-        #storage.stack()
-        #print(storage);print()
-        #storage.flatten(1,2)
-        #print(storage);print()
-
-        #storage.dictionary["advantages"] = utils.compute_advantages(
-        #    next_obs    = next_obs,
-        #    next_done   = next_done,
-        #    values      = storage.dictionary["values"],
-        #    rewards     = storage.dictionary["rewards"],
-        #    dones       = storage.dictionary["done"],
-        #    agent       = agent,
-        #    gamma       = self.gamma,
-        #    gaelambda   = self.gaelambda,
-        #    steps       = self.steps
-        #)
-        #
-        #storage.dictionary["returns"] = utils.compute_returns(
-        #    values     = storage.dictionary["values"], 
-        #    advantages = storage.dictionary["advantages"],
-        #)
-
-        #print(storage);print()
-
-        #return storage.flatten(0,1).detach()
-
-
 @ppo.group()
 def trajectory(): pass
 
@@ -129,12 +87,14 @@ def trajectory(): pass
 @click.option("--gamma"     , "gamma"     , type=float , default=.99)
 @click.option("--gaelambda" , "gaelambda" , type=float , default=.95)
 @click.option("--steps"     , "steps"     , type=int   , default=64)
+@click.option("--feedback"  , "feedback"  , type=bool  , default=False)
 @click.pass_obj
-def default(trainer, gamma, gaelambda, steps):
+def default(trainer, gamma, gaelambda, steps, feedback):
     trainer.algorithm.set_trajectory(
         Trajectory( 
             steps     = steps,
             gamma     = gamma,
-            gaelambda = gaelambda
+            gaelambda = gaelambda,
+            feedback  = feedback
         )
     )

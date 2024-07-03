@@ -1,6 +1,35 @@
 from environments import environment
 import random, torch, click, vmas
 
+class RunningMeanStd():
+    # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+    def __init__(self, epsilon=1e-4, shape=(), device="cuda:0"):
+        self.mean = torch.zeros(shape, device=device)
+        self.var = torch.ones(shape, device=device)
+        self.count = epsilon
+
+    def update(self, x):
+        batch_mean = x.mean(0)
+        batch_var = x.var(0)
+        batch_count = x.shape[0]
+        self.update_from_moments(batch_mean, batch_var, batch_count)
+
+    def update_from_moments(self, batch_mean, batch_var, batch_count):
+        self.mean, self.var, self.count = update_mean_var_count_from_moments(
+            self.mean, self.var, self.count, batch_mean, batch_var, batch_count)
+
+def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var, batch_count):
+    delta = batch_mean - mean
+    tot_count = count + batch_count
+
+    new_mean = mean + delta * batch_count / tot_count
+    m_a = var * count
+    m_b = batch_var * batch_count
+    M2 = m_a + m_b + torch.square(delta) * count * batch_count / tot_count
+    new_var = M2 / tot_count
+    new_count = tot_count
+
+    return new_mean, new_var, new_count
 
 class Dispersion:
 
@@ -8,7 +37,7 @@ class Dispersion:
         self,
         envs               = 64,
         agents             = 5,
-        device             = "cuda",
+        device             = "cuda:0",
         continuous_actions = True,
         wrapper            = None, 
         max_steps          = None, 
@@ -33,21 +62,24 @@ class Dispersion:
             grad_enabled       = grad_enabled,
             n_agents           = agents,
         )
+        self.rms = RunningMeanStd(shape=self.get_observation_space()[0].shape, device=device)
 
         print(self.get_observation_space())
         print(self.get_action_space())
 
-    def step(self, observation, action):
-        #print("actions",action.shape)
+    def step(self, action):
         next_observation, reward, done, info = self.env.step(action)
-        #print(torch.stack(reward).shape)
-        #print(torch.stack(next_observation).shape)
-        return {
-            "observations"      : observation,
-            "next_observations" : torch.stack(next_observation),
-            "rewards"           : torch.stack(reward),
-            "done"              : done.unsqueeze(0).repeat(self.agents, 1)
-        }
+        return next_observation, reward, done, info
+    
+    @torch.no_grad
+    def compute_statistics(self, observations):
+        pass
+        #self.rms.update(observations.view(-1,observations.size(-1)))
+
+    @torch.no_grad
+    def normalize(self, obs):
+        return obs
+        return torch.clip((obs - self.rms.mean) / torch.sqrt(self.rms.var + 1e-4), -10, 10)
 
     @torch.no_grad
     def reset(self, prev=None, dones=None):
@@ -87,8 +119,9 @@ class Dispersion:
 @click.option("--reset-prb"    , "reset_prb"    , type=float, default=0.15)
 @click.option("--max_steps"    , "max_steps"    , type=int  , default=None)
 @click.option("--grad-enabled" , "grad_enabled" , type=bool , default=True)
+@click.option("--state-dict-path", "state_dict_path"  , type=click.Path(), default=None)
 @click.pass_obj
-def dispersion(trainer, envs, agents, seed, max_steps, reset_prb, grad_enabled, device):
+def dispersion(trainer, envs, agents, seed, max_steps, reset_prb, grad_enabled, device, state_dict_path):
     trainer.set_environment(
         Dispersion(
             envs   =   envs,
@@ -100,5 +133,4 @@ def dispersion(trainer, envs, agents, seed, max_steps, reset_prb, grad_enabled, 
             grad_enabled = grad_enabled
         )
     )
-
-
+    if state_dict_path: trainer.environment.rms = torch.load(state_dict_path)["rms"]

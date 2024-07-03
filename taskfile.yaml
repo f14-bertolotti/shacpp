@@ -83,15 +83,15 @@ tasks:
       - mkdir -p models/ppo-dispersion
       - venv/bin/python3 src/cli.py
         cli storage     default
-        cli agent       transformer-agent --observation-size 13 --action-size 2 --layers 2
-        cli environment dispersion --reset-prb .333 --envs 512 --grad-enabled False --agents 3
-        cli algorithm   ppo --batch-size 8192 --epochs 4
-        cli algorithm   ppo trajectory default --steps 32
+        cli agent       mlp-agent --observation-size 13 --action-size 2 
+        cli environment dispersion --envs 512 --grad-enabled False --agents 3
+        cli algorithm   ppo --batch-size 2048 --epochs 4
+        cli algorithm   ppo trajectory default --steps 64
         cli algorithm   ppo optimizer  adam --learning-rate 0.001
         cli algorithm   ppo scheduler  constant
         cli logger      file --path models/ppo-dispersion/train.log
         cli callback    dispersion
-        cli callback    checkpointer --path models/ppo-dispersion/agent.pkl --utc 1
+        cli callback    checkpointer --path models/ppo-dispersion/agent.pkl --utc 10
         cli save-configuration --path models/ppo-dispersion/configuration.json
         cli train --epochs 1000000
       - cp ./taskfile.yaml models/ppo-dispersion/

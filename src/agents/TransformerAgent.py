@@ -52,6 +52,9 @@ class TransformerAgent(torch.nn.Module):
 
         self.actor_logstd = torch.nn.Parameter(torch.zeros(1, action_size)).to(device)
 
+
+
+
     def get_value(self, x):
         flag = type(x) == list
         x = torch.stack(x).transpose(0,1) if type(x) == list else x

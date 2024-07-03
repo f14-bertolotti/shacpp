@@ -19,15 +19,15 @@ def viz(trainer, steps, uselogits, xlim, ylim, interval, show, outputpath):
 
     # get test trajectory 
     frames, observations, current_observation = [], [], torch.stack(trainer.environment.reset()).transpose(0,1) 
+
     for step in tqdm.tqdm(range(0, steps)):
-        with torch.no_grad(): agent_result = trainer.agent.get_action(current_observation)
+        with torch.no_grad(): agent_result = trainer.agent.get_action(trainer.environment.normalize(current_observation.unsqueeze(0)).squeeze(0))
         
         actions = agent_result["logits"] if uselogits else agent_result["actions"]
         actions = actions.transpose(0,1)
 
-        environment_result  = trainer.environment.step(current_observation,actions)
-        print(environment_result["done"])
-        current_observation = environment_result["next_observations"].transpose(0,1)
+        next_observations, rewards, done, info  = trainer.environment.step(actions)
+        current_observation = torch.stack(next_observations).transpose(0,1)
         frames.append(trainer.environment.render(mode="rgb_array"))
         observations.append(current_observation.cpu().squeeze(0).detach())
    

@@ -7,27 +7,53 @@ import numpy as np
 
 from torch.distributions.normal import Normal
 
-class MLPAgent(nn.Module):
-    def __init__(self, observation_size, action_size, hidden_size, device):
+class MixerAgent(nn.Module):
+    def __init__(self, observation_size, action_size,device):
         super().__init__()
+        self.positions = torch.nn.Embedding(256, 64).to(device)
         agents = 3
         self.critic = nn.Sequential(
-            utils.Lambda(lambda x:x.flatten(1,2)),
-            layer_init(nn.Linear(observation_size * agents, hidden_size, device=device)),
+            layer_init(nn.Linear(observation_size, 64)).to(device),
+            utils.Lambda(lambda x:x + self.positions(torch.arange(x.size(1), device=device, dtype=torch.long))),
             nn.Tanh(),
-            layer_init(nn.Linear(hidden_size, hidden_size, device=device)),
+
+            utils.Lambda(lambda x:x.transpose(1,2)),
+            layer_init(nn.Linear(agents, 64)).to(device),
             nn.Tanh(),
-            layer_init(nn.Linear(hidden_size, agents, device=device), std=1.0),
+            utils.Lambda(lambda x:x.transpose(1,2)),
+            
+            layer_init(nn.Linear(64, 64)).to(device),
+            nn.Tanh(),
+
+            utils.Lambda(lambda x:x.transpose(1,2)),
+            layer_init(nn.Linear(64, agents)).to(device),
+            nn.Tanh(),
+            utils.Lambda(lambda x:x.transpose(1,2)),
+
+            utils.Lambda(lambda x:x),
+
+            layer_init(nn.Linear(64, 1), std=1.0).to(device),
         )
         self.actor_mean = nn.Sequential(
-            utils.Lambda(lambda x:x.flatten(1,2)),
-            layer_init(nn.Linear(observation_size * agents, hidden_size, device=device)),
+            layer_init(nn.Linear(observation_size, 64)).to(device),
+            utils.Lambda(lambda x:x + self.positions(torch.arange(x.size(1), device=device, dtype=torch.long))),
             nn.Tanh(),
-            layer_init(nn.Linear(hidden_size, hidden_size, device=device)),
+
+            utils.Lambda(lambda x:x.transpose(1,2)),
+            layer_init(nn.Linear(agents, 64)).to(device),
             nn.Tanh(),
-            layer_init(nn.Linear(hidden_size, action_size * agents, device=device), std=0.01),
+            utils.Lambda(lambda x:x.transpose(1,2)),
+
+            layer_init(nn.Linear(64, 64)).to(device),
             nn.Tanh(),
-            utils.Lambda(lambda x:x.view(x.size(0),agents,action_size)),
+
+            utils.Lambda(lambda x:x.transpose(1,2)),
+            layer_init(nn.Linear(64, agents)).to(device),
+            nn.Tanh(),
+            utils.Lambda(lambda x:x.transpose(1,2)),
+            
+            layer_init(nn.Linear(64, action_size), std=0.01).to(device),
+            nn.Tanh(),
         )
         self.actor_logstd = nn.Parameter(torch.zeros(1, action_size)).to(device)
 
@@ -65,16 +91,16 @@ class MLPAgent(nn.Module):
 @agent.group(invoke_without_command=True)
 @click.option("--observation-size" , "observation_size" , type=int , default=2)
 @click.option("--action-size"      , "action_size"      , type=int , default=2)
-@click.option("--hidden-size"      , "hidden_size"      , type=int , default=64)
+@click.option("--embedding-size"   , "embedding_size"   , type=int , default=64)
+@click.option("--shared"           , "shared"           , type=bool, default=True)
 @click.option("--device"           , "device"           , type=str , default="cuda:0")
 @click.option("--state-dict-path"  , "state_dict_path"  , type=click.Path(), default=None)
 @click.pass_obj
-def mlp_agent(trainer, observation_size, action_size, hidden_size, device, state_dict_path):
+def mixer_agent(trainer, observation_size, action_size, embedding_size, shared, device, state_dict_path):
     trainer.set_agent(
-        MLPAgent(
+        MixerAgent(
             observation_size = observation_size,
             action_size      = action_size,
-            hidden_size      = hidden_size,
             device           = device
         )
     )
