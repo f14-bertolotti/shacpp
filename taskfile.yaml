@@ -77,73 +77,36 @@ tasks:
       - dependencies
     sources:
       - src/**/*.py
+    vars:
+      FOLDER   : ppo-dispersion
     generates:
-      - models/ppo-dispersion/.trained
+      - models/{{.FOLDER}}/.trained
     cmds:
-      - mkdir -p models/ppo-dispersion
+      - mkdir -p models/{{.FOLDER}}
       - venv/bin/python3 src/cli.py
-        cli storage     default
-        cli agent       mlp-agent --observation-size 13 --action-size 2 
-        cli environment dispersion --envs 512 --grad-enabled False --agents 3
-        cli algorithm   ppo --batch-size 2048 --epochs 4
-        cli algorithm   ppo trajectory default --steps 64
-        cli algorithm   ppo optimizer  adam --learning-rate 0.001
-        cli algorithm   ppo scheduler  constant
-        cli logger      file --path models/ppo-dispersion/train.log
-        cli callback    dispersion
-        cli callback    checkpointer --path models/ppo-dispersion/agent.pkl --utc 10
-        cli save-configuration --path models/ppo-dispersion/configuration.json
-        cli train --epochs 1000000
-      - cp ./taskfile.yaml models/ppo-dispersion/
-      - touch models/ppo-dispersion/.trained
+        cli environment dispersion --envs 512 --agents 3 --seed 42
+        cli agent mlp-agent --shared false --layers 1 --hidden-size 64
+        cli algorithm ppo --batch-size 1024 --epochs 4
+        cli algorithm ppo trajectory default --reset-prb .33 --feedback true --steps 64
+        cli algorithm ppo optimizer  adam --learning-rate 0.001
+        cli algorithm ppo scheduler  cosine --lrmin 0.0001 --tmax 50
+        cli callback trainlog           --path models/{{.FOLDER}}/train.log
+        cli callback evaluate           --path models/{{.FOLDER}}/valid.log --ete 10 --steps 64 --size 512
+        cli callback checkpointer       --path models/{{.FOLDER}}/agent.pkl --ete 10
+        cli callback save-configuration --path models/{{.FOLDER}}/configuration.json
+        cli train --episodes 1000 --seed 42
+      - cp ./taskfile.yaml models/{{.FOLDER}}/
+      - touch models/{{.FOLDER}}/.trained
 
-
-
-  ppo-learnable-reward:
-    deps: 
-      - dependencies
-    sources:
-      - src/**/*.py
-    generates:
-      - models/ppo-lernable-reward/.trained
-    cmds:
-      - mkdir -p models/ppo-learnable-reward
-      - venv/bin/python3 src/cli.py
-        cli agent transformer-agent
-        cli environment scattered-learnable-reward
-        cli environment reward transformer-reward 
-        cli loss ppo
-        cli optimizer adam
-        cli scheduler cosine
-        cli trajectory ppo
-        cli storage default
-        cli logger file --path models/ppo-learnable-reward/train.log
-        cli callback base-learnable-reward
-        cli callback checkpointer --path models/ppo-learnable-reward/agent.pkl 
-        cli save-configuration --path models/ppo-learnable-reward/configuration.json
-        cli train
-      - cp ./taskfile.yaml models/ppo-learnable-reward/
-      - touch models/ppo-learnable-reward/.trained
-
-  viz:
-    deps: [dependencies]
-    cmds:
-      - venv/bin/python3 src/cli.py
-        cli agent transformer-agent --state-dict-path models/ppo/agent.pkl
-        cli environment scattered --envs 1
-        cli viz --show True
-
-  fig:
+  ppo-dispersion-viz:
     deps:
       - dependencies
+    sources:
+      - models/**/*.log
+    generates:
+      - models/ppo-dispersion.png
+    vars:
+      SAMPLES: '{{default 1000 .SAMPLES}}'
     cmds:
-      - jet init --shape 1 1
-        jet line --samples 1000 --input-path models/ppo/train.log                   --x id --y message/reward      --label ppo
-        jet line --samples 1000 --input-path models/ppo-learnable-reward/train.log  --x id --y message/real_reward --label ppo-learnable-reward
-        jet line --samples 1000 --input-path models/shac-learnable-reward/train.log --x id --y message/real_reward --label shac-learnable-reward
-        jet plot --show True
-
-  clean-ppo:
-    cmds:
-      - rm -rf models/ppo
+      - SAMPLES={{.SAMPLES}}; eval "jet init --shape 1 1 "$(find models -maxdepth 1 -type d -name 'ppo-dispersion-*' -printf " jet line --samples ${SAMPLES} --input-path %p/train.log --x message/episode --y message/reward --label %p")" jet plot --show True --output-path models/ppo-dispersion.png"
 
