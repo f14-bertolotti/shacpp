@@ -3,8 +3,6 @@ from Vizualize import viz
 from environments import environment
 from algorithms   import   algorithm
 from callbacks    import    callback
-from storages     import     storage
-from loggers      import      logger
 from agents       import       agent
 import jsonpickle
 import click
@@ -27,8 +25,6 @@ def save_configuration(trainer, path):
 cli.add_command(environment)
 cli.add_command(algorithm)
 cli.add_command(callback)
-cli.add_command(storage)
-cli.add_command(logger)
 cli.add_command(agent)
 
 # put the cli group command as last command in the command tree
