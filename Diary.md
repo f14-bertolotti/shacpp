@@ -15,3 +15,27 @@ Dispersion , 3 agents , envs 512, bs 8192 , achieve 1.6 out of 3 goals , agents 
 
 
 
+== Shared Reward vs Per Agent Reward
+A per agent rewards favors a competitive behavior
+A shared reward favors a cooperative behavior
+
+When using a agent based reward, in the dispersion environment, agents go all
+towards the nearest reward rather than split to achieve all the rewards
+
+When using a shared reward, in the dispersion environment, the behavior of agents that did not contributed to the achievement 
+are also promoted. To end this results in only one agent learning a good behavior
+
+== Dispersion environment
+At the start of the dispersion environment all agents start at the same position
+with the same observation.
+However, the agents get different rewards. 
+With agents that share the policy this causes problems
+as for no reason one action is good or bad.
+
+== Transformer
+The transformer does not work when we use a single embedding per observation vector.
+Instead, it works incredibly well, when we use an embedding per each observation in the observation vector.
+
+Probably, this is caused by the fact that computation happens between attention heads
+and having only an attention `agents x agents` (instead of `(agents · obs_size)`) does not 
+allow for much computation.

@@ -7,8 +7,10 @@ import jsonpickle, click
 @click.pass_obj
 def save_configuration(trainer, path):
     def wrapper(episode, **kwargs):
-        if episode == 0: 
+        if episode == 1: 
             with open(path, "w") as file: 
                 file.write(str(jsonpickle.encode(trainer,indent=4)))
+
+        return {}
     trainer.add_callback(wrapper)
 

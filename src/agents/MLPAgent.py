@@ -21,7 +21,7 @@ class MLPAgent(torch.nn.Module):
             torch.nn.Flatten(1,2),
             utils.layer_init(torch.nn.Linear(observation_size * self.agents, hidden_size, device=device)),
             torch.nn.Tanh(),
-            *[utils.layer_init(torch.nn.Linear(hidden_size, hidden_size, device=device)) for layer in range(layers)],
+            *[utils.layer_init(torch.nn.Linear(hidden_size, hidden_size, device=device)) for _ in range(layers)],
             torch.nn.Tanh(),
         )
         
@@ -36,13 +36,13 @@ class MLPAgent(torch.nn.Module):
         )
 
         # actor architecture
-        self.actor_mean = torch.nn.Sequential(
+        self.actor = torch.nn.Sequential(
             self.actor_base,
             utils.layer_init(torch.nn.Linear(hidden_size, action_size * self.agents, device=device), std=0.01),
             torch.nn.Tanh(),
             utils.Lambda(lambda x:x.view(x.size(0),self.agents,action_size)),
         )
-        self.actor_logstd = torch.nn.Parameter(torch.zeros(1, action_size)).to(device)
+        self.actor.logstd = torch.nn.Parameter(torch.zeros(1, action_size)).to(device)
 
     def get_value(self, x):
         return {"values" : self.critic(x)}
@@ -50,8 +50,8 @@ class MLPAgent(torch.nn.Module):
     def get_action(self, x, action=None):
         action_mean = self.actor_mean(x)
         action_logstd = self.actor_logstd.expand_as(action_mean)
-        action_std = torch.exp(action_logstd)
-        probs = torch.distributions.normal.Normal(action_mean, action_std)
+        action_std    = torch.exp(action_logstd)
+        probs         = torch.distributions.normal.Normal(action_mean, action_std)
 
         if action is None: action = torch.clamp(probs.rsample(),-1,1)
         
@@ -66,21 +66,23 @@ class MLPAgent(torch.nn.Module):
         return self.get_action(observation, action=action) | self.get_value(observation)
 
 
-
 @agent.group(invoke_without_command=True)
-@click.option("--hidden-size"     , "hidden_size"     , type=int          , default=64)
-@click.option("--shared"          , "shared"          , type=bool         , default=False)
-@click.option("--layers"          , "layers"          , type=int          , default=1)
-@click.option("--state-dict-path" , "state_dict_path" , type=click.Path() , default=None)
+@click.option("--hidden-size"     , "hidden_size"     , type=int          , default=64    , help="Hidden number of neurons.")
+@click.option("--shared"          , "shared"          , type=bool         , default=False , help="True if the first layers should be shared between critic and actor.")
+@click.option("--layers"          , "layers"          , type=int          , default=1     , help="Number of layer of the network.")
+@click.option("--state-dict-path" , "state_dict_path" , type=click.Path() , default=None  , help="Path to the agent to be loaded.")
+@click.option("--compile"         , "compile"         , type=bool         , default=True  , help="True if the agent should be compiled")
 @click.pass_obj
-def mlp_agent(trainer, hidden_size, layers, shared, state_dict_path):
+def mlp_agent(trainer, hidden_size, layers, shared, state_dict_path, compile):
+    compiler = torch.compile if compile else lambda x:x
     trainer.set_agent(
-        MLPAgent(
-            trainer     = trainer,
-            shared      = shared,
-            layers      = layers,
-            hidden_size = hidden_size,
-        )
+        compiler(MLPAgent(
+            trainer     = trainer     ,
+            shared      = shared      ,
+            layers      = layers      ,
+            hidden_size = hidden_size ,
+        ))
     )
+
 
     if state_dict_path: trainer.agent.load_state_dict(torch.load(state_dict_path)["agentsd"])

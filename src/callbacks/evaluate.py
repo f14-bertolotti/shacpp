@@ -12,22 +12,26 @@ def evaluate(trainer, steps, size, path, ete):
     file_logger = loggers.File(path)
 
     def wrapped(episode, **kwargs):
-        if episode % ete != 0:  return
+        if episode % ete != 0:  return {}
 
-        epochs  = math.ceil(size / trainer.environment.envs)
-        envs    = epochs * trainer.environment.envs
-        rewards = torch.zeros(envs , steps, trainer.environment.agents)
+        epochs  = math.ceil(size / trainer.environment.envirs)
+        envirs  = epochs * trainer.environment.envirs
+        rewards = torch.zeros(envirs , steps, trainer.environment.agents)
         
         for epoch in range(epochs):
             current_observation = trainer.environment.reset()
             for step in range(steps):
                 agent_result = trainer.agent.get_action(trainer.environment.normalize(current_observation))
                 envir_result = trainer.environment.step(agent_result["logits"])
-                rewards[trainer.environment.envs * epoch:trainer.environment.envs * (epoch+1), step] = envir_result["reward"]
+                rewards[trainer.environment.envirs * epoch:trainer.environment.envirs * (epoch+1), step] = envir_result["reward"]
                 current_observation = envir_result["observation"]
 
         avg_reward = rewards.sum(1).sum(1).mean().item()
         file_logger.log({"episode" : episode, "reward" : avg_reward})
+
+        return {
+            "eval_reward" : avg_reward
+        }
 
     trainer.add_callback(wrapped)
 
