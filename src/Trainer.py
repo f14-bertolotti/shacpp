@@ -25,10 +25,23 @@ class Trainer:
 
         trainer.algorithm.start()
 
-        for episode in (tbar:=tqdm.tqdm(range(1, episodes + 1))):
+        for episode in (bar:=tqdm.tqdm(range(1, episodes + 1))):
             train_result = trainer.algorithm.step(episode)
-            for callback in trainer.callbacks: callback(**locals())
 
+            # chain of callbacks to customize behavior at the end of every training step
+            # e.g. checkpointing, evaluation, tqdm bar modification.
+            callback_result = dict()
+            for callback in trainer.callbacks: 
+                callback_result = callback_result | callback(
+                    bar            = bar             ,
+                    seed           = seed            ,
+                    trainer        = trainer         ,
+                    episode        = episode         ,
+                    episodes       = episodes        ,
+                    train_result   = train_result    ,
+                    detect_anamaly = detect_anamaly  ,
+                    prev_result    = callback_result ,
+                ) 
         trainer.algorithm.end()
 
 

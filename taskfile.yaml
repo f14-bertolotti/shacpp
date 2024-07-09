@@ -60,7 +60,7 @@ tasks:
         cli environment scattered-learnable-reward scheduler constant
         cli algorithm   shac 
         cli algorithm   shac trajectory default 
-        cli algorithm   shac trajectory optimizer adam --learning-rate 0.0005
+        cli algorithm   shac trajectory optimizer adam --learning-rate 0.001
         cli algorithm   shac trajectory scheduler constant 
         cli algorithm   shac optimizer  adam --learning-rate 0.0001
         cli algorithm   shac scheduler  cosine --lrmin 0.000001
@@ -78,23 +78,25 @@ tasks:
     sources:
       - src/**/*.py
     vars:
-      FOLDER   : ppo-dispersion
+      FOLDER : '{{default "ppo-dispersion" .FOLDER}}'
     generates:
       - models/{{.FOLDER}}/.trained
     cmds:
       - mkdir -p models/{{.FOLDER}}
       - venv/bin/python3 src/cli.py
-        cli environment dispersion --envs 512 --agents 3 --seed 42
-        cli agent mlp-agent --shared false --layers 1 --hidden-size 64
-        cli algorithm ppo --batch-size 1024 --epochs 4
-        cli algorithm ppo trajectory default --reset-prb .33 --feedback true --steps 64
-        cli algorithm ppo optimizer  adam --learning-rate 0.001
-        cli algorithm ppo scheduler  cosine --lrmin 0.0001 --tmax 50
+        cli environment dispersion --envs 128 --agents 3 --seed 42 --shared-reward False
+        cli agent transformer-oc2e --compile True --memory-tokens 32 --layers 3 --embedding-size 128 --feedforward-size 256 --heads 4 --shared True
+        cli algorithm ppo --batch-size 2048 --epochs 5
+        cli algorithm ppo trajectory default --steps 48
+        cli algorithm ppo optimizer  adam --learning-rate 0.0001
+        cli algorithm ppo scheduler  constant
         cli callback trainlog           --path models/{{.FOLDER}}/train.log
         cli callback evaluate           --path models/{{.FOLDER}}/valid.log --ete 10 --steps 64 --size 512
         cli callback checkpointer       --path models/{{.FOLDER}}/agent.pkl --ete 10
         cli callback save-configuration --path models/{{.FOLDER}}/configuration.json
-        cli train --episodes 1000 --seed 42
+        cli callback save-best          --path models/{{.FOLDER}}/best.pkl
+        cli callback bar 
+        cli train --episodes 1000 --seed 42 
       - cp ./taskfile.yaml models/{{.FOLDER}}/
       - touch models/{{.FOLDER}}/.trained
 
@@ -108,5 +110,5 @@ tasks:
     vars:
       SAMPLES: '{{default 1000 .SAMPLES}}'
     cmds:
-      - SAMPLES={{.SAMPLES}}; eval "jet init --shape 1 1 "$(find models -maxdepth 1 -type d -name 'ppo-dispersion-*' -printf " jet line --samples ${SAMPLES} --input-path %p/train.log --x message/episode --y message/reward --label %p")" jet plot --show True --output-path models/ppo-dispersion.png"
+      - SAMPLES={{.SAMPLES}}; eval "jet init --shape 1 1 "$(find models -maxdepth 1 -type d -name 'ppo-dispersion-*' -printf " jet line --samples ${SAMPLES} --input-path %p/valid.log --x message/episode --y message/reward --label %p")" jet plot --show True --output-path models/ppo-dispersion.png"
 

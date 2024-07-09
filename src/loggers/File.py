@@ -13,6 +13,6 @@ class File:
         self.logid = 0
 
     def log(self, value):
-        self.logger.info(f"id\": {self.logid}, \"message\":" + str(value).replace("'","\""))
+        self.logger.info(f"\"id\": {self.logid}, \"message\":" + str(value).replace("'","\""))
         self.logid += 1
 
