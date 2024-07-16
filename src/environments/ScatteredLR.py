@@ -1,4 +1,4 @@
-from environments.rewards import reward, DummyReward
+from environments.rewards import reward, Dummy
 from environments import environment
 import torch, click
 from optimizers import add_adam_command
@@ -10,7 +10,7 @@ class ScatteredLR:
         self.envs, self.agents, self.device = envs, agents, device
         self.points = torch.tensor([[(i/9)*2-1,(j/9)*2-1] for j in range(10) for i in range(10)],dtype=torch.float32,device=device)
         self.loss = torch.nn.MSELoss()
-        self.rewardnn = DummyReward()
+        self.rewardnn = Dummy()
 
     def set_reward_nn(self, value):self.rewardnn  = value
     def set_optimizer(self, value):self.optimizer = value

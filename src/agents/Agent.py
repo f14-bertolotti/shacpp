@@ -1,4 +1,4 @@
-import torch, click
+import copy, torch, click
 
 @click.group()
 def agent(): pass
@@ -24,7 +24,7 @@ class Agent:
         probs         = torch.distributions.normal.Normal(action_mean, action_std)
 
         if action is None: action = torch.clamp(probs.rsample(),-1,1)
-        
+
         return {
             "logits"   : action_mean,
             "actions"  : action,

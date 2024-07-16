@@ -24,6 +24,8 @@ class TransformerOC2E(Agent, torch.nn.Module):
             feedforward_size = 256    ,
             heads            = 2      ,
             shared           = True   ,
+            actor_init_gain  = 1.41   ,
+            critic_init_gain = 1.41   ,
             activation       = "gelu"
         ):
 
@@ -67,7 +69,7 @@ class TransformerOC2E(Agent, torch.nn.Module):
                 torch.nn.LayerNorm(embedding_size, device=device),
                 self.critic_encoder,
                 utils.Lambda(lambda x: x[:,::observation_size,:]),
-                utils.layer_init(torch.nn.Linear(embedding_size, 1, device=device), std=1),
+                utils.layer_init(torch.nn.Linear(embedding_size, 1, device=device), std=actor_critic_gain),
                 utils.Lambda(lambda x:x.squeeze(-1)),
             ),
             actor = torch.nn.Sequential(
@@ -77,7 +79,7 @@ class TransformerOC2E(Agent, torch.nn.Module):
                 torch.nn.LayerNorm(embedding_size, device=device),
                 self.actor_encoder,
                 utils.Lambda(lambda x: x[:,::observation_size,:]),
-                utils.layer_init(torch.nn.Linear(embedding_size, action_size, device=device),std=.01),
+                utils.layer_init(torch.nn.Linear(embedding_size, action_size, device=device),std=actor_init_gain),
                 torch.nn.Tanh(),
             )
         )
@@ -88,18 +90,21 @@ class TransformerOC2E(Agent, torch.nn.Module):
 @agent.group(invoke_without_command=True)
 @Options.transformer
 @click.pass_obj
-def transformer_oc2e(trainer, layers, embedding_size, feedforward_size, heads, activation, shared, compile, state_dict_path):
+def transformer_oc2e(trainer, layers, embedding_size, feedforward_size, heads, activation, shared, compile, state_dict_path, actor_init_gain, critic_init_gain):
     compiler = torch.compile if compile else lambda x:x
 
     trainer.set_agent(
         compiler(TransformerOC2E(
-            trainer          = trainer,
-            layers           = layers,
-            embedding_size   = embedding_size,
-            feedforward_size = feedforward_size,
-            heads            = heads,
-            activation       = activation,
-            shared           = shared,
+            trainer          = trainer          ,
+            layers           = layers           ,
+            embedding_size   = embedding_size   ,
+            feedforward_size = feedforward_size ,
+            heads            = heads            ,
+            activation       = activation       ,
+            shared           = shared           ,
+            actor_init_gain  = actor_init_gain  ,
+            critic_init_gain = critic_init_gain
+ 
         ))
     )
 

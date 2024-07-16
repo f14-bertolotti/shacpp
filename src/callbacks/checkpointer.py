@@ -10,9 +10,9 @@ def checkpointer(trainer, path, ete):
     def wrapper(episode, **kwargs):
         if episode % ete == 0: 
             torch.save({
-                "agentsd" : trainer.agent.state_dict(),
-                "rms"     : trainer.environment.state_dict(),
-                "episode" : episode
+                "agentsd"  : trainer.agent.state_dict(),
+                "rms"      : trainer.environment.state_dict(),
+                "episode"  : episode
             }, path)
         return {}
 

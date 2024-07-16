@@ -1,12 +1,14 @@
 from algorithms.ppo import compute_advantages, compute_returns, ppo
+from algorithms import Options
 import click, torch 
 
 class Trajectory:
-    def __init__(self, trainer, gamma=.99, gaelm=.95, steps=64):
+    def __init__(self, trainer, gamma=.99, gaelm=.95, steps=64, utr=1):
     
         self.gamma = gamma
         self.gaelm = gaelm
         self.steps = steps
+        self.utr   =   utr
 
         self.device = trainer.environment.device
         self.envirs = trainer.environment.envirs
@@ -19,6 +21,8 @@ class Trajectory:
         self.dones    = torch.ones ((self.envirs , self.steps                                                         ), device=self.device, dtype=torch.bool)
         self.values   = torch.zeros((self.envirs , self.steps, self.agents                                            ), device=self.device)
 
+        self.rollouts = 0
+
     def reset_storage(self):
         """ reset storage into a full zero state """
         self.obs     .zero_()
@@ -29,10 +33,12 @@ class Trajectory:
         self.values  .zero_()
 
     def __call__(self, environment, agent):
-        self.reset_storage()
+        self.rollouts += 1
  
-        next_obs  = environment.reset()
-        next_done = torch.zeros(self.envirs, device=self.device)
+        next_obs  = environment.reset()                          if self.rollouts % self.utr == 0 else self.obs  [:,-1].clone()
+        next_done = torch.zeros(self.envirs, device=self.device) if self.rollouts % self.utr == 0 else self.dones[:,-1].clone()
+        
+        self.reset_storage()
 
         # unroll trajectories
         for step in range(0, self.steps):
@@ -82,16 +88,15 @@ class Trajectory:
 def trajectory(): pass
 
 @trajectory.group(invoke_without_command=True)
-@click.option("--gamma"     , "gamma"     , type=float , default=.99)
-@click.option("--gaelambda" , "gaelambda" , type=float , default=.95)
-@click.option("--steps"     , "steps"     , type=int   , default=64)
+@Options.trajectory
 @click.pass_obj
-def default(trainer, gamma, gaelambda, steps):
+def default(trainer, gamma, gaelambda, steps, utr):
     trainer.algorithm.set_trajectory(
         Trajectory( 
             trainer = trainer   ,
             steps   = steps     ,
             gamma   = gamma     ,
             gaelm   = gaelambda ,
+            utr     = utr       ,
         )
     )

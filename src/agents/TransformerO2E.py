@@ -13,6 +13,8 @@ class TransformerO2E(Agent, torch.nn.Module):
             heads            = 2      ,
             memory_tokens    = 0      ,
             shared           = True   ,
+            actor_init_gain   = 1.41  , 
+            critic_init_gain = 1.41   ,
             activation       = "gelu"
         ):
         torch.nn.Module.__init__(self)
@@ -55,7 +57,7 @@ class TransformerO2E(Agent, torch.nn.Module):
                 utils.Lambda(lambda x:x + self.critic_position(torch.arange(x.size(1), device=device, dtype=torch.long))),
                 torch.nn.LayerNorm(embedding_size, device=device),
                 self.critic_encoder,
-                utils.layer_init(torch.nn.Linear(embedding_size, 1, device=device), std=1),
+                utils.layer_init(torch.nn.Linear(embedding_size, 1, device=device), std=critic_init_gain),
                 utils.Lambda(lambda x:x[:,:agents,:]),
                 utils.Lambda(lambda x:x.squeeze(-1)),
             ),
@@ -65,31 +67,34 @@ class TransformerO2E(Agent, torch.nn.Module):
                 utils.Lambda(lambda x:x + self.actor_position(torch.arange(x.size(1), device=device, dtype=torch.long))),
                 torch.nn.LayerNorm(embedding_size, device=device),
                 self.actor_encoder,
-                utils.layer_init(torch.nn.Linear(embedding_size, action_size, device=device),std=.01),
+                utils.layer_init(torch.nn.Linear(embedding_size, action_size, device=device),std=actor_init_gain),
                 utils.Lambda(lambda x:x[:,:agents,:]),
                 torch.nn.Tanh(),
             )
         )
 
-        self.actor.logstd = torch.nn.Parameter(torch.zeros(1, action_size)).to(device)
+        self.actor.logstd = torch.nn.Parameter(torch.zeros(1, action_size).to(device))
 
 
 @agent.group(invoke_without_command=True)
 @Options.transformer
 @click.option("--memory-tokens", "memory_tokens", type=int, default=0, help="memory tokens to be added")
 @click.pass_obj
-def transformer_o2e(trainer, layers, embedding_size, feedforward_size, heads, activation, shared, compile, state_dict_path, memory_tokens):
+def transformer_o2e(trainer, layers, embedding_size, feedforward_size, heads, activation, shared, compile, state_dict_path, memory_tokens, actor_init_gain, critic_init_gain):
     compiler = torch.compile if compile else lambda x:x
     trainer.set_agent(
         compiler(TransformerO2E(
-            trainer          = trainer,
-            layers           = layers,
-            embedding_size   = embedding_size,
-            feedforward_size = feedforward_size,
-            heads            = heads,
-            activation       = activation,
-            memory_tokens    = memory_tokens,
-            shared           = shared
+            trainer          = trainer          ,
+            layers           = layers           ,
+            embedding_size   = embedding_size   ,
+            feedforward_size = feedforward_size ,
+            heads            = heads            ,
+            activation       = activation       ,
+            memory_tokens    = memory_tokens    ,
+            shared           = shared           ,
+            actor_init_gain  = actor_init_gain  ,
+            critic_init_gain = critic_init_gain
+ 
         ))
     )
 
