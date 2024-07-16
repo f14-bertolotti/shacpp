@@ -1,5 +1,5 @@
 
-def loss(new, old):
-    return ((new["values"] - old["target_values"])**2).mean()
+def loss(values, target_values):
+    return ((values - target_values)**2).mean()
 
 

@@ -5,4 +5,4 @@ from algorithms.ppo.value_loss  import value_loss
 from algorithms.ppo.loss        import loss
 from algorithms.ppo.Algorithm   import PPO, ppo
 from algorithms.ppo.Trajectory  import Trajectory
-
+from algorithms                 import Options

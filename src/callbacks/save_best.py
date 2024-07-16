@@ -11,9 +11,9 @@ def save_best(trainer, path):
         if reward >= wrapper.best_reward:
             wrapper.best_reward = reward
             torch.save({
-                "agentsd" : trainer.agent.state_dict(),
-                "rms"     : trainer.environment.state_dict(),
-                "episode" : episode
+                "agentsd"  : trainer.agent.state_dict(),
+                "rms"      : trainer.environment.state_dict(),
+                "episode"  : episode
             }, path)
         return {}
     wrapper.best_reward = float("-inf")

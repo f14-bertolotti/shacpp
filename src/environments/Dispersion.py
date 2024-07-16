@@ -1,7 +1,9 @@
-from environments import environment
-import numpy, torch, click, vmas
+from environments import SurrogateReward, Environment, environment, Options
+from environments.rewards import reward
 from scenarios import Dispersion as DispersionScenario
-from environments import Environment
+from optimizers import add_adam_command, add_sgd_command
+from schedulers import add_constant_command, add_cosine_command
+import torch, click, vmas
 
 class Dispersion(Environment):
 
@@ -33,42 +35,11 @@ class Dispersion(Environment):
             seed               = seed,
         )
 
-
-    def get_action_size(self):
-        return numpy.prod(self.world.get_action_space     ()[0].shape)
-
-    def get_observation_size(self):
-        return numpy.prod(self.world.get_observation_space()[0].shape)
-
-    def step(self, action):
-        next_observation, reward, done, info = self.world.step(action.transpose(0,1))
-        return {
-            "observation" : torch.stack(next_observation).transpose(0,1), 
-            "reward"      : torch.stack(reward          ).transpose(0,1), 
-            "done"        : done, 
-            "info"        : info,
-        }
-
-    @torch.no_grad
-    def reset(self):
-        return torch.stack(self.world.reset()).transpose(0,1)
-
-    @torch.no_grad
-    def render(self, *args, **kwargs):
-        return self.world.render(*args, **kwargs)
-
-
 @environment.group(invoke_without_command=True)
-@click.option("--envs"            , "envs"            , type=int          , default=64      , help="number of parallel environments.")
-@click.option("--device"          , "device"          , type=str          , default="cuda:0", help="device for the environments: cuda or cpu.")
-@click.option("--seed"            , "seed"            , type=int          , default=None    , help="environment seed.")
-@click.option("--agents"          , "agents"          , type=int          , default=3       , help="number of agents per environment.")
-@click.option("--shared-reward"   , "shared_reward"   , type=bool         , default=False   , help="True if all agents share the reward.")
-@click.option("--grad-enabled"    , "grad_enabled"    , type=bool         , default=False   , help="True if one can backpropagate in the simulator.")
-@click.option("--rms"             , "rms"             , type=bool         , default=False   , help="True if statisticts and normalization of the observation should be computed.")
-@click.option("--state-dict-path" , "state_dict_path" , type=click.Path() , default=None    , help="Path to where environment data has been stored.")
+@Options.environment
 @click.pass_obj
 def dispersion(trainer, envs, agents, seed, grad_enabled, device, shared_reward, rms, state_dict_path):
+    if hasattr(trainer, "environment"): return
     trainer.set_environment(
         Dispersion(
             envs         = envs,
@@ -81,3 +52,36 @@ def dispersion(trainer, envs, agents, seed, grad_enabled, device, shared_reward,
         )
     )
     if state_dict_path: trainer.environment.rms = torch.load(state_dict_path)["rms"]
+
+@environment.group(invoke_without_command=True)
+@Options.environment
+@click.pass_obj
+def dispersion_sr(trainer, envs, agents, seed, grad_enabled, device, shared_reward, rms, state_dict_path):
+    if hasattr(trainer, "environment"): return
+    trainer.set_environment(
+        SurrogateReward(
+            Dispersion(
+                envs         = envs          ,
+                agents       = agents        ,
+                seed         = seed          ,
+                device       = device        ,
+                shared_reward= shared_reward ,
+                rms          = rms           ,
+                grad_enabled = grad_enabled
+            )
+        )
+    )
+    if state_dict_path: trainer.environment.rms = torch.load(state_dict_path)["rms"]
+
+dispersion_sr.add_command(reward)
+
+@dispersion_sr.group()
+def optimizer(): pass
+add_adam_command(optimizer, srcnav=lambda x:x.environment, tgtnav=lambda x:x.environment.rewardnn, attrname="set_optimizer")
+add_sgd_command (optimizer, srcnav=lambda x:x.environment, tgtnav=lambda x:x.environment.rewardnn, attrname="set_optimizer")
+
+@dispersion_sr.group()
+def scheduler(): pass
+add_cosine_command  (scheduler, srcnav=lambda x:x.environment, tgtnav=lambda x:x.environment, attrname="set_scheduler")
+add_constant_command(scheduler, srcnav=lambda x:x.environment, tgtnav=lambda x:x.environment, attrname="set_scheduler")
+

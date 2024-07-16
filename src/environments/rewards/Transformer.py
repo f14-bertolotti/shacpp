@@ -1,7 +1,7 @@
 from environments.rewards.Reward import reward
 import torch, click
 
-class TransformerReward(torch.nn.Module):
+class Transformer(torch.nn.Module):
     def __init__(self, layers = 3, embedding_size = 64, heads=2, feedforward_size=256, activation="gelu", device="cuda:0"):
         super().__init__()
         self.embedding = torch.nn.Linear(2, embedding_size, device=device)
@@ -32,9 +32,9 @@ class TransformerReward(torch.nn.Module):
 @click.option("--activation"       , "activation"       , type=str , default="gelu"   , help="activation function")
 @click.option("--device"           , "device"           , type=str , default="cuda:0" , help="device")
 @click.pass_obj
-def transformer_reward(trainer, layers, embedding_size, heads, feedforward_size, activation, device):
+def transformer(trainer, layers, embedding_size, heads, feedforward_size, activation, device):
     trainer.environment.set_reward_nn(
-        TransformerReward(
+        Transformer(
             layers           = layers,
             embedding_size   = embedding_size,
             heads            = heads,
