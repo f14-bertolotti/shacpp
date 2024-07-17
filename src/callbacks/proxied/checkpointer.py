@@ -11,6 +11,7 @@ def make_command(where, root):
             if episode % ete == 0: 
                 torch.save({
                     "agentsd"  : trainer.agent.state_dict(),
+                    "rewardsd" : trainer.environment.rewardnn.state_dict(),
                     "rms"      : trainer.environment.state_dict(),
                     "episode"  : episode
                 }, path)

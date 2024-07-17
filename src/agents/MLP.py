@@ -1,5 +1,5 @@
 from agents import Options, Agent, agent
-import utils, click, torch, copy
+import utils, click, torch, copy, nn
 
 class MLP(Agent, torch.nn.Module):
     """ 
@@ -18,15 +18,16 @@ class MLP(Agent, torch.nn.Module):
         action_size      = trainer.environment.get_action_size()
         device           = trainer.environment.device
 
-        # actor layers
-        self.actor_first  = utils.layer_init(utils.MultiLinear(agents, observation_size*agents, hidden_size, bias=True, requires_grad=True, device=device))
-        self.actor_hidden = torch.nn.ModuleList([l for _ in range(layers) for l in [utils.layer_init(utils.MultiLinear(agents, hidden_size, hidden_size, bias=True, requires_grad=True, device=device)),torch.nn.Tanh()]])
-        self.actor_last   = utils.layer_init(utils.MultiLinear(agents , hidden_size , action_size , bias=False , requires_grad=True , device=device), std=actor_init_gain)
+        self.critic = nn.MLP(
+            activation = "Tanh",
+            input_size = observation_size*agents,
+            hidden_size = hidden_size,
+            output_size = hidden_size,
+            layers      = layers,
+            dropout     = 0
+        )
 
-        # critic layers
-        self.critic_first  = self.actor_first  if shared else copy.deepcopy(self.actor_first )
-        self.critic_hidden = self.actor_hidden if shared else copy.deepcopy(self.actor_hidden)
-        self.critic_last   = utils.layer_init(utils.MultiLinear(agents, hidden_size, 1, bias=False, requires_grad=True, device=device), std=critic_init_gain)
+        self.actor = self.critic if shared else copy.deepcopy(self.critic)
 
         Agent.__init__(
             self,
@@ -34,20 +35,20 @@ class MLP(Agent, torch.nn.Module):
                 torch.nn.Flatten(1,2),
                 utils.Lambda(lambda x:x.unsqueeze(1).repeat(1,agents,1)),
                 utils.Lambda(lambda x:x.unsqueeze(-2)),
-                self.critic_first,
+                self.critic,
                 torch.nn.Tanh(),
-                *self.critic_hidden,
-                self.critic_last,
+                torch.nn.Dropout(0),
+                utils.layer_init(utils.MultiLinear(agents , hidden_size , 1 , bias=False , requires_grad=True , device=device), std=actor_init_gain),
                 utils.Lambda(lambda x:x.squeeze(-2).squeeze(-1)),
             ),
             actor = torch.nn.Sequential(
                 torch.nn.Flatten(1,2),
                 utils.Lambda(lambda x:x.unsqueeze(1).repeat(1,agents,1)),
                 utils.Lambda(lambda x:x.unsqueeze(-2)),
-                self.actor_first,
+                self.actor,
                 torch.nn.Tanh(),
-                *self.actor_hidden,
-                self.actor_last,
+                torch.nn.Dropout(0),
+                utils.layer_init(utils.MultiLinear(agents, hidden_size, action_size, bias=False, requires_grad=True, device=device), std=critic_init_gain),
                 utils.Lambda(lambda x:x.squeeze(-2)),
                 torch.nn.Tanh(),
             )
@@ -72,6 +73,5 @@ def mlp(trainer, hidden_size, layers, shared, state_dict_path, compile, actor_in
             critic_init_gain = critic_init_gain
         ))
     )
-
 
     if state_dict_path: trainer.agent.load_state_dict(torch.load(state_dict_path)["agentsd"])

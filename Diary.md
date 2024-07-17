@@ -39,3 +39,10 @@ Instead, it works incredibly well, when we use an embedding per each observation
 Probably, this is caused by the fact that computation happens between attention heads
 and having only an attention `agents x agents` (instead of `(agents · obs_size)`) does not 
 allow for much computation.
+
+
+== Proxy Reward
+I have tried to use a trainer MLP proxy reward to train a shac agent instead of the simulation reward. 
+This works incredibly well. 
+I believe that this is because the gradient are much smoother if we use NN rather than the simulator directly.
+The idea is that it is easy to find a path that optimize a NN approximating the reward instead of the reward directly.

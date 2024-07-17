@@ -15,7 +15,7 @@ def viz(trainer, steps, uselogits, outputpath):
     for step in tqdm.tqdm(range(0, steps)):
         agent_result = trainer.agent.get_action(trainer.environment.normalize(current_observation))
 
-        envir_result = trainer.environment.step(agent_result["logits"] if uselogits else agent_result["actions"])
+        envir_result = trainer.environment.step(action=agent_result["logits"] if uselogits else agent_result["actions"])
         current_observation = envir_result["observation"]
 
         frames.append(trainer.environment.render(mode="rgb_array"))

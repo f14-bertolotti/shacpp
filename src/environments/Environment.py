@@ -10,7 +10,7 @@ class Environment():
         self.rmssts = RunningMeanStd() if rms else None
         self.rms    = rms
     
-    def step(self, action:torch.Tensor) -> dict[str,torch.Tensor]:
+    def step(self, action:torch.Tensor, oldobs:torch.Tensor|None = None) -> dict[str,torch.Tensor]:
         next_observation, reward, done, info = self.world.step(action.transpose(0,1))
         return {
             "observation" : torch.stack(next_observation).transpose(0,1), 
