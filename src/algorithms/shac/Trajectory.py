@@ -30,11 +30,11 @@ class Trajectory:
         self.utr           =           utr
         self.rollouts      =             0
 
-        self.obs      = [] #torch.zeros((self.envirs , self.steps, self.agents, trainer.environment.get_observation_size()), requires_grad = True , device=self.device)
-        self.actions  = [] #torch.zeros((self.envirs , self.steps, self.agents, trainer.environment.get_action_size()     ), requires_grad = True , device=self.device)
-        self.rewards  = [] #torch.zeros((self.envirs , self.steps, self.agents                                            ), requires_grad = True , device=self.device)
-        self.dones    = [] #torch.ones ((self.envirs , self.steps                                                         ), requires_grad = False, device=self.device, dtype=torch.bool)
-        self.values   = [] #torch.zeros((self.envirs , self.steps, self.agents                                            ), requires_grad = True , device=self.device)
+        self.obs      = []
+        self.actions  = []
+        self.rewards  = []
+        self.dones    = []
+        self.values   = []
 
     @torch.no_grad()
     def reset_storage(self):

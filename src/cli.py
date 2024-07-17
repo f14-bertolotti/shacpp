@@ -1,17 +1,18 @@
 from Trainer import Trainer
 from Vizualize import viz
-from environments import environment
-from algorithms   import   algorithm
-from callbacks    import    callback
-from agents       import       agent
+from callbacks    import make_callback
+from environments import   environment
+from algorithms   import     algorithm
+from agents       import         agent
 import jsonpickle
 import click
 
+trainer = Trainer()
 
 @click.group(invoke_without_command=True, context_settings={'show_default': True})
 @click.pass_context
 def cli(context):
-    if not context.obj: context.obj = Trainer()
+    context.obj = trainer
 
 @staticmethod
 @cli.group(invoke_without_command=True)
@@ -22,9 +23,9 @@ def save_configuration(trainer, path):
 
 # node commands, can be called in chain by navigating upwards
 # in the command tree
+make_callback(where=trainer,root=cli)
 cli.add_command(environment)
 cli.add_command(algorithm)
-cli.add_command(callback)
 cli.add_command(agent)
 
 # put the cli group command as last command in the command tree

@@ -33,11 +33,10 @@ class Trajectory:
         self.values  .zero_()
 
     def __call__(self, environment, agent):
-        self.rollouts += 1
  
         next_obs  = environment.reset()                          if self.rollouts % self.utr == 0 else self.obs  [:,-1].clone()
         next_done = torch.zeros(self.envirs, device=self.device) if self.rollouts % self.utr == 0 else self.dones[:,-1].clone()
-        
+        self.rollouts += 1
         self.reset_storage()
 
         # unroll trajectories
@@ -50,7 +49,7 @@ class Trajectory:
             self.values  [:, step] = agent_result["values"  ]
             self.actions [:, step] = agent_result["actions" ]
             self.logprobs[:, step] = agent_result["logprobs"]
-            envir_result = environment.step(agent_result["actions"])
+            envir_result = environment.step(oldobs=self.obs[:,step], action=agent_result["actions"])
             self.rewards [:, step] = envir_result["reward"  ]
 
             next_obs, next_done = envir_result["observation"], envir_result["done"]
