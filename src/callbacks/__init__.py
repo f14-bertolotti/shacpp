@@ -1,10 +1,10 @@
-from callbacks.trainlog           import make_command as make_trainlog
-from callbacks.validate           import make_command as make_validate
-from callbacks.checkpointer       import make_command as make_checkpointer
-from callbacks.save_configuration import make_command as make_save_configuration
-from callbacks.savebest           import make_command as make_save_best
-from callbacks.bar                import make_command as make_bar
-from callbacks.callback           import make_command as make_callback
+from callbacks.Callback        import callback, Callback
+from callbacks.Barline         import Barline , barline
+from callbacks.Greeting        import Greeting, greeting
+from callbacks.CheckpointAgent import CheckpointAgent, checkpoint_agent
+from callbacks.SaveConfig      import SaveConfig, saveconfig
+from callbacks.Validate        import Validate, validate
+from callbacks.TrainLog        import TrainLog, trainlog
 
+from callbacks.proxied import proxied as proxied_group
 
-from callbacks.proxied import make_proxied 

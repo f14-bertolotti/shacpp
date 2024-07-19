@@ -1,4 +1,4 @@
-from callbacks.proxied.checkpointer import make_command as make_checkpointer
-from callbacks.proxied.validate     import make_command as make_validate
-from callbacks.proxied.savebest     import make_command as make_save_best
-from callbacks.proxied.proxied      import make_command as make_proxied
+from callbacks.proxied.Callback import proxied
+from callbacks.proxied.Validate import Validate, validate
+from callbacks.proxied.ProxyLog import ProxyLog, proxylog
+from callbacks.proxied.TrainLog import TrainLog, trainlog

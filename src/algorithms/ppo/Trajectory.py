@@ -5,6 +5,7 @@ import click, torch
 class Trajectory:
     def __init__(self, trainer, gamma=.99, gaelm=.95, steps=64, utr=1):
     
+        self.trainer = trainer
         self.gamma = gamma
         self.gaelm = gaelm
         self.steps = steps
@@ -39,8 +40,12 @@ class Trajectory:
         self.rollouts += 1
         self.reset_storage()
 
+        for callback in self.trainer.callbacks: callback.start_trajectory(locals())
+
         # unroll trajectories
         for step in range(0, self.steps):
+            for callback in self.trainer.callbacks: callback.start_trajectory_step(locals())
+
             self.obs  [:, step] = next_obs
             self.dones[:, step] = next_done
             
@@ -53,6 +58,8 @@ class Trajectory:
             self.rewards [:, step] = envir_result["reward"  ]
 
             next_obs, next_done = envir_result["observation"], envir_result["done"]
+
+            for callback in self.trainer.callbacks: callback.end_trajectory_step(locals())
 
         # compute trajectories statistics and normalize
         environment.update_statistics(self.obs)
@@ -70,6 +77,9 @@ class Trajectory:
             gaelambda = self.gaelm     ,
         )
         returns = compute_returns   (advantages, self.values)
+
+
+        for callback in self.trainer.callbacks: callback.end_trajectory(locals())
        
         return {
             "observations" : self.obs      ,

@@ -26,13 +26,14 @@ class SHAC(Algorithm):
     def set_trajectory(self, value): self.trajectory = value
 
     def start(self): 
-        torch.set_printoptions(sci_mode=False)
         self.target_agent = copy.deepcopy(self.trainer.agent)
         self.agent        = self.trainer.agent
 
     def end  (self): pass
 
     def step (self, episode):
+
+        for callback in self.trainer.callbacks: callback.start_episode(locals())
 
         trajectories = self.trajectory(
             agent        = self.agent,
@@ -51,37 +52,35 @@ class SHAC(Algorithm):
         )
         
         result = []
-        for epoch in range(self.epochs):
-            for step, (observations, target_values) in enumerate(dataloader):
+        for epoch in range(0, self.epochs+1):
+
+            for callback in self.trainer.callbacks: callback.start_epoch(locals())
+            for step, (observations, target_values) in enumerate(dataloader, 1):
+
+                for callback in self.trainer.callbacks: callback.start_step(locals())
                 self.critic_optimizer.zero_grad()
 
                 values = self.agent.get_value(observations)["values"]
                 lossval = loss(values = values, target_values = target_values)
                 lossval.backward()
 
+                for callback in self.trainer.callbacks: callback.before_update(locals())
+
                 torch.nn.utils.clip_grad_norm_(self.agent.parameters(), self.max_grad_norm)
             
                 self.critic_optimizer.step()
 
-                result.append({
-                    "episode"   : episode                                                                ,
-                    "epoch"     : epoch                                                                  ,
-                    "step"      : step                                                                   ,
-                    "loss"      : lossval.item()                                                         ,
-                    "reward"    : trajectories["rewards"].sum().item() / trajectories["rewards"].size(0) ,
-                    "critic_lr" : self.trainer.algorithm.critic_optimizer.param_groups[0]["lr"]          ,
-                    "actor_lr"  : self.trainer.algorithm.actor_optimizer.param_groups[0]["lr"]           ,
-                    "time"      : time.time() - self.start_time
-                })
+                for callback in self.trainer.callbacks: callback.end_step(locals())
         
             self.critic_scheduler.step()
+            for callback in self.trainer.callbacks: callback.end_epoch(locals())
 
         with torch.no_grad():
-            for (name, param), (name_targ, param_targ) in zip(self.agent.critic.named_parameters(), self.target_agent.critic.named_parameters()):
+            for param, param_targ in zip(self.agent.critic.parameters(), self.target_agent.critic.parameters()):
                 param_targ.data.mul_(self.target_alpha)
                 param_targ.data.add_((1. - self.target_alpha) * param.data)
 
-        return result
+        for callback in self.trainer.callbacks: callback.end_episode(locals())
 
 
 @algorithm.group(invoke_without_command=True)

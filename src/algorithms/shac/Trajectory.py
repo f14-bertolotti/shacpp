@@ -9,7 +9,7 @@ from utils import hash_tensors
 class Trajectory:
 
     def __init__(self, trainer, gamma=.99, gaelm=.95, steps=64, utr=1, max_grad_norm=1):
-
+        self.trainer = trainer
         self.actor_optimizer = trainer.algorithm.actor_optimizer
         self.actor_scheduler = trainer.algorithm.actor_scheduler
 
@@ -54,7 +54,9 @@ class Trajectory:
         self.reset_storage()
 
         # unroll trajectories
+        for callback in self.trainer.callbacks: callback.start_trajectory(locals())
         for step in range(0, self.steps):
+            for callback in self.trainer.callbacks: callback.start_trajectory_step(locals())
             self.obs  .append(next_obs )
             self.dones.append(next_done)
             
@@ -67,6 +69,7 @@ class Trajectory:
             self.rewards .append(envir_result["reward"  ])
 
             next_obs, next_done = envir_result["observation"], envir_result["done"]
+            for callback in self.trainer.callbacks: callback.end_trajectory_step(locals())
 
 
         rewards = torch.stack(self.rewards)
@@ -95,15 +98,17 @@ class Trajectory:
             (self.gamma ** self.steps) * values
         ).sum() / (self.steps * self.envirs)
 
-
         loss.backward()
+
+        for callback in self.trainer.callbacks: callback.before_trajectory_update(locals())
         
         torch.nn.utils.clip_grad_norm_(agent.parameters(), self.max_grad_norm)
         self.actor_optimizer.step()
         self.actor_scheduler.step()
 
-
         environment.update_statistics(obs)
+
+        for callback in self.trainer.callbacks: callback.end_trajectory(locals())
 
         return {
             "observations"  : obs           ,
