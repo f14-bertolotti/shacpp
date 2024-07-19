@@ -1,9 +1,9 @@
 from Trainer import Trainer
 from Vizualize import viz
-from callbacks    import make_callback
-from environments import   environment
-from algorithms   import     algorithm
-from agents       import         agent
+from environments import environment
+from algorithms   import   algorithm
+from callbacks    import    callback
+from agents       import       agent
 import jsonpickle
 import click
 
@@ -23,7 +23,7 @@ def save_configuration(trainer, path):
 
 # node commands, can be called in chain by navigating upwards
 # in the command tree
-make_callback(where=trainer,root=cli)
+cli.add_command(callback)
 cli.add_command(environment)
 cli.add_command(algorithm)
 cli.add_command(agent)

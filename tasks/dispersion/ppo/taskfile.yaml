@@ -1,0 +1,8 @@
+version: '3'
+
+includes:
+  default : 
+    taskfile: default.yaml
+    dir: ../../..
+
+

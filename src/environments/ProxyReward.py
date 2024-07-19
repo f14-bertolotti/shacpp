@@ -21,6 +21,7 @@ class Proxify(Environment):
             drop_last    = True   ,
             epochs       = None   ,
         ):
+        self.trainer = trainer
 
         # setup environment variables
         super().__init__(
@@ -51,13 +52,19 @@ class Proxify(Environment):
         self.rewards  = torch.zeros(self.dataset_size , dtype=torch.float32 , requires_grad=False, device=environment.device)
         self.mask     = torch.zeros(self.dataset_size , dtype=torch.bool    , requires_grad=False, device=environment.device)
 
+        self.updates = 0
+
     def set_optimizer(self, value): self.optimizer = value
     def set_scheduler(self, value): self.scheduler = value
     def set_reward_nn(self, value): self.rewardnn  = value
 
     def update_statistics(self, observations):
+        self.updates += 1
+
         """ this method performs also the training of the reward, other than computing running statistics """
         if self.rms: self.rms.update(observations.view(-1,observations.size(-1)))
+
+        for callback in self.trainer.callbacks: callback.start_update_proxy(locals())
 
         # create the dataset for the reward network
         dataloader = torch.utils.data.DataLoader(
@@ -73,6 +80,8 @@ class Proxify(Environment):
 
         # train the reward network
         for epoch in itertools.count(0):
+            
+            for callback in self.trainer.callbacks: callback.start_epoch_proxy(locals())
 
             # max epoch is set, terminate when reached
             if self.epochs is not None and epoch >= self.epochs: break
@@ -80,7 +89,9 @@ class Proxify(Environment):
             accuracies = []
 
             # training epoch
-            for obs, rew in dataloader:
+            for step, (obs, rew) in enumerate(dataloader,1):
+                for callback in self.trainer.callbacks: callback.start_step_proxy(locals())
+
                 self.optimizer.zero_grad()
                 res  = self.rewardnn(obs)
                 loss = ((res - rew)**2).mean()
@@ -89,11 +100,19 @@ class Proxify(Environment):
                 
                 # compute accuracy of the reward
                 accuracies.append(rew.isclose(res,atol=self.atol))
+                for callback in self.trainer.callbacks: callback.end_step_proxy(locals())
 
             self.scheduler.step()
+            
+            accuracy = torch.cat(accuracies, dim=0).float().mean().item()
 
+            for callback in self.trainer.callbacks: callback.end_epoch_proxy(locals())
+            
             # terminate if threshold is set and is reached
-            if self.threshold is not None and torch.cat(accuracies, dim=0).float().mean().item() > self.threshold: break
+            if self.threshold is not None and accuracy > self.threshold: break
+
+        for callback in self.trainer.callbacks: callback.end_update_proxy(locals())
+
 
     def pert(self, low:torch.Tensor, peak:torch.Tensor, high:torch.Tensor):
         """ pert distribution   : https://en.wikipedia.org/wiki/PERT_distribution 
@@ -131,12 +150,12 @@ class Proxify(Environment):
         proxy_reward = self.rewardnn(torch.cat([observation , action] , dim=2))
 
         return {
-        "observation"  : observation  ,
-        "real_reward"  : real_reward  ,
-        "proxy_reward" : proxy_reward ,
-        "reward"       : proxy_reward ,
-        "done"         : done         ,
-        "info"         : info         ,
+            "observation"  : observation  ,
+            "real_reward"  : real_reward  ,
+            "proxy_reward" : proxy_reward ,
+            "reward"       : proxy_reward ,
+            "done"         : done         ,
+            "info"         : info         ,
         }
 
 

@@ -1,0 +1,12 @@
+version: '3'
+
+includes:
+  proxied : 
+    taskfile: proxied.yaml
+    dir: ../../..
+
+  default : 
+    taskfile: default.yaml
+    dir: ../../..
+
+

@@ -13,35 +13,26 @@ class Trainer:
     def add_callback    (self, value): self.callbacks.append(value)
 
     @click.command()
-    @click.option("--detect-anomaly" , "detect_anamaly" , type=bool , default=False)
-    @click.option("--seed"           , "seed"           , type=int  , default=42)
-    @click.option("--episodes"       , "episodes"       , type=int  , default=1000)
+    @click.option("--detect-anomaly" , "detect_anamaly" , type=bool , default=False , help="True if torch detect anamaly should be enabled" )
+    @click.option("--seed"           , "seed"           , type=int  , default=42    , help="seed to the run"                                )
+    @click.option("--episodes"       , "episodes"       , type=int  , default=1000  , help="max number of training episodes"                )
+    @click.option("--etc"            , "etc"            , type=int  , default=10    , help="epochs to validation"                           )
     @click.pass_obj
     @staticmethod
-    def train(trainer, seed, episodes, detect_anamaly):
+    def train(trainer, seed, episodes, detect_anamaly, etc):
 
         torch.autograd.set_detect_anomaly(detect_anamaly)
         utils.seed_everything(seed)
 
         trainer.algorithm.start()
+        for callback in trainer.callbacks: callback.start(locals())
 
-        for episode in (bar:=tqdm.tqdm(range(1, episodes + 1))):
-            train_result = trainer.algorithm.step(episode)
+        for episode in range(1, episodes + 1):
+            trainer.algorithm.step(episode)
 
-            # chain of callbacks to customize behavior at the end of every training step
-            # e.g. checkpointing, evaluation, tqdm bar modification.
-            callback_result = dict()
-            for callback in trainer.callbacks: 
-                callback_result = callback_result | callback(
-                    bar            = bar             ,
-                    seed           = seed            ,
-                    trainer        = trainer         ,
-                    episode        = episode         ,
-                    episodes       = episodes        ,
-                    train_result   = train_result    ,
-                    detect_anamaly = detect_anamaly  ,
-                    prev_result    = callback_result ,
-                ) 
+            if episode % etc == 0: trainer.algorithm.evaluate()
+            
+        for callback in trainer.callbacks: callback.end(locals())
         trainer.algorithm.end()
 
 
