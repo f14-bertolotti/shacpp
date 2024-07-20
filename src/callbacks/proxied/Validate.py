@@ -61,7 +61,7 @@ class Validate(callbacks.Callback):
             }, self.sdpath)
 
         # set trainer bar description
-        if hasattr(self.trainer, "bar_description"): self.trainer.bar_description.update(eval_reward = reward, best_eval_reward = self.best)
+        if hasattr(self.trainer, "bar_description"): self.trainer.bar_description.update(eval_reward = avg_real_reward, best_eval_reward = self.best)
 
 @proxied.group()
 @click.option("--steps"   , "steps"   , type=int          , default=64          , help="number of steps of unroll for the evaluation"  )

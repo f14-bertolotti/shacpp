@@ -28,7 +28,7 @@ class Dispersion(dispersion.Scenario):
         for i,agent in enumerate(self.world.agents):
             agent.set_pos(self.start_positions[i], batch_index=env_index)
 
-        # the rest of the code is untached wrt. the original dispersion implementation.
+        # the rest of the code is untouched wrt. the original dispersion implementation.
         for landmark in self.world.landmarks:
             landmark.set_pos(
                 torch.zeros(

@@ -26,7 +26,6 @@ tasks:
                       --actor-init-gain 0.1
         cli algorithm ppo --batch-size 1024 
                           --epochs 8 
-                          --batch-size 1024   
                           --max-grad-norm 0.5 
                           --epochs 4          
                           --clip-coef 0.2     

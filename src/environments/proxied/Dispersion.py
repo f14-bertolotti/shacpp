@@ -9,7 +9,7 @@ import torch, click
 @Options.environment
 @Options.proxy_reward
 @click.pass_obj
-def dispersion(trainer, envs, agents, seed, grad_enabled, device, shared_reward, rms, state_dict_path, dataset_size, batch_size, lamb, atol, threshold, shuffle, drop_last, epochs):
+def dispersion(trainer, envs, agents, seed, grad_enabled, device, shared_reward, rms, state_dict_path, dataset_size, batch_size, lamb, atol, threshold, shuffle, drop_last, epochs, norm_factor):
     if hasattr(trainer, "environment"): return
     trainer.set_environment(
         Proxify(
@@ -30,7 +30,8 @@ def dispersion(trainer, envs, agents, seed, grad_enabled, device, shared_reward,
             threshold    = threshold    ,
             shuffle      = shuffle      ,
             drop_last    = drop_last    ,
-            epochs       = epochs
+            epochs       = epochs       ,
+            norm_factor  = norm_factor
         )
     )
     if state_dict_path: trainer.environment.rms = torch.load(state_dict_path)["rms"]

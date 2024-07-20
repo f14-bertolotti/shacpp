@@ -16,6 +16,7 @@ class Proxify(Environment):
             batch_size   = 500    ,
             lamb         = 8      ,
             atol         = .1     ,
+            norm_factor  = None   ,
             threshold    = None   ,
             shuffle      = True   ,
             drop_last    = True   ,
@@ -35,6 +36,7 @@ class Proxify(Environment):
         self.world = environment.world
 
         # setup proxify variables
+        self.norm_factor  = norm_factor
         self.dataset_size = dataset_size
         self.batch_size   = batch_size
         self.threshold    = threshold
@@ -131,7 +133,7 @@ class Proxify(Environment):
         updated = self.pert(
             low  = torch.zeros(newobs.size(0)*newobs.size(1) , dtype = torch.float32 , device=self.device)                         ,
             high = torch.ones (newobs.size(0)*newobs.size(1) , dtype = torch.float32 , device=self.device) * (self.dataset_size-1) ,
-            peak = real_reward.flatten(0,1) / (real_reward.max()+1e-5) * (self.dataset_size-1),
+            peak = real_reward.flatten(0,1) / (self.norm_factor if self.norm_factor else real_reward.max()+1e-5) * (self.dataset_size-1),
         ).round().to(torch.long)
 
         # update the dataset

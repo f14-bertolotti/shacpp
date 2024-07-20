@@ -1,6 +1,7 @@
 version: '3'
 
 includes:
+
   proxied : 
     taskfile: proxied.yaml
     dir: ../../..

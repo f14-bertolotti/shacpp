@@ -12,13 +12,14 @@ environment = utils.decochain(
 )
 
 proxy_reward = utils.decochain(
-    click.option("--dataset-size" , "dataset_size" , type=int           , default = 10000 , help="maximum dataset size to train the reward function."                   ),
-    click.option("--batch-size"   , "batch_size"   , type=int           , default = 500   , help="batch size to train the reward function."                             ),
-    click.option("--lamb"         , "lamb"         , type=int           , default = 8     , help="lambda factor in pert distribution of the reward dataset."            ),
-    click.option("--atol"         , "atol"         , type=float         , default = .1    , help="tolerance for the accuracy."                                          ),
-    click.option("--threshold"    , "threshold"    , type=float         , default = .9    , help="threshold accuracy to end reward training."                           ),
-    click.option("--epochs"       , "epochs"       , type=int           , default = None  , help="maximum number of epoch to train the reward function (None means inf)"),
-    click.option("--drop-last"    , "drop_last"    , type=bool          , default = True  , help="Drops the last batch in reward training."                             ),
-    click.option("--shuffle"      , "shuffle"      , type=bool          , default = True  , help="Shuffles the dataset before each epoch in reward training."           ),
+    click.option("--dataset-size" , "dataset_size" , type=int           , default = 10000 , help="maximum dataset size to train the reward function."                      ),
+    click.option("--batch-size"   , "batch_size"   , type=int           , default = 500   , help="batch size to train the reward function."                                ),
+    click.option("--lamb"         , "lamb"         , type=int           , default = 8     , help="lambda factor in pert distribution of the reward dataset."               ),
+    click.option("--atol"         , "atol"         , type=float         , default = .1    , help="tolerance for the accuracy."                                             ),
+    click.option("--threshold"    , "threshold"    , type=float         , default = .9    , help="threshold accuracy to end reward training."                              ),
+    click.option("--epochs"       , "epochs"       , type=int           , default = None  , help="maximum number of epoch to train the reward function (None means inf)"   ),
+    click.option("--drop-last"    , "drop_last"    , type=bool          , default = True  , help="Drops the last batch in reward training."                                ),
+    click.option("--shuffle"      , "shuffle"      , type=bool          , default = True  , help="Shuffles the dataset before each epoch in reward training."              ),
+    click.option("--norm-factor"  , "norm_factor"  , type=float         , default = None  , help="Normalization factor for real reward in the pert distribution sampleing."),
 )
                                                                                                                                                                 

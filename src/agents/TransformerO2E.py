@@ -27,7 +27,7 @@ class TransformerO2E(Agent, torch.nn.Module):
 
         # setup embedding parameters (obs embedding and obs embeddings) 
         self.actor_embedding = utils.layer_init(torch.nn.Linear(observation_size, embedding_size, device=device))
-        self.actor_position  = torch.nn.Embedding(agents + memory_tokens, embedding_size, device=device)
+        #self.actor_position  = torch.nn.Embedding(agents + memory_tokens, embedding_size, device=device)
         self.actor_memorytkn = torch.nn.Parameter(torch.normal(torch.zeros(1,memory_tokens, embedding_size), torch.ones(1,memory_tokens, embedding_size) * 0.2).to(device))
 
         # setup transformer encoder
@@ -44,7 +44,7 @@ class TransformerO2E(Agent, torch.nn.Module):
         )
 
         # if shared is True, shares the parameters, otherwise share the architecture.
-        self.critic_position  = self.actor_position  if shared else copy.deepcopy(self.actor_position) 
+        #self.critic_position  = self.actor_position  if shared else copy.deepcopy(self.actor_position) 
         self.critic_embedding = self.actor_embedding if shared else copy.deepcopy(self.actor_embedding)
         self.critic_encoder   = self.actor_encoder   if shared else copy.deepcopy(self.actor_encoder)
         self.critic_memorytkn = self.actor_memorytkn if shared else copy.deepcopy(self.actor_memorytkn)
@@ -54,7 +54,7 @@ class TransformerO2E(Agent, torch.nn.Module):
             critic = torch.nn.Sequential(
                 self.critic_embedding,
                 utils.Lambda(lambda x:torch.cat([x,self.critic_memorytkn.repeat(x.size(0),1,1)], dim=1)),
-                utils.Lambda(lambda x:x + self.critic_position(torch.arange(x.size(1), device=device, dtype=torch.long))),
+                #utils.Lambda(lambda x:x + self.critic_position(torch.arange(x.size(1), device=device, dtype=torch.long))),
                 torch.nn.LayerNorm(embedding_size, device=device),
                 self.critic_encoder,
                 utils.layer_init(torch.nn.Linear(embedding_size, 1, device=device), std=critic_init_gain),
@@ -64,7 +64,7 @@ class TransformerO2E(Agent, torch.nn.Module):
             actor = torch.nn.Sequential(
                 self.actor_embedding,
                 utils.Lambda(lambda x:torch.cat([x, self.actor_memorytkn.repeat(x.size(0),1,1)], dim=1)),
-                utils.Lambda(lambda x:x + self.actor_position(torch.arange(x.size(1), device=device, dtype=torch.long))),
+                #utils.Lambda(lambda x:x + self.actor_position(torch.arange(x.size(1), device=device, dtype=torch.long))),
                 torch.nn.LayerNorm(embedding_size, device=device),
                 self.actor_encoder,
                 utils.layer_init(torch.nn.Linear(embedding_size, action_size, device=device),std=actor_init_gain),
