@@ -20,11 +20,13 @@ class MLPOFA(Agent, torch.nn.Module):
 
         # actor layers
         self.actor_obs2emb = utils.layer_init(torch.nn.Linear(observation_size*agents, hidden_size, device=device))
+        self.actor_pos     = torch.nn.Parameter(torch.normal(torch.zeros(agents, hidden_size, device=device), 0.1 * torch.ones(agents, hidden_size, device=device)))
         self.actor_hidden  = torch.nn.ModuleList([l for _ in range(layers) for l in [utils.layer_init(torch.nn.Linear(hidden_size, hidden_size, device=device)), torch.nn.Tanh()]])
         self.actor_hid2act = utils.layer_init(torch.nn.Linear(hidden_size, action_size, device=device), std=actor_init_gain)
 
         # critic layers
         self.critic_obs2emb = self.actor_obs2emb if shared else copy.deepcopy(self.actor_obs2emb)
+        self.critic_pos     = self.actor_pos     if shared else copy.deepcopy(self.actor_pos)
         self.critic_hidden  = self.actor_hidden  if shared else copy.deepcopy(self.actor_hidden)
         self.critic_hid2val = utils.layer_init(torch.nn.Linear(hidden_size, 1, bias=False, device=device), std=critic_init_gain)
 
@@ -35,6 +37,7 @@ class MLPOFA(Agent, torch.nn.Module):
                 utils.Lambda(lambda x:x.unsqueeze(1).repeat(1,agents,1)),
 
                 self.critic_obs2emb,
+                utils.Lambda(lambda x:x + self.critic_pos),
                 torch.nn.Tanh(),
                 *self.critic_hidden,
                 
@@ -46,6 +49,7 @@ class MLPOFA(Agent, torch.nn.Module):
                 utils.Lambda(lambda x:x.unsqueeze(1).repeat(1,agents,1)),
 
                 self.actor_obs2emb,
+                utils.Lambda(lambda x:x + self.actor_pos),
                 torch.nn.Tanh(),
                 *self.actor_hidden,
                 

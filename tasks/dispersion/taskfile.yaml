@@ -7,4 +7,14 @@ includes:
   ppo  : 
     taskfile: ppo/taskfile.yaml
 
+tasks:
+  viz:
+    sources:
+      - models/**/*.log
+    generates:
+      - models/dispersion.png
+    vars:
+      SAMPLES: '{{default 1000 .SAMPLES}}'
+    cmds:
+      - SAMPLES={{.SAMPLES}}; eval "jet init --shape 1 1 "$(find models/dispersion -name 'valid.log' -printf " jet line --samples ${SAMPLES} --input-path %p --x message/episode --y message/reward --label %p")" jet plot --show True --output-path models/dispersion.png"
 

@@ -4,7 +4,6 @@ from optimizers import add_adam_command
 from schedulers import add_constant_command, add_cosine_command
 import click, torch
 
-from utils import hash_tensors
 
 class Trajectory:
 

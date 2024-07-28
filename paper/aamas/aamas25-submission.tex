@@ -1,0 +1,72 @@
+
+%%%% For anonymized submission, use this
+%\documentclass[sigconf,anonymous]{aamas} 
+%%%% For camera-ready, use this
+\documentclass[sigconf]{aamas} 
+
+
+\usepackage{balance} % for balancing columns on the final page
+
+\setcopyright{ifaamas}
+\acmConference[AAMAS '25]{Proc.\@ of the 24th International Conference
+on Autonomous Agents and Multiagent Systems (AAMAS 2025)}{May 19 -- 23, 2025}
+{Detroit, Michigan, USA}{A.~El~Fallah~Seghrouchni, Y.~Vorobeychik, S.~Das, A.~Nowe (eds.)}
+\copyrightyear{2025}
+\acmYear{2025}
+\acmDOI{}
+\acmPrice{}
+\acmISBN{}
+
+
+%%% Use this command to specify your EasyChair submission number.
+%%% In anonymous mode, it will be printed on the first page.
+\acmSubmissionID{<<EasyChair submission id>>}
+
+\title{Title}
+
+%%% Provide names, affiliations, and email addresses for all authors.
+
+\author{Francesco Bertolotti}
+\affiliation{
+  \institution{Università degli Studi di Milano}
+  \city{Milan}
+  \country{Italy}}
+\email{francesco.bertolotti@di.unimi.it}
+
+\author{Walter Cazzola}
+\affiliation{
+  \institution{Università degli Studi di Milano}
+  \city{Milan}
+  \country{Italy}}
+\email{walter.cazzola@di.unimi.it}
+
+\author{Gianluca Aguzzi}
+\affiliation{
+  \institution{Università di Bologna}
+  \city{Bologna}
+  \country{Italy}}
+\email{gianluca.aguzzi@unibo.it}
+
+\author{Mirko Viroli}
+\affiliation{
+  \institution{Università di Bologna}
+  \city{Bologna}
+  \country{Italy}}
+\email{mirko.viroli@unibo.it}
+
+\keywords{Multi-Agent, Differetiable Environment, World Model}
+
+
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+\input{sects/abstract.tex}
+\maketitle 
+\input{sects/acks.tex}
+
+\bibliographystyle{ACM-Reference-Format} 
+\bibliography{ml+nn,foundations,strings,aosd,my_work,grammars,software_engineering,reflection,dsu,dsl,pl,splc,programming,roles,oolanguages,testing,./bibs/local}
+
+\end{document}
