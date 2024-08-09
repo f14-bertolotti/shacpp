@@ -3,7 +3,7 @@ from Dispersion import Dispersion as DispersionScenario
 import numpy, torch, vmas
 from moviepy.editor import ImageSequenceClip
 
-agents = 5
+agents = 3
 envs   = 1
 device = "cuda:0"
 steps = 64
@@ -27,7 +27,7 @@ world = vmas.simulator.environment.Environment(
 observation_size:int = numpy.prod(world.get_observation_space()[0].shape)
 action_size     :int = numpy.prod(world.get_action_space()[0].shape)
 
-actor_model  = ActorModel3 (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
+actor_model  = ActorModel(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
 actor_model.load_state_dict(torch.load("actor.pkl")["actor_state_dict"])
 
 frames, observation = [], torch.stack(world.reset()).transpose(0,1)
@@ -39,6 +39,7 @@ with torch.no_grad():
         actions = actor_model(observation, actions)
         frames.append(world.render(mode="rgb_array"))
         observation, reward, done, info = world.step(actions.transpose(0,1))
+        print(done)
         observation = torch.stack(observation).transpose(0,1)
 
 
