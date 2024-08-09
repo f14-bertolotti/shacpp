@@ -15,7 +15,7 @@ def pert(low:torch.Tensor, peak:torch.Tensor, high:torch.Tensor, lamb:int=8):
     return low + torch.distributions.Beta(alpha, beta).sample() * r
 
 
-def compute_values(steps, envirs, values, agents, rewards, slam, gamma, device="cuda:0"):
+def compute_values(steps, envirs, values, dones, agents, rewards, slam, gamma, device="cuda:0"):
     values, rewards = values.squeeze(-1), rewards.squeeze(-1)
 
     target_values = torch.zeros(steps, envirs, agents, dtype=torch.float32, device=device)
@@ -24,14 +24,19 @@ def compute_values(steps, envirs, values, agents, rewards, slam, gamma, device="
     lam = torch.ones(envirs, agents, dtype=torch.float32, device=device)
 
     for i in reversed(range(steps)):
-        lam = lam * slam
-        Ai = (slam * gamma * Ai + gamma * values[i] + (1. - lam) / (1. - slam) * rewards[i])
-        Bi = Bi + rewards[i]
+        #lam = lam * slam
+        #Ai = (slam * gamma * Ai + gamma * values[i] + (1. - lam) / (1. - slam) * rewards[i])
+        #Bi = Bi + rewards[i]
+        #target_values[i] = (1.0 - slam) * Ai + lam * Bi
+        lam = slam * lam * (1. - dones[i]) + dones[i]
+        Ai = (1.0 - dones[i]) * (slam * gamma * Ai + gamma * values[i] + (1. - lam) / (1. - slam) * rewards[i])
+        Bi = gamma * (values[i] * dones[i] + Bi * (1.0 - dones[i])) + rewards[i]
         target_values[i] = (1.0 - slam) * Ai + lam * Bi
 
     target_values = target_values.unsqueeze(-1)
 
     return target_values
+
 
 class Lambda(torch.nn.Module):
     def __init__(self, func):
