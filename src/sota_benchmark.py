@@ -9,7 +9,6 @@ from benchmarl.eval_results import load_and_merge_json_dicts, Plotting
 from benchmarl.experiment import ExperimentConfig
 from benchmarl.models.mlp import MlpConfig
 from benchmarl.utils import DEVICE_TYPING
-from matplotlib import pyplot as plt
 from torchrl.data import CompositeSpec
 from torchrl.envs import EnvBase, VmasEnv
 
@@ -53,7 +52,7 @@ class ProxyTask(Task):
             scenario=Dispersion(
                 device="cuda:0",
                 radius=.05,
-                agents=4,
+                agents=self.get_agents_from_self(),
             ),
             num_envs=num_envs,
             continuous_actions=continuous_actions,
@@ -153,7 +152,7 @@ processed_data = Plotting.process_data(raw_dict)
 Plotting.performance_profile_figure(
     environment_comparison_matrix=environment_comparison_matrix
 ).savefig("performance_profile.png")
-(fig, _) = Plotting.aggregate_scores(
+(fig, _, _) = Plotting.aggregate_scores(
     environment_comparison_matrix=environment_comparison_matrix
 )
 fig.savefig("aggregate_scores.png")
