@@ -114,7 +114,7 @@ class ProxyTask(Task):
 
 
 configuration = ExperimentConfig.get_from_yaml()
-configuration.max_n_frames = 6000
+configuration.max_n_frames = 180000
 configuration.train_device = "cuda:0"
 
 benchmark = Benchmark(
