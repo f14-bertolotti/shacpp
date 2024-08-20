@@ -8,6 +8,7 @@ tasks:
     vars:
       FOLDER : '{{default "dispersion/shac/default" .FOLDER}}'
       DEVICE : '{{default "cuda:0" .DEVICE}}'
+      SEED   : '{{default 42 .SEED}}'
     generates:
       - models/{{.FOLDER}}/.trained
     cmds:
@@ -16,7 +17,7 @@ tasks:
         cli environment dispersion --device {{.DEVICE}} 
                                    --envs 128 
                                    --agents 3 
-                                   --seed 42 
+                                   --seed {{.SEED}}
                                    --requires-grad True
         cli agent mlp --compile True 
                       --hidden-size 128 
@@ -40,6 +41,6 @@ tasks:
         cli callback validate --sdpath  models/{{.FOLDER}}/best.pkl 
                               --logpath models/{{.FOLDER}}/valid.log
                               --etc 10 --size 512 --steps 64
-        cli train --episodes {{.EPISODES}} --seed 42 
+        cli train --episodes {{.EPISODES}} --seed {{.SEED}} 
       - cp ./taskfile.yaml models/{{.FOLDER}}/
       - touch models/{{.FOLDER}}/.trained

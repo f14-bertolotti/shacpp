@@ -1,6 +1,7 @@
 import torch
 
 def compute_shac_values(steps, envirs, values, agents, rewards, slam, gamma, device="cuda:0"):
+    print(values.shape, rewards.shape)
     target_values = torch.zeros(steps, envirs, agents, dtype=torch.float32, device=device)
     Ai = torch.zeros(envirs, agents, dtype=torch.float32, device=device)
     Bi = torch.zeros(envirs, agents, dtype=torch.float32, device=device)

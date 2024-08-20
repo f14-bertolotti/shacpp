@@ -90,11 +90,9 @@ class Trajectory:
              device  = self.device
          )
 
-            
-        self.actor_optimizer.zero_grad()
         loss = -(
             (rewards * self.gammas).sum(0) + 
-            (self.gamma ** self.steps) * values
+            (self.gamma ** self.steps) * values[-1]
         ).sum() / (self.steps * self.envirs)
 
         loss.backward()

@@ -11,7 +11,7 @@ class MLP(torch.nn.Module):
             torch.nn.Linear(input_size, hidden_size, device=device),
             activation(),
             torch.nn.Dropout(dropout),
-            *[l for _ in range(layers) for l in [torch.nn.Linear(hidden_size, hidden_size , device=device), activation(), torch.nn.Dropout(.1)]],
+            *[l for _ in range(layers) for l in [torch.nn.Linear(hidden_size, hidden_size , device=device), activation(), torch.nn.Dropout(dropout)]],
             activation(),
             torch.nn.Linear(hidden_size, output_size, device=device),
         )

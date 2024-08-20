@@ -1,6 +1,3 @@
-from MultiLinear import MultiLinear
-from utils import layer_init
-from utils import inverse_permutation
 import torch
 
 class RewardModel(torch.nn.Module):
