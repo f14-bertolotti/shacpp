@@ -3,7 +3,7 @@ from Dispersion import Dispersion as DispersionScenario
 import numpy, torch, vmas
 from moviepy.editor import ImageSequenceClip
 
-agents = 3
+agents = 10
 envs   = 1
 device = "cuda:0"
 steps = 64

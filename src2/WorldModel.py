@@ -1,5 +1,4 @@
-from MultiLinear import MultiLinear
-import copy, torch
+import torch
 
 class WorldModel(torch.nn.Module):
     def __init__(self, observation_size, action_size, agents, layers=3, hidden_size=128, heads=2, feedforward_size=512, dropout=0.1, max_positions=512, activation="ReLU", device="cuda:0"):
