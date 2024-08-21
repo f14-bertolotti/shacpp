@@ -1,9 +1,6 @@
 from utils import layer_init
-from utils import Lambda
 from MultiLinear import MultiLinear
-from MLP import MLP
 import torch
-
 
 class ActorModel(torch.nn.Module):
     def __init__(self, observation_size, action_size, agents, hidden_size=128, layers = 1, dropout=0.1, activation="Tanh", device="cuda:0"):

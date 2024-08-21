@@ -1,7 +1,6 @@
 from vmas.scenarios import dispersion
 import torch
 
-
 class Dispersion(dispersion.Scenario):
     """ 
     This is almost identical to the dispersion vmas scenarios.
