@@ -1,4 +1,3 @@
-from utils import layer_init
 import torch
 
 class MultiLinear(torch.nn.Module):
@@ -8,7 +7,6 @@ class MultiLinear(torch.nn.Module):
 
         self.weight = torch.nn.Parameter(torch.empty(channels, input_size, output_size, requires_grad=requires_grad).to(device))
         self.bias   = torch.nn.Parameter(torch.empty(channels, 1, output_size, requires_grad=requires_grad).to(device)) if bias else torch.tensor(0, requires_grad=False, device=device)
-        layer_init(self,1.141)
 
     def forward(self, x): 
         x = x.unsqueeze(-2)

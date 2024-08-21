@@ -1,114 +1,208 @@
-from functools import reduce
-
 from RewardModel import *
-from WorldModel import WorldModel
 from ActorModel import *
 from ValueModel import *
 from Dispersion import Dispersion as DispersionScenario
-import itertools, termcolor, numpy, torch, utils, vmas
+import numpy
+import torch
+import utils
+import click
+import utils
+import vmas
+import tqdm
+import json
+import os
 
 def train_reward_model(
         episode, 
-        reward_model, 
-        reward_cache, 
-        observation_cache, 
-        action_cache, 
-        reward_model_msk_data, 
-        reward_model_obs_data, 
-        reward_model_act_data, 
-        reward_model_rew_data, 
-        reward_pert_low, 
-        reward_pert_high, 
-        reward_model_batch_size, 
-        reward_model_dataset_size, 
-        reward_model_optimizer
+        model, 
+        episode_data, 
+        cached_data,
+        batch_size, 
+        dataset_size, 
+        training_epochs,
+        optimizer,
+        logger,
     ):
 
-    peak_cache = reward_cache.flatten(0,1).sum(1).sum(1)
+    peak_cache = episode_data["rewards"].flatten(0,1).sum(1).sum(1)
     indexes = utils.pert(
-        low  = reward_pert_low,
-        high = reward_pert_high,
-        peak = (peak_cache - peak_cache.min()) / (peak_cache.max() - peak_cache.min() + 1e-5) * (reward_model_dataset_size-1),
+        low  = cached_data["pert_low"],
+        high = cached_data["pert_high"],
+        peak = (peak_cache - peak_cache.min()) / (peak_cache.max() - peak_cache.min() + 1e-5) * (dataset_size-1),
     ).round().to(torch.long)
 
-    reward_model_msk_data[indexes] = True
-    reward_model_obs_data[indexes] = observation_cache.flatten(0,1).detach().clone()
-    reward_model_act_data[indexes] = action_cache     .flatten(0,1).detach().clone()
-    reward_model_rew_data[indexes] = reward_cache     .flatten(0,1).detach().clone()
+    cached_data["mask"        ][indexes] = True
+    cached_data["observations"][indexes] = episode_data["observations"].flatten(0,1).detach().clone()
+    cached_data["actions"     ][indexes] = episode_data["actions"]     .flatten(0,1).detach().clone()
+    cached_data["rewards"     ][indexes] = episode_data["rewards"]     .flatten(0,1).detach().clone()
 
     dataloader = torch.utils.data.DataLoader(
         torch.utils.data.TensorDataset(
-            reward_model_obs_data[reward_model_msk_data],
-            reward_model_act_data[reward_model_msk_data],
-            reward_model_rew_data[reward_model_msk_data],
+            cached_data["observations"][cached_data["mask"]],
+            cached_data["actions"     ][cached_data["mask"]],
+            cached_data["rewards"     ][cached_data["mask"]],
         ),
         collate_fn = torch.utils.data.default_collate,
-        batch_size = reward_model_batch_size,
+        batch_size = batch_size,
         drop_last  = True,
         shuffle    = True
     )
 
-    for epoch in itertools.count(0):
+    for epoch in range(training_epochs):
         tpfn,tot = 0,0
         tpfn_nonzero, tot_nonzero = 0,0
         for step, (obs, act, tgt) in enumerate(dataloader,1):
-            reward_model_optimizer.zero_grad()
-            prd = reward_model(obs,act)
+            optimizer.zero_grad()
+            prd = model(obs,act)
             loss = ((prd - tgt)**2).mean()
             loss.backward()
-            reward_model_optimizer.step()
+            optimizer.step()
 
-            tpfn,tot = tpfn + torch.isclose(prd, tgt, atol=.1).float().sum(), tot + numpy.prod(prd.shape) 
-            tpfn_nonzero, tot_nonzero = tpfn_nonzero + torch.isclose(prd[tgt>0], tgt[tgt>0], atol=.1).float().sum(), tot_nonzero + numpy.prod(prd[tgt>0].shape)
-            print(termcolor.colored(f"\rreward model training episode:{episode:<5d}, epoch:{epoch:<3d}, step:{step:<3d}, mask:{reward_model_msk_data.sum().item():<4d}, masknz:{(reward_model_rew_data[reward_model_msk_data] > 0).sum().item():<4d}, loss:{loss.item():5.4f}, acc:{tpfn/tot:5.4f} acc_nonzero:{tpfn_nonzero/tot_nonzero:5.4f}", "yellow"), end="")
-        if tpfn/tot >= .9: break
-        if epoch >= 8: break
-    print()
+            tpfn,tot = tpfn + torch.isclose(prd, tgt, atol=.1).float().sum().item(), tot + numpy.prod(prd.shape).item() 
+            tpfn_nonzero, tot_nonzero = tpfn_nonzero + torch.isclose(prd[tgt>0], tgt[tgt>0], atol=.1).float().sum().item(), tot_nonzero + numpy.prod(prd[tgt>0].shape).item()
+            logger.info(json.dumps({
+                "episode"         : episode,
+                "epoch"           : epoch,
+                "step"            : step,
+                "loss"            : loss.item(),
+                "accuracy"        : tpfn/(tot+1e-7),
+                "accuracy_nz"     : tpfn_nonzero/(tot_nonzero+1e-7),
+                "dataset_size"    : cached_data["mask"].sum().item(),
+                "dataset_size_nz" : (cached_data["rewards"][cached_data["mask"]] > 0).sum().item(),
+            }))
 
 def train_value_model(
         episode,
-        value_model, 
-        value_model_optimizer, 
-        agents, 
-        train_steps, 
-        train_envs, 
-        observation_cache, 
-        value_cache, 
-        reward_cache, 
-        done_cache,
-        value_model_training_epochs, 
-        value_model_batch_size, 
+        model, 
+        optimizer, 
+        episode_data,
+        training_epochs, 
+        batch_size, 
         slam, 
         gamma, 
-        device
+        logger,
     ):
-    target_values = utils.compute_values(train_steps, train_envs, value_cache, done_cache, agents, reward_cache, slam=slam, gamma=gamma, device=device)
+    
+    target_values = utils.compute_values(
+        values  = episode_data["values"] ,
+        rewards = episode_data["rewards"],
+        dones   = episode_data["dones"]  ,
+        slam    = slam                   ,
+        gamma   = gamma
+    )
+
     dataloader = torch.utils.data.DataLoader(
         torch.utils.data.TensorDataset(
-            observation_cache.flatten(0,1).detach(),
-            target_values    .flatten(0,1).detach(),
+            episode_data["observations"].flatten(0,1).detach(),
+            target_values               .flatten(0,1).detach(),
         ),
         collate_fn = torch.utils.data.default_collate,
-        batch_size = value_model_batch_size,
+        batch_size = batch_size,
         drop_last  = False,
         shuffle    = True
     )
     
-    for epoch in range(1, value_model_training_epochs+1):
+    for epoch in range(1, training_epochs+1):
         for step, (obs, tgt) in enumerate(dataloader, 1):
-            value_model_optimizer.zero_grad()
-            prd = value_model(obs)
+            optimizer.zero_grad()
+            prd = model(obs)
             loss = ((prd - tgt)**2).mean()
     
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(value_model.parameters(), .5)
-            value_model_optimizer.step()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), .5)
+            optimizer.step()
     
-            print(termcolor.colored(f"\r value model training episode:{episode:<5d}, epoch:{epoch:<3d}, step:{step:<3d}, loss:{loss.item():5.4f}", "magenta"), end="")
-    print()
+            logger.info(json.dumps({
+                "episode"         : episode,
+                "epoch"           : epoch,
+                "step"            : step,
+                "loss"            : loss.item(),
+            }))
+
+def train_actor_model(
+        episode,
+        reward_model,
+        actor_model,
+        episode_data,
+        optimizer,
+        gammas,
+        logger,
+    ):
+    steps, envs = episode_data["observations"].size(0), episode_data["observations"].size(1)
+
+    # compute proxy rewards
+    reward_model.eval()
+    proxy_rewards = reward_model(episode_data["observations"].flatten(0,1), episode_data["actions"].flatten(0,1)).view(*episode_data["rewards"].shape)
+    reward_model.train()
+    
+    # compute value cache mask
+    dead_runs = episode_data["dones"][0,:,0]
+    live_runs = dead_runs.logical_not()
+    live_steps = episode_data["dones"][:,live_runs,0].logical_not().sum(0) - 1
+    
+    # compute loss
+    optimizer.zero_grad()
+    loss = -((proxy_rewards * gammas * episode_data["dones"].unsqueeze(-1).logical_not()).sum() + ((gammas * episode_data["values"])[live_steps,live_runs]).sum()) / (steps * envs)
+    loss.backward()
+    torch.nn.utils.clip_grad_norm_(actor_model.parameters(), 1)
+    optimizer.step()
+    logger.info(json.dumps({
+            "episode" : episode,
+            "loss"    : loss.item(),
+            "done"    : episode_data["dones"][-1,:,0].sum().int().item(),
+            "reward"  : episode_data["rewards"].sum(0).mean(0).sum().item()
+    }))
+
+@torch.no_grad
+def evaluate(
+        episode,
+        actor_model,
+        reward_model, 
+        value_model,
+        world,
+        steps,
+        envs,
+        logger
+    ):
+    actor_model .eval()
+    reward_model.eval()
+    value_model .eval()
+    
+    eval_episode = unroll(
+        observations = None, 
+        world        = world,
+        unroll_steps = steps,
+        actor_model  = actor_model,
+        value_model  = value_model
+    )
+    proxy_rewards = reward_model(eval_episode["observations"].flatten(0,1), eval_episode["actions"].flatten(0,1)).view(*eval_episode["rewards"].shape)
+    
+    actor_model .train()
+    reward_model.train()
+    value_model .train()
+   
+    logger.info(json.dumps({
+        "episode"            : episode,
+        "done"               : eval_episode["dones"][-1,:,0].sum().int().item(),
+        "reward"             : eval_episode["rewards"].sum().item() / envs,
+        "reward_loss"        : ((eval_episode["rewards"] - proxy_rewards)**2).mean().item(),
+        "reward_accuracy"    : torch.isclose(proxy_rewards, eval_episode["rewards"], atol=.1).float().mean().item(),
+        "reward_accuracy_nz" : torch.isclose(proxy_rewards[eval_episode["rewards"]>0], eval_episode["rewards"][eval_episode["rewards"]>0], atol=.1).float().mean().item()
+    }))
+
+    return {
+        "rewards" : eval_episode["rewards"].sum().item() / envs
+    }
 
 
-def unroll(actor_model, world, observations = None, actions=None, unroll_steps = 64):
+def unroll(
+        actor_model,
+        value_model,
+        world      ,
+        observations = None,
+        actions      = None,
+        unroll_steps = 64
+    ):
 
     world.world.zero_grad()
     if observations is None: 
@@ -119,7 +213,7 @@ def unroll(actor_model, world, observations = None, actions=None, unroll_steps =
     observation_cache = []
     action_cache      = []
     reward_cache      = []
-    dones_cache       = []
+    done_cache        = []
 
     for step in range(1, unroll_steps+1):
         observation_cache.append(observations)
@@ -131,29 +225,66 @@ def unroll(actor_model, world, observations = None, actions=None, unroll_steps =
 
         action_cache.append(actions)    
         reward_cache.append(rewards)     
-        dones_cache .append(dones)
+        done_cache  .append(dones)
 
-    done_stack = torch.stack(dones_cache)
-    live_steps = done_stack.logical_not().sum(0)
-    done_stack[live_steps[live_steps < unroll_steps],live_steps < unroll_steps] = False
+    observation_cache = torch.stack(observation_cache)
+    action_cache      = torch.stack(action_cache)
+    reward_cache      = torch.stack(reward_cache)
+    done_cache        = torch.stack(done_cache)
+    value_cache       = value_model(observation_cache.flatten(0,1)).view(observation_cache.size(0), observation_cache.size(1), observation_cache.size(2), 1)
 
-    return torch.stack(observation_cache), torch.stack(action_cache), torch.stack(reward_cache), torch.stack(dones_cache).unsqueeze(-1).repeat(1,1,observations.size(1)).float()
+    return { 
+            "observations" : observation_cache, 
+            "actions"      : action_cache, 
+            "rewards"      : reward_cache, 
+            "values"       : value_cache,
+            "dones"        : done_cache.unsqueeze(-1).repeat(1,1,observations.size(1)).float()
+    }
 
-def train():
-    torch.set_printoptions(threshold=100000000000, linewidth=1000)
+@click.command
+@click.option("--device"            , "device"            , type=str          , default="cuda:0" , help="random device")
+@click.option("--seed"              , "seed"              , type=int          , default=42       , help="random seed")
+@click.option("--episodes"          , "episodes"          , type=int          , default=500      , help="episodes before resetting the environement")
+@click.option("--etr"               , "etr"               , type=int          , default=5        , help="training etr between evaluations")
+@click.option("--value-batch-size"  , "value_batch_size"  , type=int          , default=512      , help="value model batch size")
+@click.option("--reward-batch-size" , "reward_batch_size" , type=int          , default=512      , help="reward model batch size")
+@click.option("--value-epochs"      , "value_epochs"      , type=int          , default=4        , help="value model epochs")
+@click.option("--reward-epochs"     , "reward_epochs"     , type=int          , default=4        , help="reward model epochs")
+@click.option("--etv"               , "etv"               , type=int          , default=10       , help="number of etv")
+@click.option("--agents"            , "agents"            , type=int          , default=5        , help="number of agents")
+@click.option("--train-envs"        , "train_envs"        , type=int          , default=512      , help="number of train environments")
+@click.option("--eval-envs"         , "eval_envs"         , type=int          , default=512      , help="number of evaluation environments")
+@click.option("--train-steps"       , "train_steps"       , type=int          , default=32       , help="number of steps for the training rollout")
+@click.option("--eval-steps"        , "eval_steps"        , type=int          , default=64       , help="number of steps for the evaluation rollout")
+@click.option("--gamma"             , "gamma_factor"      , type=float        , default=.99      , help="reward discount factor")
+@click.option("--lambda"            , "lambda_factor"     , type=float        , default=.95      , help="td-lambda factor")
+@click.option("--dir"               , "dir"               , type=click.Path() , default="./"     , help="directory in which store logs and checkpoints")
+def run(
+        dir,
+        seed,
+        episodes,
+        agents,
+        train_envs,
+        train_steps,
+        eval_envs,
+        eval_steps,
+        value_batch_size,
+        value_epochs,
+        reward_batch_size,
+        reward_epochs,
+        etr,
+        gamma_factor,
+        lambda_factor,
+        etv,
+        device
+    ):
 
-    seed = 49
     utils.seed_everything(seed)
 
-    agents       = 5
-    train_envs   = 512
-    eval_envs    = 512
-    device       = "cuda:0"
-    episodes     = 10000
-    train_steps  = 32
-    eval_steps   = 64
-    gamma        = .99
-    slam         = .95
+    eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
+    reward_logger = utils.get_file_logger(os.path.join(dir,"reward.log"))
+    value_logger  = utils.get_file_logger(os.path.join(dir, "value.log"))
+    policy_logger = utils.get_file_logger(os.path.join(dir,"policy.log"))
 
     train_world = vmas.simulator.environment.Environment(
         DispersionScenario(
@@ -188,19 +319,11 @@ def train():
     )
     
     reward_model_dataset_size    = 10000
-    reward_model_batch_size      = 512
-    
-    value_model_training_epochs  = 8
-    value_model_batch_size       = 512
-    episode_to_reset             = 5
     
     gammas = torch.ones(train_steps, device=device, dtype=torch.float)
-    gammas[1:] = gamma
+    gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents).unsqueeze(-1)
     
-    reward_pert_low  = torch.zeros(train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False)
-    reward_pert_high = torch.ones (train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False) * (reward_model_dataset_size-1)
-
     observation_size:int = numpy.prod(train_world.get_observation_space()[0].shape)
     action_size     :int = numpy.prod(train_world.get_action_space()[0].shape)
     
@@ -212,127 +335,93 @@ def train():
     actor_model_optimizer  = torch.optim.Adam( actor_model.parameters(), lr=0.001)
     value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=0.001)
     
-    reward_model_obs_data = torch.zeros(reward_model_dataset_size, agents, observation_size, device=device)
-    reward_model_act_data = torch.zeros(reward_model_dataset_size, agents,      action_size, device=device)
-    reward_model_rew_data = torch.zeros(reward_model_dataset_size, agents,                1, device=device)
-    reward_model_msk_data = torch.zeros(reward_model_dataset_size, dtype=torch.bool, device=device)
-    
+    reward_model_cache = {
+        "observations" : torch.zeros(reward_model_dataset_size, agents, observation_size, device=device),
+        "actions"      : torch.zeros(reward_model_dataset_size, agents,      action_size, device=device),
+        "rewards"      : torch.zeros(reward_model_dataset_size, agents,                1, device=device),
+        "mask"         : torch.zeros(reward_model_dataset_size, dtype=torch.bool, device=device),
+        "pert_low"     : torch.zeros(train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False),
+        "pert_high"    : torch.ones (train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False) * (reward_model_dataset_size-1)
+    }
+   
     prev_obs, prev_act = None, None
     
-    for episode in range(1, episodes):
+    for episode in (bar:=tqdm.tqdm(range(1, episodes))):
         
-        observation_cache, action_cache, reward_cache, done_cache = unroll(
-            observations  = (None if episode == 1 or episode % episode_to_reset == 0 else prev_obs), 
-            actions       = (None if episode == 1 or episode % episode_to_reset == 0 else prev_act),
+        # unroll episode #############################################
+        episode_data = unroll(
+            observations  = (None if episode == 1 or episode % etr == 0 else prev_obs), 
+            actions       = (None if episode == 1 or episode % etr == 0 else prev_act),
             world         = train_world,
             unroll_steps  = train_steps,
-            actor_model   = actor_model.sample
+            actor_model   = actor_model.sample,
+            value_model   = value_model
         )
-        value_cache = value_model(observation_cache.flatten(0,1)).view(train_steps, train_envs, agents, 1)
     
-        
- 
         # train actor model ###########################################
-        reward_model.eval()
-        actor_model_optimizer.zero_grad()
-        proxy_rewards = reward_model(observation_cache.flatten(0,1), action_cache.flatten(0,1)).view(*reward_cache.shape)
-        
-        dead_runs = done_cache[0,:,0]
-        live_runs = dead_runs.logical_not()
-        live_steps = done_cache[:,live_runs,0].logical_not().sum(0) - 1
+        train_actor_model(
+            episode      = episode               ,
+            reward_model = reward_model          ,
+            actor_model  = actor_model           ,
+            episode_data = episode_data          ,
+            optimizer    = actor_model_optimizer ,
+            gammas       = gammas                ,
+            logger       = policy_logger,
+        )
 
-        loss = -((proxy_rewards * gammas * done_cache.unsqueeze(-1).logical_not()).sum()  + ((gammas * value_cache)[live_steps,live_runs]).sum()) / (train_steps * train_envs)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(actor_model.parameters(), 1)
-        actor_model_optimizer.step()
-        reward_model.train()
-        print(termcolor.colored(f" actor model training episode:{episode:<5d}, done:{done_cache[-1,:,0].sum().int().item():<5d}, loss:{loss.item():5.4f},  rew:{reward_cache.sum(0).mean(0).sum().item():5.4f}", "cyan"))
- 
+         
         # train reward model ##########################################
         train_reward_model(
-            episode                       = episode                       ,
-            reward_model                  = reward_model                  ,
-            reward_cache                  = reward_cache                  ,
-            observation_cache             = observation_cache             ,
-            action_cache                  = action_cache                  ,
-            reward_model_msk_data         = reward_model_msk_data         ,
-            reward_model_obs_data         = reward_model_obs_data         ,
-            reward_model_act_data         = reward_model_act_data         ,
-            reward_model_rew_data         = reward_model_rew_data         ,
-            reward_pert_low               = reward_pert_low               ,
-            reward_pert_high              = reward_pert_high              ,
-            reward_model_batch_size       = reward_model_batch_size       ,
-            reward_model_dataset_size     = reward_model_dataset_size     ,
-            reward_model_optimizer        = reward_model_optimizer
+            episode         = episode                   ,
+            model           = reward_model              ,
+            optimizer       = reward_model_optimizer    ,
+            episode_data    = episode_data              ,
+            cached_data     = reward_model_cache        ,
+            batch_size      = reward_batch_size         ,
+            dataset_size    = reward_model_dataset_size ,
+            training_epochs = reward_epochs             ,
+            logger          = reward_logger
         )
 
         # train value model ###########################################
         train_value_model(
-            episode                     = episode                     ,
-            value_model                 = value_model                 ,
-            value_model_optimizer       = value_model_optimizer       ,
-            agents                      = agents                      ,
-            train_steps                 = train_steps                 ,
-            train_envs                  = train_envs                  ,
-            observation_cache           = observation_cache           ,
-            value_cache                 = value_cache                 ,
-            done_cache                  = done_cache                  ,
-            reward_cache                = reward_cache                ,
-            value_model_training_epochs = value_model_training_epochs ,
-            value_model_batch_size      = value_model_batch_size      ,
-            slam                        = slam                        ,
-            gamma                       = gamma                       ,
-            device                      = device
+            episode         = episode               ,
+            model           = value_model           ,
+            optimizer       = value_model_optimizer ,
+            episode_data    = episode_data          ,
+            training_epochs = value_epochs          ,
+            batch_size      = value_batch_size      ,
+            slam            = lambda_factor         ,
+            gamma           = gamma_factor          ,
+            logger          = value_logger
         )
     
     
-        if episode % 10 == 0:
+        if episode % etv == 0:
             torch.save({
-                "actor_state_dict" : actor_model.state_dict(),   
-            }, "actor.pkl")
+                "actor_state_dict"  : actor_model.state_dict(),   
+                "reward_state_dict" : reward_model.state_dict(),
+                "value_state_dict"  : value_model.state_dict(),
+            }, os.path.join(dir,"models.pkl"))
+
     
-        if episode % 10 == 0:
-            
-            # evaluate
-            with torch.no_grad():
-                actor_model.eval()
-                reward_model.eval()
+        if episode % etv == 0:
+            eval_data = evaluate(
+                episode      = episode      ,
+                actor_model  = actor_model  ,
+                reward_model = reward_model ,
+                value_model  = value_model  ,
+                world        = eval_world   ,
+                steps        = eval_steps   ,
+                envs         = eval_envs    ,
+                logger       = eval_logger
+            ) 
+            eval_reward = eval_data["rewards"]
+            bar.set_description(f"reward:{eval_reward:5.3f}")
 
-                maxes_obs = observation_cache.max(0,keepdim=True)[0].max(1,keepdim=True)[0].max(2)[0].detach()
-                mines_obs = observation_cache.min(0,keepdim=True)[0].min(1,keepdim=True)[0].min(2)[0].detach()
-                maxes_act = action_cache.max(0,keepdim=True)[0].max(1,keepdim=True)[0].max(2)[0].detach()
-                mines_act = action_cache.min(0,keepdim=True)[0].min(1,keepdim=True)[0].min(2)[0].detach()
-                random_obs_data = torch.rand(1000,observation_cache.size(2),observation_cache.size(3), device=observation_cache.device) * (maxes_obs - mines_obs) + mines_obs
-                random_act_data = torch.rand(1000,action_cache     .size(2),action_cache     .size(3), device=action_cache     .device) * (maxes_act - mines_act) + mines_act
-                ood_rew = reward_model(random_obs_data, random_act_data)
-                mean_ood_rew = ood_rew.mean().item()
-                var_ood_rew = ood_rew.var().item()
-
-                obs_cache, act_cache, eval_reward, eval_done = unroll(
-                    observations = None, 
-                    world        = eval_world,
-                    unroll_steps = eval_steps,
-                    actor_model  = actor_model,
-                )
-                proxy_rew = reward_model(obs_cache.flatten(0,1), act_cache.flatten(0,1)).view(*eval_reward.shape)
-                rew_acc = torch.isclose(proxy_rew, eval_reward, atol=.1).float().mean()
-                rew_acc_nz = torch.isclose(proxy_rew[eval_reward>0], eval_reward[eval_reward>0], atol=.1).float().mean()
-
-                actor_model.train()
-                reward_model.eval()
-
-                reward_model_stats = str(reduce(lambda x,y: (min(x[0],y[0]),(x[1]+y[1])/2,max(x[2],y[2])),[(p.min().item(), p.mean().item(), p.max().item()) for p in reward_model.parameters()]))
-                actor_model_stats  = str(reduce(lambda x,y: (min(x[0],y[0]),(x[1]+y[1])/2,max(x[2],y[2])),[(p.min().item(), p.mean().item(), p.max().item()) for p in actor_model.parameters()]))
-            
-            print(termcolor.colored(f"eval reward {episode}, {eval_reward.sum() / eval_envs} {rew_acc} {rew_acc_nz} {mean_ood_rew} {var_ood_rew} "+ reward_model_stats + actor_model_stats, "green"))
-            with open("eval.log","a") as file:file.write("{" + f"\"episode\":{episode}, \"reward\":{eval_reward.sum() /eval_envs}, \"rewacc\":{rew_acc}, \"rew_acc_nz\":{rew_acc_nz}, \"ood_rew_mean\":{mean_ood_rew}, \"ood_rew_var\":{var_ood_rew}" + "}\n")
-
-        prev_obs = observation_cache[-1].detach().clone()
-        prev_act = action_cache[-1].detach().clone()
-        del observation_cache
-        del action_cache
-        del reward_cache
-        del value_cache 
+        prev_obs = episode_data["observations"][-1].detach().clone()
+        prev_act = episode_data["actions"     ][-1].detach().clone()
+        del episode_data
 
 if __name__ == "__main__":
-    train()
+    run()
