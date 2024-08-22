@@ -100,10 +100,9 @@ def run(
     observation_size:int = numpy.prod(train_world.get_observation_space()[0].shape)
     action_size     :int = numpy.prod(train_world.get_action_space()[0].shape)
     
-    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128 , dropout=0.0, activation="Tanh", device = device)
-    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128 , dropout=0.0, activation="Tanh", device = device)
+    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
+    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
     reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="Tanh", device = device)
-    world_model  = models.World (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128 , dropout=0.0, activation="relu", device = device)
     
     reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.0001) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
