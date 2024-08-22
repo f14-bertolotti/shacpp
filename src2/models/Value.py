@@ -1,10 +1,10 @@
 import torch
 
-class ValueModel(torch.nn.Module):
+class Value(torch.nn.Module):
     def __init__(self, observation_size, action_size, agents, layers = 1, hidden_size=128, activation="Tanh", dropout=0.1, device="cuda:0"):
         super().__init__()
         self.agents = agents
-        self.first_layer   = torch.nn.Linear(observation_size*agents, hidden_size, device = device)
+        self.first_layer   = torch.nn.Linear(observation_size, hidden_size, device = device)
         self.first_act     = getattr(torch.nn, activation)()
         self.first_drop    = torch.nn.Dropout(dropout)
         self.first_norm    = torch.nn.LayerNorm(hidden_size, device=device)
@@ -14,16 +14,11 @@ class ValueModel(torch.nn.Module):
         self.hidden_drop   = torch.nn.ModuleList([torch.nn.Dropout(dropout)])
         self.hidden_norms  = torch.nn.ModuleList([torch.nn.LayerNorm(hidden_size, device=device) for _ in range(layers)])
 
-
         self.last_layer    = torch.nn.Linear(hidden_size, 1, bias=False, device = device)
-        self.idxs = [j for i in range(agents) for j in range(agents) if i != j]
 
     def forward(self, observations):
 
-        detached_obs = observations.detach()[:,self.idxs].view(observations.size(0),self.agents, -1)
-
-        src = torch.cat([observations, detached_obs], dim=-1)
-
+        src = observations
         hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(src))))
         for layer, act, drop, norm in zip(self.hidden_layers, self.hidden_act, self.hidden_drop, self.hidden_norms):
             hidden = norm(hidden + drop(act(layer(hidden))))

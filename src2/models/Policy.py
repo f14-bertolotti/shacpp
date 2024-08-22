@@ -2,7 +2,7 @@ from utils import layer_init
 from MultiLinear import MultiLinear
 import torch
 
-class ActorModel(torch.nn.Module):
+class Policy(torch.nn.Module):
     def __init__(self, observation_size, action_size, agents, hidden_size=128, layers = 1, dropout=0.1, activation="Tanh", device="cuda:0"):
         super().__init__()
         self.first_layer   = torch.nn.Linear(observation_size*agents, hidden_size, device=device)

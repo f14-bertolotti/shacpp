@@ -1,6 +1,6 @@
 import torch
 
-class RewardModel(torch.nn.Module):
+class Reward(torch.nn.Module):
     def __init__(self, observation_size, action_size, agents, layers = 1, hidden_size=128, dropout=0.1, activation="Tanh", device="cuda:0"):
         super().__init__()
 
