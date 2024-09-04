@@ -11,11 +11,12 @@ def train_value(
         logger,
         clip_coefficient = .5
     ):
+
     
     target_values = utils.compute_values(
         values  = episode_data["values"] ,
         rewards = episode_data["rewards"],
-        dones   = episode_data["dones"]  ,
+        dones   = episode_data["dones"].float()  ,
         slam    = slam                   ,
         gamma   = gamma
     )

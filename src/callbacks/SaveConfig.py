@@ -7,8 +7,9 @@ class SaveConfig(Callback):
         self.path    =    path
 
     def start(self, data):
-        with open(self.path, "w") as file: 
-            file.write(str(jsonpickle.encode(self.trainer,indent=4)))
+        pass
+        #with open(self.path, "w") as file: 
+        #    file.write(str(jsonpickle.encode(self.trainer,indent=4)))
  
 
 @callback.group

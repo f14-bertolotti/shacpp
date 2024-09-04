@@ -40,11 +40,11 @@ class Environment():
     
     @torch.no_grad
     def get_action_size(self):
-        return numpy.prod(self.world.get_action_space     ()[0].shape)
+        return 2
 
     @torch.no_grad
     def get_observation_size(self):
-        return numpy.prod(self.world.get_observation_space()[0].shape)
+        return 13
 
 
 @click.group()

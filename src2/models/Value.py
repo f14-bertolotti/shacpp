@@ -22,7 +22,7 @@ class Value(torch.nn.Module):
         hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(src))))
         for layer, act, drop, norm in zip(self.hidden_layers, self.hidden_act, self.hidden_drop, self.hidden_norms):
             hidden = norm(hidden + drop(act(layer(hidden))))
-        value = self.last_layer(hidden)
+        value = self.last_layer(hidden).squeeze(-1)
         return value
 
 

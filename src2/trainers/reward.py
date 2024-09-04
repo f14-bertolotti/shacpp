@@ -12,7 +12,7 @@ def train_reward(
         logger,
     ):
 
-    peak_cache = episode_data["rewards"].flatten(0,1).sum(1).sum(1)
+    peak_cache = episode_data["rewards"].flatten(0,1).sum(1)
     indexes = utils.pert(
         low  = cached_data["pert_low"],
         high = cached_data["pert_high"],
