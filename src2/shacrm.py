@@ -15,23 +15,13 @@ import os
 
 
 @click.command
-@click.option("--device"            , "device"            , type=str          , default="cuda:0" , help="random device")
-@click.option("--seed"              , "seed"              , type=int          , default=42       , help="random seed")
-@click.option("--episodes"          , "episodes"          , type=int          , default=500      , help="episodes before resetting the environement")
-@click.option("--etr"               , "etr"               , type=int          , default=5        , help="training etr between evaluations")
+@utils.common_options
 @click.option("--value-batch-size"  , "value_batch_size"  , type=int          , default=512      , help="value model batch size")
 @click.option("--reward-batch-size" , "reward_batch_size" , type=int          , default=512      , help="reward model batch size")
 @click.option("--value-epochs"      , "value_epochs"      , type=int          , default=4        , help="value model epochs")
 @click.option("--reward-epochs"     , "reward_epochs"     , type=int          , default=4        , help="reward model epochs")
-@click.option("--etv"               , "etv"               , type=int          , default=10       , help="number of etv")
-@click.option("--agents"            , "agents"            , type=int          , default=5        , help="number of agents")
-@click.option("--train-envs"        , "train_envs"        , type=int          , default=512      , help="number of train environments")
-@click.option("--eval-envs"         , "eval_envs"         , type=int          , default=512      , help="number of evaluation environments")
-@click.option("--train-steps"       , "train_steps"       , type=int          , default=32       , help="number of steps for the training rollout")
-@click.option("--eval-steps"        , "eval_steps"        , type=int          , default=64       , help="number of steps for the evaluation rollout")
 @click.option("--gamma"             , "gamma_factor"      , type=float        , default=.99      , help="reward discount factor")
 @click.option("--lambda"            , "lambda_factor"     , type=float        , default=.95      , help="td-lambda factor")
-@click.option("--dir"               , "dir"               , type=click.Path() , default="./"     , help="directory in which store logs and checkpoints")
 def run(
         dir,
         seed,
@@ -45,6 +35,8 @@ def run(
         value_epochs,
         reward_batch_size,
         reward_epochs,
+        observation_size,
+        action_size,
         etr,
         gamma_factor,
         lambda_factor,
@@ -68,7 +60,6 @@ def run(
         n_agents           = agents        ,
         num_envs           = train_envs    ,
         device             = device        ,
-        shared_reward      = False         ,
         grad_enabled       = True          ,
         continuous_actions = True          ,
         dict_spaces        = False         ,
@@ -84,7 +75,6 @@ def run(
         n_agents           = agents        ,
         num_envs           = eval_envs     ,
         device             = device        ,
-        shared_reward      = False         ,
         grad_enabled       = False         ,
         continuous_actions = True          ,
         dict_spaces        = False         ,
@@ -95,13 +85,10 @@ def run(
     
     gammas = torch.ones(train_steps, device=device, dtype=torch.float)
     gammas[1:] = gamma_factor
-    gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents).unsqueeze(-1)
-    
-    observation_size:int = numpy.prod(train_world.get_observation_space()[0].shape)
-    action_size     :int = numpy.prod(train_world.get_action_space()[0].shape)
+    gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
     value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
-    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
+    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device, shared=[True, True, False])
     reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="Tanh", device = device)
     
     reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.0001) 
@@ -111,26 +98,26 @@ def run(
     reward_model_cache = {
         "observations" : torch.zeros(reward_model_dataset_size, agents, observation_size, device=device),
         "actions"      : torch.zeros(reward_model_dataset_size, agents,      action_size, device=device),
-        "rewards"      : torch.zeros(reward_model_dataset_size, agents,                1, device=device),
+        "rewards"      : torch.zeros(reward_model_dataset_size, agents, device=device),
         "mask"         : torch.zeros(reward_model_dataset_size, dtype=torch.bool, device=device),
         "pert_low"     : torch.zeros(train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False),
         "pert_high"    : torch.ones (train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False) * (reward_model_dataset_size-1)
     }
    
-    prev_obs, prev_act = None, None
+    prev_observations, prev_dones = None, None
     
     for episode in (bar:=tqdm.tqdm(range(1, episodes))):
         
         # unroll episode #############################################
         episode_data = unroll(
-            observations  = (None if episode == 1 or episode % etr == 0 else prev_obs), 
-            actions       = (None if episode == 1 or episode % etr == 0 else prev_act),
+            observations  = (None if episode == 1 or episode % etr == 0 else prev_observations), 
+            dones         = (None if episode == 1 or episode % etr == 0 else prev_dones),
             world         = train_world,
             unroll_steps  = train_steps,
-            reward_model  = reward_model,
             policy_model  = policy_model.sample,
-            value_model   = value_model
         )
+        episode_data["proxy_rewards"] = reward_model(episode_data["observations"], episode_data["actions"])
+        episode_data["values"]        = value_model(episode_data["observations"])
     
         # train actor model ###########################################
         trainers.train_policy(
@@ -141,7 +128,6 @@ def run(
             gammas       = gammas                ,
             logger       = policy_logger         ,
         )
-
          
         # train reward model ##########################################
         trainers.train_reward(
@@ -182,8 +168,6 @@ def run(
             eval_data = evaluate(
                 episode      = episode      ,
                 policy_model = policy_model  ,
-                reward_model = reward_model ,
-                value_model  = value_model  ,
                 world        = eval_world   ,
                 steps        = eval_steps   ,
                 envs         = eval_envs    ,
@@ -191,9 +175,10 @@ def run(
             ) 
             eval_reward = eval_data["rewards"]
             bar.set_description(f"reward:{eval_reward:5.3f}")
+            del eval_data
 
-        prev_obs = episode_data["observations"][-1].detach().clone()
-        prev_act = episode_data["actions"     ][-1].detach().clone()
+        prev_observations = episode_data["last_observations"].detach().clone()
+        prev_dones        = episode_data["last_dones"       ].detach().clone()
         del episode_data
 
 if __name__ == "__main__":

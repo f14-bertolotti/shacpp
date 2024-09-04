@@ -20,6 +20,6 @@ class Reward(torch.nn.Module):
         hidden = self.first_drop(self.first_act(self.first_layer(src)))
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):
             hidden = ln(hidden + drop(act(layer(hidden))))
-        value = self.last_layer(hidden)
+        value = self.last_layer(hidden).squeeze(-1)
         return value
 

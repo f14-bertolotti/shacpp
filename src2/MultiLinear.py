@@ -8,6 +8,10 @@ class MultiLinear(torch.nn.Module):
         self.weight = torch.nn.Parameter(torch.empty(channels, input_size, output_size, requires_grad=requires_grad).to(device))
         self.bias   = torch.nn.Parameter(torch.empty(channels, 1, output_size, requires_grad=requires_grad).to(device)) if bias else torch.tensor(0, requires_grad=False, device=device)
 
+        with torch.no_grad():
+            torch.nn.init.xavier_uniform_(self.weight)
+            torch.nn.init.zeros_(self.bias)
+
     def forward(self, x): 
         x = x.unsqueeze(-2)
         x = torch.matmul(x, self.weight) 

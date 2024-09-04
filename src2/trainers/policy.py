@@ -18,7 +18,7 @@ def train_policy(
     
     # compute loss
     optimizer.zero_grad()
-    loss = -((episode_data["proxy_rewards"] * gammas * episode_data["dones"].unsqueeze(-1).logical_not()).sum() + ((gammas * episode_data["values"])[live_steps,live_runs]).sum()) / (steps * envs)
+    loss = -((episode_data["proxy_rewards"] * gammas * episode_data["dones"].logical_not()).sum() + ((gammas * episode_data["values"])[live_steps,live_runs]).sum()) / (steps * envs)
     loss.backward()
     torch.nn.utils.clip_grad_norm_(model.parameters(), clip_coefficient)
     optimizer.step()
