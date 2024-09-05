@@ -1,6 +1,8 @@
 from Dispersion import Dispersion as DispersionScenario
-from unroll import unroll
-from evaluate import evaluate
+from unroll import Nunroll, unroll
+from evaluate import Nevaluate, evaluate
+
+evaluate
 
 import trainers
 import models
@@ -29,6 +31,7 @@ import os
 @click.option("--eval-envs"         , "eval_envs"         , type=int          , default=512      , help="number of evaluation environments")
 @click.option("--train-steps"       , "train_steps"       , type=int          , default=32       , help="number of steps for the training rollout")
 @click.option("--eval-steps"        , "eval_steps"        , type=int          , default=64       , help="number of steps for the evaluation rollout")
+@click.option("--enable-grads"      , "enable_grads"      , type=bool         , default=False    , help="Shold grads be enabled")
 @click.option("--gamma"             , "gamma_factor"      , type=float        , default=.99      , help="reward discount factor")
 @click.option("--lambda"            , "lambda_factor"     , type=float        , default=.95      , help="td-lambda factor")
 @click.option("--dir"               , "dir"               , type=click.Path() , default="./"     , help="directory in which store logs and checkpoints")
@@ -48,16 +51,18 @@ def run(
         etr,
         gamma_factor,
         lambda_factor,
+        enable_grads,
         etv,
         device
     ):
-
+    torch.set_float32_matmul_precision('high')
     utils.seed_everything(seed)
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
     reward_logger = utils.get_file_logger(os.path.join(dir,"reward.log"))
     value_logger  = utils.get_file_logger(os.path.join(dir, "value.log"))
     policy_logger = utils.get_file_logger(os.path.join(dir,"policy.log"))
+    world_logger  = utils.get_file_logger(os.path.join(dir, "world.log"))
 
     train_world = vmas.simulator.environment.Environment(
         DispersionScenario(
@@ -69,7 +74,7 @@ def run(
         num_envs           = train_envs    ,
         device             = device        ,
         shared_reward      = False         ,
-        grad_enabled       = True          ,
+        grad_enabled       = enable_grads  ,
         continuous_actions = True          ,
         dict_spaces        = False         ,
         seed               = seed          ,
@@ -100,22 +105,28 @@ def run(
     observation_size:int = numpy.prod(train_world.get_observation_space()[0].shape)
     action_size     :int = numpy.prod(train_world.get_action_space()[0].shape)
     
-    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128 , dropout=0.0, activation="Tanh", device = device)
-    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128 , dropout=0.0, activation="Tanh", device = device)
-    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="Tanh", device = device)
-    world_model  = models.World (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128 , dropout=0.0, activation="relu", device = device)
+    #value_model =models.Value  (observation_size=observation_size, action_size=action_size, agents=agents, steps=train_steps, layers=1, hidden_size=128 , dropout=0.0, activation="Tanh", device=device)
+    policy_model=models.NPolicy(observation_size=observation_size, action_size=action_size, agents=agents, steps=train_steps, layers=1, hidden_size=128, dropout=0.0, activation="Tanh", device=device)
+    reward_model=models.Reward2(observation_size=observation_size, action_size=action_size, agents=agents, steps=train_steps, layers=1, hidden_size=128 , feedforward_size=512, heads=4, dropout=0.0, activation="gelu", device=device)
+    #world_model =models.World  (observation_size=observation_size, action_size=action_size, agents=agents, steps=train_steps, layers=1, hidden_size=128 , feedforward_size=512, heads=2, dropout=0.0, activation="relu", device=device)
+
     
-    reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.0001) 
+    reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.001) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
-    value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=0.001)
+    #value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=0.001)
+    #world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=0.001)
+
+    policy_model = torch.compile(policy_model)
+    reward_model = torch.compile(reward_model)
     
-    reward_model_cache = {
+    rewval_model_cache = {
         "observations" : torch.zeros(reward_model_dataset_size, agents, observation_size, device=device),
-        "actions"      : torch.zeros(reward_model_dataset_size, agents,      action_size, device=device),
-        "rewards"      : torch.zeros(reward_model_dataset_size, agents,                1, device=device),
+        "actions"      : torch.zeros(reward_model_dataset_size, train_steps, agents, action_size, device=device),
+        "rewards"      : torch.zeros(reward_model_dataset_size, train_steps, agents,   1, device=device),
+        "values"       : torch.zeros(reward_model_dataset_size, train_steps, agents,   1, device=device),
         "mask"         : torch.zeros(reward_model_dataset_size, dtype=torch.bool, device=device),
-        "pert_low"     : torch.zeros(train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False),
-        "pert_high"    : torch.ones (train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False) * (reward_model_dataset_size-1)
+        "pert_low"     : torch.zeros(train_envs, dtype = torch.float32 , device=device, requires_grad=False),
+        "pert_high"    : torch.ones (train_envs, dtype = torch.float32 , device=device, requires_grad=False) * (reward_model_dataset_size-1)
     }
    
     prev_obs, prev_act = None, None
@@ -123,16 +134,17 @@ def run(
     for episode in (bar:=tqdm.tqdm(range(1, episodes))):
         
         # unroll episode #############################################
-        episode_data = unroll(
+        episode_data = Nunroll(
             observations  = (None if episode == 1 or episode % etr == 0 else prev_obs), 
-            actions       = (None if episode == 1 or episode % etr == 0 else prev_act),
             world         = train_world,
             unroll_steps  = train_steps,
             reward_model  = reward_model,
             policy_model  = policy_model.sample,
-            value_model   = value_model
+            world_model   = None, #world_model,
+            value_model   = None, #value_model
         )
-    
+        
+   
         # train actor model ###########################################
         trainers.train_policy(
             episode      = episode               ,
@@ -143,48 +155,39 @@ def run(
             logger       = policy_logger         ,
         )
 
-         
+ 
         # train reward model ##########################################
-        trainers.train_reward(
+        trainers.train_rewval(
             episode         = episode                   ,
             model           = reward_model              ,
             optimizer       = reward_model_optimizer    ,
             episode_data    = episode_data              ,
-            cached_data     = reward_model_cache        ,
             batch_size      = reward_batch_size         ,
-            dataset_size    = reward_model_dataset_size ,
             training_epochs = reward_epochs             ,
-            logger          = reward_logger
+            logger          = reward_logger,
+            cache           = rewval_model_cache,
+            slam = lambda_factor,
+            gamma = gamma_factor
         )
 
-        # train value model ###########################################
-        trainers.train_value(
-            episode         = episode               ,
-            model           = value_model           ,
-            optimizer       = value_model_optimizer ,
-            episode_data    = episode_data          ,
-            training_epochs = value_epochs          ,
-            batch_size      = value_batch_size      ,
-            slam            = lambda_factor         ,
-            gamma           = gamma_factor          ,
-            logger          = value_logger
-        )
+
     
     
         if episode % etv == 0:
             torch.save({
                 "policy_state_dict" : policy_model.state_dict(),   
                 "reward_state_dict" : reward_model.state_dict(),
-                "value_state_dict"  : value_model.state_dict(),
+                #"value_state_dict"  : value_model.state_dict(),
+                #"world_state_dict"  : world_model.state_dict(),
             }, os.path.join(dir,"models.pkl"))
 
     
         if episode % etv == 0:
-            eval_data = evaluate(
+            eval_data = Nevaluate(
                 episode      = episode      ,
                 policy_model = policy_model  ,
                 reward_model = reward_model ,
-                value_model  = value_model  ,
+                value_model  = None, #value_model  ,
                 world        = eval_world   ,
                 steps        = eval_steps   ,
                 envs         = eval_envs    ,
@@ -194,7 +197,6 @@ def run(
             bar.set_description(f"reward:{eval_reward:5.3f}")
 
         prev_obs = episode_data["observations"][-1].detach().clone()
-        prev_act = episode_data["actions"     ][-1].detach().clone()
         del episode_data
 
 if __name__ == "__main__":
