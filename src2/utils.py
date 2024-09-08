@@ -4,6 +4,7 @@ import numpy
 import torch
 import click
 import json
+import os
 
 def layer_init(layer, std=1.141, bias_const=0.0):
     torch.nn.init.orthogonal_(layer.weight, std)
@@ -94,9 +95,11 @@ common_options = chain(
     click.option("--train-steps"       , "train_steps"       , type=int          , default=32       , help="number of steps for the training rollout"      ),
     click.option("--eval-steps"        , "eval_steps"        , type=int          , default=64       , help="number of steps for the evaluation rollout"    ),
     click.option("--dir"               , "dir"               , type=click.Path() , default="./"     , help="directory in which store logs and checkpoints" ),
+    click.option("--restore-path"      , "restore_path"      , type=click.Path() , default=None     , help="path to a checkpoint to restore"               ),
     click.option("--etr"               , "etr"               , type=int          , default=5        , help="epochs between environment resets"             ),
     click.option("--etv"               , "etv"               , type=int          , default=10       , help="epochs between evaluations"                    ),
-)
+    click.option("--compile"           , "compile"           , type=bool         , default=False    , help="compile the model"                             ),
+)   
 
 
 @torch.no_grad
@@ -147,3 +150,5 @@ def ppo_loss(new_values, old_values, new_logprobs, old_logprobs, advantages, ret
 
     return ploss + vloss * vfcoef - entcoef * eloss 
 
+def save_locals(dir, locals):
+    return json.dump(locals, open(os.path.join(dir, "locals.json"), "w"), indent=4)
