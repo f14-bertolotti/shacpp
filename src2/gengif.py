@@ -11,6 +11,7 @@ import models, click, utils, torch, vmas
 @click.option("--device"            , "device"            , type=str          , default="cuda:0" , help="device"                                     )
 @click.option("--output-path"       , "output_path"       , type=click.Path() , default="x.gif"  , help="output path"                                )
 @click.option("--input-path"        , "input_path"        , type=click.Path() , default=None     , help="input model path"                           )
+@click.option("--compile"           , "compile"           , type=bool         , default=False    , help="compile the model"                          )
 def run(
         seed,
         agents,
@@ -20,6 +21,7 @@ def run(
         device,
         output_path,
         input_path,
+        compile,
     ):
     utils.seed_everything(seed)
 
@@ -39,7 +41,9 @@ def run(
         seed               = None   ,
     )
     
-    policy = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device, shared=[False, False, False])
+    policy = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device, shared=[True, True, False])
+
+    if compile: policy = torch.compile(policy)
     if input_path: policy.load_state_dict(torch.load(input_path)["policy_state_dict"])
     
     frames, observation = [], torch.stack(world.reset()).transpose(0,1)

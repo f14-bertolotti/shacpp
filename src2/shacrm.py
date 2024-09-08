@@ -16,12 +16,12 @@ import os
 
 @click.command
 @utils.common_options
-@click.option("--value-batch-size"  , "value_batch_size"  , type=int          , default=512      , help="value model batch size")
-@click.option("--reward-batch-size" , "reward_batch_size" , type=int          , default=512      , help="reward model batch size")
-@click.option("--value-epochs"      , "value_epochs"      , type=int          , default=4        , help="value model epochs")
-@click.option("--reward-epochs"     , "reward_epochs"     , type=int          , default=4        , help="reward model epochs")
-@click.option("--gamma"             , "gamma_factor"      , type=float        , default=.99      , help="reward discount factor")
-@click.option("--lambda"            , "lambda_factor"     , type=float        , default=.95      , help="td-lambda factor")
+@click.option("--value-batch-size"  , "value_batch_size"  , type=int  , default=512, help="value model batch size")
+@click.option("--reward-batch-size" , "reward_batch_size" , type=int  , default=512, help="reward model batch size")
+@click.option("--value-epochs"      , "value_epochs"      , type=int  , default=4  , help="value model epochs")
+@click.option("--reward-epochs"     , "reward_epochs"     , type=int  , default=4  , help="reward model epochs")
+@click.option("--gamma"             , "gamma_factor"      , type=float, default=.99, help="reward discount factor")
+@click.option("--lambda"            , "lambda_factor"     , type=float, default=.95, help="td-lambda factor")
 def run(
         dir,
         seed,
@@ -41,9 +41,12 @@ def run(
         gamma_factor,
         lambda_factor,
         etv,
+        compile,
+        restore_path,
         device
     ):
 
+    utils.save_locals(dir, locals())
     utils.seed_everything(seed)
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
@@ -81,7 +84,7 @@ def run(
         seed               = seed          ,
     )
     
-    reward_model_dataset_size    = 10000
+    reward_model_dataset_size    = 40000
     
     gammas = torch.ones(train_steps, device=device, dtype=torch.float)
     gammas[1:] = gamma_factor
@@ -89,7 +92,19 @@ def run(
     
     value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
     policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device, shared=[True, True, False])
-    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="Tanh", device = device)
+    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 3, hidden_size = 512, dropout=0.0, activation="Tanh", device = device)
+
+    if compile:
+        policy_model = torch.compile(policy_model)
+        reward_model = torch.compile(reward_model)
+        value_model  = torch.compile(value_model)
+
+    if restore_path:
+        checkpoint = torch.load(restore_path)
+        policy_model.load_state_dict(checkpoint["policy_state_dict"])
+        reward_model.load_state_dict(checkpoint["reward_state_dict"])
+        value_model .load_state_dict(checkpoint["value_state_dict"])
+    
     
     reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.0001) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
@@ -117,7 +132,7 @@ def run(
             policy_model  = policy_model.sample,
         )
         episode_data["proxy_rewards"] = reward_model(episode_data["observations"], episode_data["actions"])
-        episode_data["values"]        = value_model(episode_data["observations"])
+        episode_data["values"]        = value_model(episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
     
         # train actor model ###########################################
         trainers.train_policy(
@@ -167,7 +182,8 @@ def run(
         if episode % etv == 0:
             eval_data = evaluate(
                 episode      = episode      ,
-                policy_model = policy_model  ,
+                policy_model = policy_model ,
+                reward_model = reward_model ,
                 world        = eval_world   ,
                 steps        = eval_steps   ,
                 envs         = eval_envs    ,

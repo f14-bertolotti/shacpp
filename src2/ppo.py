@@ -20,6 +20,7 @@ import os
 @click.option("--epochs"     , "epochs"       , type=int   , default=4   , help="epochs")
 def run(
         dir,
+        restore_path,
         seed,
         episodes,
         agents,
@@ -35,8 +36,9 @@ def run(
         gamma_factor,
         batch_size,
         epochs,
+        compile,
     ):
-
+    torch.set_float32_matmul_precision('high')
     utils.seed_everything(seed)
 
     ppo_logger    = utils.get_file_logger(os.path.join(dir,"ppo.log"))
@@ -76,9 +78,19 @@ def run(
     
     policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", shared=[False, False, False],  device = device)
     value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
+
+    if compile:
+        policy_model = torch.compile(policy_model)
+        value_model  = torch.compile(value_model)
+
+    if restore_path:
+        checkpoint = torch.load(restore_path)
+        policy_model.load_state_dict(checkpoint["policy_state_dict"])
+        value_model.load_state_dict(checkpoint["value_state_dict"])
     
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
     value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=0.001)
+
     
     prev_dones, prev_observations = None, None
     

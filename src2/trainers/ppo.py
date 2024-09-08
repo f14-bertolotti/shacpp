@@ -19,7 +19,7 @@ def train_ppo(
     ):
 
     
-    values = value_model(episode_data["observations"])
+    values = value_model(episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
     advantages = utils.compute_advantages(
         value_model = value_model                       ,
         rewards     = episode_data["rewards"]           ,
