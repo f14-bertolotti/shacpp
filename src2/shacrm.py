@@ -84,15 +84,15 @@ def run(
         seed               = seed          ,
     )
     
-    reward_model_dataset_size    = 40000
+    reward_model_dataset_size    = 10000
     
     gammas = torch.ones(train_steps, device=device, dtype=torch.float)
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
-    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device, shared=[True, True, False])
-    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 3, hidden_size = 512, dropout=0.0, activation="Tanh", device = device)
+    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device)
+    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device, shared=[True, True, False])
+    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="Tanh", device = device)
 
     if compile:
         policy_model = torch.compile(policy_model)
@@ -125,8 +125,8 @@ def run(
         
         # unroll episode #############################################
         episode_data = unroll(
-            observations  = (None if episode == 1 or episode % etr == 0 else prev_observations), 
-            dones         = (None if episode == 1 or episode % etr == 0 else prev_dones),
+            observations  = (None if episode == 1 or episode % etr == 0 or prev_dones[:,0].all() else prev_observations), 
+            dones         = (None if episode == 1 or episode % etr == 0 or prev_dones[:,0].all() else prev_dones),
             world         = train_world,
             unroll_steps  = train_steps,
             policy_model  = policy_model.sample,
@@ -137,7 +137,8 @@ def run(
         # train actor model ###########################################
         trainers.train_policy(
             episode      = episode               ,
-            model        = policy_model          ,
+            policy_model = policy_model          ,
+            value_model  = value_model           ,
             episode_data = episode_data          ,
             optimizer    = policy_model_optimizer,
             gammas       = gammas                ,
@@ -193,8 +194,8 @@ def run(
             bar.set_description(f"reward:{eval_reward:5.3f}")
             del eval_data
 
-        prev_observations = episode_data["last_observations"].detach().clone()
-        prev_dones        = episode_data["last_dones"       ].detach().clone()
+        prev_observations = episode_data["last_observations"].detach()
+        prev_dones        = episode_data["last_dones"       ].detach()
         del episode_data
 
 if __name__ == "__main__":

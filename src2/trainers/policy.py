@@ -1,8 +1,11 @@
 import torch, json
+import utils
+import random
 
 def train_policy(
         episode,
-        model,
+        policy_model,
+        value_model,
         episode_data,
         optimizer,
         gammas,
@@ -18,9 +21,27 @@ def train_policy(
     
     # compute loss
     optimizer.zero_grad()
-    loss = -((episode_data["proxy_rewards"] * gammas * episode_data["dones"].logical_not()).sum() + ((gammas * episode_data["values"])[live_steps,live_runs]).sum()) / (steps * envs)
+    
+    #advantages = utils.compute_advantages(
+    #    value_model, 
+    #    episode_data["rewards"], 
+    #    episode_data["last_observations"], 
+    #    episode_data["values"], 
+    #    episode_data["dones"], 
+    #    episode_data["last_dones"]
+    #)
+
+    #logprobs = policy_model.eval_action(episode_data["observations"].flatten(0,1), episode_data["actions"].flatten(0,1))["logprobs"].view(episode_data["rewards"].shape)
+    #choice = random.choice(list(range(episode_data["actions"].size(2)))) 
+
+    loss = -(
+                (episode_data["proxy_rewards"] * gammas * episode_data["dones"].logical_not()).sum() + \
+                ((gammas * episode_data["values"])[live_steps,live_runs]).sum()# + \
+                #(-advantages.detach() * logprobs.exp()).sum()
+            ) / (steps * envs)
+
     loss.backward()
-    torch.nn.utils.clip_grad_norm_(model.parameters(), clip_coefficient)
+    torch.nn.utils.clip_grad_norm_(policy_model.parameters(), clip_coefficient)
     optimizer.step()
     logger.info(json.dumps({
             "episode" : episode,
