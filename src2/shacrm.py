@@ -90,9 +90,10 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device)
-    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device, shared=[True, True, False])
-    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="Tanh", device = device)
+    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device, shared=[True,True,True])
+    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 2, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 2, hidden_size = 512, dropout=0.0, activation="ReLU", device = device)
+
 
     if compile:
         policy_model = torch.compile(policy_model)
@@ -106,7 +107,7 @@ def run(
         value_model .load_state_dict(checkpoint["value_state_dict"])
     
     
-    reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.0001) 
+    reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.00005) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
     value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=0.001)
     
@@ -131,8 +132,8 @@ def run(
             unroll_steps  = train_steps,
             policy_model  = policy_model.sample,
         )
-        episode_data["proxy_rewards"] = reward_model(episode_data["observations"], episode_data["actions"])
-        episode_data["values"]        = value_model(episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
+        episode_data["proxy_rewards"] = reward_model(episode_data["observations"].flatten(0,1), episode_data["actions"].flatten(0,1)).view(episode_data["rewards"].shape)
+        episode_data["values"]        = value_model (episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
     
         # train actor model ###########################################
         trainers.train_policy(
@@ -158,18 +159,18 @@ def run(
             logger          = reward_logger
         )
 
-        # train value model ###########################################
-        trainers.train_value(
-            episode         = episode               ,
-            model           = value_model           ,
-            optimizer       = value_model_optimizer ,
-            episode_data    = episode_data          ,
-            training_epochs = value_epochs          ,
-            batch_size      = value_batch_size      ,
-            slam            = lambda_factor         ,
-            gamma           = gamma_factor          ,
-            logger          = value_logger
-        )
+        ## train value model ###########################################
+        #trainers.train_value(
+        #    episode         = episode               ,
+        #    model           = value_model           ,
+        #    optimizer       = value_model_optimizer ,
+        #    episode_data    = episode_data          ,
+        #    training_epochs = value_epochs          ,
+        #    batch_size      = value_batch_size      ,
+        #    slam            = lambda_factor         ,
+        #    gamma           = gamma_factor          ,
+        #    logger          = value_logger
+        #)
     
     
         if episode % etv == 0:
@@ -193,6 +194,7 @@ def run(
             eval_reward = eval_data["rewards"]
             bar.set_description(f"reward:{eval_reward:5.3f}")
             del eval_data
+        print(episode_data["last_dones"][:,0].sum().int().item())
 
         prev_observations = episode_data["last_observations"].detach()
         prev_dones        = episode_data["last_dones"       ].detach()

@@ -20,7 +20,7 @@ def evaluate(
    
     proxy = None
     if reward_model is not None: 
-        proxy = reward_model(eval_episode["observations"], eval_episode["actions"])
+        proxy = reward_model(eval_episode["observations"].flatten(0,1), eval_episode["actions"].flatten(0,1)).view(eval_episode["rewards"].shape)
     rewards = eval_episode["rewards"]
 
     logger.info(json.dumps({

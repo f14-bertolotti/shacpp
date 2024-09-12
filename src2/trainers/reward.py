@@ -19,7 +19,6 @@ def train_reward(
         peak = (peak_cache - peak_cache.min()) / (peak_cache.max() - peak_cache.min() + 1e-5) * (dataset_size-1),
     ).round().to(torch.long)
 
-
     cached_data["mask"        ][indexes] = episode_data["dones"][:,:,0].flatten(0,1).detach().logical_not()
     cached_data["observations"][indexes] = episode_data["observations"].flatten(0,1).detach()
     cached_data["actions"     ][indexes] = episode_data["actions"]     .flatten(0,1).detach()
@@ -43,7 +42,7 @@ def train_reward(
         for step, (obs, act, tgt) in enumerate(dataloader,1):
             optimizer.zero_grad()
             prd = model(obs,act)
-            loss = ((prd[tgt>0] - tgt[tgt>0])**2).mean() + ((prd[tgt==0] - tgt[tgt==0])**2).mean()
+            loss = ((prd[tgt==0] - tgt[tgt==0])**2).mean() + ((prd[tgt>0] - tgt[tgt>0])**2).mean()
             loss.backward()
             optimizer.step()
 
@@ -60,4 +59,4 @@ def train_reward(
                 "dataset_size_nz" : (cached_data["rewards"][cached_data["mask"]] > 0).sum().item(),
             }))
 
-
+        if tpfn/tot > .8: break
