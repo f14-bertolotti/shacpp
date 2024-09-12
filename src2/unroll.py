@@ -5,12 +5,21 @@ def unroll(
         world,
         observations = None,
         dones        = None,
-        unroll_steps = 64
+        unroll_steps = 64,
+        reset_dones  = False
     ):
 
     world.world.zero_grad()
-    if observations is None: observations = torch.stack(world.reset()).transpose(0,1)
-    if dones        is None: dones        = torch.zeros(observations.size(0), observations.size(1), device=observations.device).bool()
+
+    if dones is not None and observations is not None and reset_dones:
+        for i in dones[:,0].nonzero():
+            observations[i] = torch.stack(world.reset_at(i)).transpose(0,1)[i]
+    
+    if observations is None and dones is None: 
+        observations = torch.stack(world.reset()).transpose(0,1)
+        dones        = torch.zeros(observations.size(0), observations.size(1), device=observations.device).bool()
+
+    observations = observations.detach()
 
     observation_cache = []
     action_cache      = []
