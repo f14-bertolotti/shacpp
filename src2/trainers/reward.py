@@ -59,4 +59,3 @@ def train_reward(
                 "dataset_size_nz" : (cached_data["rewards"][cached_data["mask"]] > 0).sum().item(),
             }))
 
-        if tpfn/tot > .8: break
