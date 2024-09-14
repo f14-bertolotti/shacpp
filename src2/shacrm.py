@@ -91,8 +91,8 @@ def run(
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
     value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device, shared=[True,True,True])
-    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 2, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
-    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 2, hidden_size = 512, dropout=0.0, activation="ReLU", device = device)
+    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="ReLU", device = device)
 
 
     if compile:
@@ -107,7 +107,7 @@ def run(
         value_model .load_state_dict(checkpoint["value_state_dict"])
     
     
-    reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.00005) 
+    reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=0.0001) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
     value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=0.001)
     
