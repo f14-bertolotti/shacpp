@@ -1,7 +1,7 @@
 from utils import layer_init
 import torch
 
-class Policy(torch.nn.Module):
+class PolicyAFO(torch.nn.Module):
     def __init__(self, observation_size, action_size, agents, hidden_size=128, layers = 1, dropout=0.1, activation="Tanh", device="cuda:0", shared=False):
         super().__init__()
         if type(shared) is not list: shared = [shared] * (layers + 2)
@@ -26,9 +26,7 @@ class Policy(torch.nn.Module):
         self.action_var = torch.ones((action_size,)).to(device)
 
     def forward(self, observations):
-        observations = observations.flatten(-2,-1)#.unsqueeze(1).repeat(1,observations.size(1),1)
-
-        #observations = torch.stack([torch.stack([observations[:,i,:] if i==j else observations[:,i,:].detach() for i in range(self.agents)],dim=1).flatten(-2,-1) for j in range(self.agents)],dim=-2)
+        observations = observations.flatten(-2,-1)
 
         hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(observations))))
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):
