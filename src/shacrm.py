@@ -16,12 +16,12 @@ import os
 
 @click.command
 @utils.common_options
-@click.option("--value-batch-size"  , "value_batch_size"  , type=int  , default=512, help="value model batch size")
-@click.option("--reward-batch-size" , "reward_batch_size" , type=int  , default=512, help="reward model batch size")
-@click.option("--value-epochs"      , "value_epochs"      , type=int  , default=4  , help="value model epochs")
-@click.option("--reward-epochs"     , "reward_epochs"     , type=int  , default=4  , help="reward model epochs")
-@click.option("--gamma"             , "gamma_factor"      , type=float, default=.99, help="reward discount factor")
-@click.option("--lambda"            , "lambda_factor"     , type=float, default=.95, help="td-lambda factor")
+@click.option("--value-batch-size"  , "value_batch_size"  , type=int  , default=2048, help="value model batch size")
+@click.option("--reward-batch-size" , "reward_batch_size" , type=int  , default=2048, help="reward model batch size")
+@click.option("--value-epochs"      , "value_epochs"      , type=int  , default=4   , help="value model epochs")
+@click.option("--reward-epochs"     , "reward_epochs"     , type=int  , default=4   , help="reward model epochs")
+@click.option("--gamma"             , "gamma_factor"      , type=float, default=.99 , help="reward discount factor")
+@click.option("--lambda"            , "lambda_factor"     , type=float, default=.95 , help="td-lambda factor")
 def run(
         dir,
         seed,
@@ -90,9 +90,9 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
-    policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
-    reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="ReLU", device = device)
+    value_model  = models.ValueAFO (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    reward_model = models.RewardAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="ReLU", device = device)
 
 
     if compile:

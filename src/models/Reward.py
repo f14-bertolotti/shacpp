@@ -1,6 +1,6 @@
 import torch
 
-class Reward(torch.nn.Module):
+class RewardAFO(torch.nn.Module):
     def __init__(self, observation_size, action_size, agents, layers = 1, hidden_size=128, activation="Tanh", dropout=0.1, device="cuda:0"):
         super().__init__()
 
