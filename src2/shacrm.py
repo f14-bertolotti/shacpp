@@ -90,7 +90,7 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device, shared=[True,True,True])
+    value_model  = models.Value (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
     policy_model = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
     reward_model = models.Reward(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="ReLU", device = device)
 
@@ -159,18 +159,18 @@ def run(
             logger          = reward_logger
         )
 
-        ## train value model ###########################################
-        #trainers.train_value(
-        #    episode         = episode               ,
-        #    model           = value_model           ,
-        #    optimizer       = value_model_optimizer ,
-        #    episode_data    = episode_data          ,
-        #    training_epochs = value_epochs          ,
-        #    batch_size      = value_batch_size      ,
-        #    slam            = lambda_factor         ,
-        #    gamma           = gamma_factor          ,
-        #    logger          = value_logger
-        #)
+        # train value model ###########################################
+        trainers.train_value(
+            episode         = episode               ,
+            model           = value_model           ,
+            optimizer       = value_model_optimizer ,
+            episode_data    = episode_data          ,
+            training_epochs = value_epochs          ,
+            batch_size      = value_batch_size      ,
+            slam            = lambda_factor         ,
+            gamma           = gamma_factor          ,
+            logger          = value_logger
+        )
     
     
         if episode % etv == 0:
