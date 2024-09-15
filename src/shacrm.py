@@ -94,7 +94,6 @@ def run(
     policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
     reward_model = models.RewardAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="ReLU", device = device)
 
-
     if compile:
         policy_model = torch.compile(policy_model)
         reward_model = torch.compile(reward_model)
@@ -120,7 +119,7 @@ def run(
         "pert_high"    : torch.ones (train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False) * (reward_model_dataset_size-1)
     }
    
-    prev_observations, prev_dones = None, None
+    prev_observations, prev_dones, eval_reward = None, None, 0
     
     for episode in (bar:=tqdm.tqdm(range(1, episodes))):
         
@@ -192,9 +191,10 @@ def run(
                 logger       = eval_logger
             ) 
             eval_reward = eval_data["rewards"]
-            bar.set_description(f"reward:{eval_reward:5.3f}")
             del eval_data
-        print(episode_data["last_dones"][:,0].sum().int().item())
+        
+        done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
+        bar.set_description(f"reward:{eval_reward:5.3f}, dones:{done_train_envs:3d}")
 
         prev_observations = episode_data["last_observations"].detach()
         prev_dones        = episode_data["last_dones"       ].detach()
