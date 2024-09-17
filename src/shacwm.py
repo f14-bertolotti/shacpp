@@ -86,8 +86,8 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
-    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=512, heads=4, feedforward_size=2048, dropout=0.0, activation="gelu", device="cuda:0")
+    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
+    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=128, heads=2, feedforward_size=512, dropout=0.0, activation="gelu", device="cuda:0")
 
     if compile:
         policy_model = torch.compile(policy_model)
@@ -98,17 +98,17 @@ def run(
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
         world_model .load_state_dict(checkpoint[ "world_state_dict"])
     
-    
     world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=0.001) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
     
     world_model_cache = {
         "observations" : torch.zeros(world_model_dataset_size, agents, observation_size, device=device),
-        "actions"      : torch.zeros(world_model_dataset_size, agents,      action_size, device=device),
-        "rewards"      : torch.zeros(world_model_dataset_size, agents, device=device),
+        "actions"      : torch.zeros(world_model_dataset_size, train_steps, agents, action_size, device=device),
+        "rewards"      : torch.zeros(world_model_dataset_size, train_steps, agents, device=device),
+        "values"       : torch.zeros(world_model_dataset_size, train_steps, agents, device=device),
         "mask"         : torch.zeros(world_model_dataset_size, dtype=torch.bool, device=device),
-        "pert_low"     : torch.zeros(train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False),
-        "pert_high"    : torch.ones (train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False) * (world_model_dataset_size-1)
+        "pert_low"     : torch.zeros(train_envs, dtype = torch.float32 , device=device, requires_grad=False),
+        "pert_high"    : torch.ones (train_envs, dtype = torch.float32 , device=device, requires_grad=False) * (world_model_dataset_size-1)
     }
    
     prev_observations, prev_dones, eval_reward = None, None, 0
@@ -145,7 +145,6 @@ def run(
             episode_data    = episode_data              ,
             cached_data     = world_model_cache        ,
             batch_size      = world_batch_size         ,
-            dataset_size    = world_model_dataset_size ,
             training_epochs = world_epochs             ,
             logger          = world_logger
         )
