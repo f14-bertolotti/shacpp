@@ -5,7 +5,6 @@ import random
 def train_policy(
         episode,
         policy_model,
-        value_model,
         episode_data,
         optimizer,
         gammas,
@@ -13,7 +12,8 @@ def train_policy(
         clip_coefficient = .5
     ):
     steps, envs = episode_data["observations"].size(0), episode_data["observations"].size(1)
-      # compute value cache mask
+    
+    # compute value cache mask
     dead_runs = episode_data["dones"][0,:,0]
     live_runs = dead_runs.logical_not()
     live_steps = episode_data["dones"][:,live_runs,0].logical_not().sum(0) - 1
