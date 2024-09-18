@@ -41,7 +41,7 @@ def run(
         seed               = None   ,
     )
     
-    policy = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 2, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    policy = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 256, dropout=0.0, activation="Tanh", device = device)
 
     if compile: policy = torch.compile(policy)
     if input_path: policy.load_state_dict(torch.load(input_path)["policy_state_dict"])

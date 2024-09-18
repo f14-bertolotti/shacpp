@@ -41,7 +41,7 @@ def run(
         restore_path,
         device
     ):
-
+    torch.set_float32_matmul_precision('high')
 
     utils.save_locals(dir, locals())
     utils.seed_everything(seed)
@@ -86,8 +86,8 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
-    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=128, heads=2, feedforward_size=512, dropout=0.0, activation="gelu", device="cuda:0")
+    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 256, dropout=0.0, activation="Tanh", device = device)
+    world_model = models.WorldAFOWide(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=64, heads=4, feedforward_size=1024, dropout=0.0, activation="gelu", device="cuda:0")
 
     if compile:
         policy_model = torch.compile(policy_model)
