@@ -86,8 +86,8 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
-    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=128, heads=2, feedforward_size=512, dropout=0.0, activation="gelu", device="cuda:0")
+    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device)
+    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=128, heads=2, feedforward_size=512, dropout=0.0, activation="relu", device="cuda:0")
 
     if compile:
         policy_model = torch.compile(policy_model)
@@ -102,7 +102,8 @@ def run(
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
     
     world_model_cache = {
-        "observations" : torch.zeros(world_model_dataset_size, agents, observation_size, device=device),
+        "observations" : torch.zeros(world_model_dataset_size, train_steps, agents, observation_size, device=device),
+        "last_obs"     : torch.zeros(world_model_dataset_size, agents, observation_size, device=device),
         "actions"      : torch.zeros(world_model_dataset_size, train_steps, agents, action_size, device=device),
         "rewards"      : torch.zeros(world_model_dataset_size, train_steps, agents, device=device),
         "values"       : torch.zeros(world_model_dataset_size, train_steps, agents, device=device),

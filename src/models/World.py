@@ -28,6 +28,7 @@ class World(torch.nn.Module):
 
         self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
+        self.hid2obs = torch.nn.Linear(hidden_size, observation_size, device = device)
 
     def forward(self, obs, act):
         # obs ENVS x STEPS x AGENTS x ACTSIZE
@@ -42,6 +43,7 @@ class World(torch.nn.Module):
 
         rew = self.hid2rew(encoded)[:,1:].squeeze(-1)
         val = self.hid2val(encoded)[:,1:].squeeze(-1)
-        return rew, val
+        obs = self.hid2obs(encoded)
+        return rew, val, obs
 
 

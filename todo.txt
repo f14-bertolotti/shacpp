@@ -1,0 +1,2 @@
+try observation/reward centering
+try with bias
