@@ -3,6 +3,7 @@ import torch
 class Value(torch.nn.Module):
     def __init__(self, observation_size, action_size, agents, layers = 1, hidden_size=128, activation="Tanh", dropout=0.1, device="cuda:0"):
         super().__init__()
+        self.agents = agents
         self.first_act     = getattr(torch.nn, activation)()
         self.first_drop    = torch.nn.Dropout(dropout)
         self.first_norm    = torch.nn.LayerNorm(hidden_size, device=device)

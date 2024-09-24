@@ -2,10 +2,8 @@ from utils import layer_init
 import torch
 
 class Policy(torch.nn.Module):
-    def __init__(self, observation_size, action_size, agents, hidden_size=128, layers = 1, dropout=0.1, activation="Tanh", device="cuda:0", shared=False):
+    def __init__(self, observation_size, action_size, agents, hidden_size=128, layers = 1, dropout=0.1, activation="Tanh", device="cuda:0"):
         super().__init__()
-        if type(shared) is not list: shared = [shared] * (layers + 2)
-        assert len(shared) == layers + 2
         self.agents = agents
         self.actions_size = action_size
 

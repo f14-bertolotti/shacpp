@@ -76,7 +76,7 @@ def run(
         seed               = seed          ,
     )
     
-    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", shared=[False, False, False],  device = device)
+    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
     value_model  = models.ValueAFO (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 128, dropout=0.0, activation="Tanh", device = device)
 
     if compile:
