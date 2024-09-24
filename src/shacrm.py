@@ -137,7 +137,7 @@ def run(
         # train actor model ###########################################
         trainers.train_policy(
             episode      = episode               ,
-            value_model  = value_model           ,
+            policy_model = policy_model          ,
             episode_data = episode_data          ,
             optimizer    = policy_model_optimizer,
             gammas       = gammas                ,
