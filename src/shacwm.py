@@ -41,7 +41,7 @@ def run(
         restore_path,
         device
     ):
-
+    torch.set_float32_matmul_precision('high')
 
     utils.save_locals(dir, locals())
     utils.seed_everything(seed)
@@ -87,7 +87,7 @@ def run(
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
     policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device)
-    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=128, heads=2, feedforward_size=512, dropout=0.0, activation="relu", device="cuda:0")
+    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=128, heads=2, feedforward_size=512, dropout=0.0, activation="relu", device=device)
 
     if compile:
         policy_model = torch.compile(policy_model)
@@ -98,7 +98,7 @@ def run(
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
         world_model .load_state_dict(checkpoint[ "world_state_dict"])
     
-    world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=0.001) 
+    world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=0.0001) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
     
     world_model_cache = {

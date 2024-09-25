@@ -28,13 +28,15 @@ def train_world(
         peak = (peak_cache - peak_cache.min()) / (peak_cache.max() - peak_cache.min() + 1e-5) * (cached_data["observations"].size(0)-1),
     ).round().to(torch.long)
 
-    cached_data["mask"        ][indexes] = episode_data["dones"][0,:,0].detach().logical_not()
-    cached_data["observations"][indexes] = episode_data["observations"]    .transpose(0,1).detach()
-    cached_data["last_obs"    ][indexes] = episode_data["last_observations"].detach()
-    cached_data["actions"     ][indexes] = episode_data["actions"]         .transpose(0,1).detach()
-    cached_data["rewards"     ][indexes] = episode_data["rewards"]         .transpose(0,1).detach()
-    cached_data["values"      ][indexes] = target_values                   .transpose(0,1).detach()
+    alive   = episode_data["dones"][0,:,0].logical_not()
+    indexes = indexes[alive]
 
+    cached_data["mask"        ][indexes] = True
+    cached_data["observations"][indexes] = episode_data["observations"     ].transpose(0,1)[alive].detach()
+    cached_data["actions"     ][indexes] = episode_data["actions"          ].transpose(0,1)[alive].detach()
+    cached_data["rewards"     ][indexes] = episode_data["rewards"          ].transpose(0,1)[alive].detach()
+    cached_data["last_obs"    ][indexes] = episode_data["last_observations"][alive].detach() 
+    cached_data["values"      ][indexes] = target_values.transpose(0,1)[alive].detach()
 
     dataloader = torch.utils.data.DataLoader(
         torch.utils.data.TensorDataset(
@@ -50,7 +52,7 @@ def train_world(
         shuffle    = True
     )
 
-    for epoch in range(4):
+    for epoch in range(training_epochs):
         tpfn_rew,tot_rew = 0,0
         tpfn_val,tot_val = 0,0
         tpfn_obs,tot_obs = 0,0
