@@ -1,16 +1,16 @@
-from Dispersion import Dispersion as DispersionScenario
-from unroll import unroll
-from evaluate import evaluate
-
-import trainers
-import models
-import torch
-import utils
-import click
-import utils
-import vmas
-import tqdm
 import os
+
+import click
+import torch
+import tqdm
+import vmas
+
+import models
+import trainers
+import utils
+from Dispersion import Dispersion as DispersionScenario
+from evaluate import evaluate
+from unroll import unroll
 
 
 @click.command
@@ -38,6 +38,9 @@ def run(
         epochs,
         compile,
     ):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
     torch.set_float32_matmul_precision('high')
     utils.seed_everything(seed)
 
