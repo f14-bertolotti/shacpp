@@ -61,22 +61,25 @@ def train_world(
         for step, (obs, act, tgt_rew, tgt_val, last) in enumerate(dataloader,1):
             optimizer.zero_grad()
             prd_rew,prd_val,prd_obs = model(obs[:,0].unsqueeze(1),act)
+            #rnd_prd_rew,rnd_prd_val,rnd_prd_obs = model(torch.rand_like(obs[:,0].unsqueeze(1))*4-2,torch.rand_like(act)*4-2)
 
             gtz = (tgt_rew  > 0)
             l1 = ((prd_rew[gtz] - tgt_rew[gtz])**2).mean()
             l2 = ((prd_rew[gtz.logical_not()] - tgt_rew[gtz.logical_not()])**2).mean()
             l3 = (((prd_obs[:,:-1] - obs)**2).sum(1) + (prd_obs[:,-1] - last)**2).mean() / prd_obs.size(1)
             l4 = ((prd_val - tgt_val)**2).mean()
+            #l5 = ((rnd_prd_rew )**2).mean()
+            #l6 = ((rnd_prd_val )**2).mean()
 
-            loss = l1 + l2 + l3 + l4
+            loss = l1 + l2  + l4 + l3 #+ l5 + l6
 
             loss.backward()
-            #torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
             optimizer.step()
 
             tpfn_rew, tot_rew = tpfn_rew + torch.isclose(prd_rew       , tgt_rew, atol=.1).sum().item(), tot_rew + numpy.prod(prd_rew.shape).item() 
             tpfn_val, tot_val = tpfn_val + torch.isclose(prd_val       , tgt_val, atol=.1).sum().item(), tot_val + numpy.prod(prd_val.shape).item() 
-            tpfn_obs, tot_obs = tpfn_obs + torch.isclose(prd_obs[:,:-1], obs, atol=.1).sum().item(), tot_obs + numpy.prod(obs.shape).item() 
+            #tpfn_obs, tot_obs = tpfn_obs + torch.isclose(prd_obs[:,:-1], obs, atol=.1).sum().item(), tot_obs + numpy.prod(obs.shape).item() 
             tpfn_nonzero_rew, tot_nonzero_rew = tpfn_nonzero_rew + torch.isclose(prd_rew[tgt_rew>0], tgt_rew[tgt_rew>0], atol=.1).float().sum().item(), tot_nonzero_rew + numpy.prod(prd_rew[tgt_rew>0].shape).item()
             tpfn_nonzero_val, tot_nonzero_val = tpfn_nonzero_val + torch.isclose(prd_val[tgt_val>0], tgt_val[tgt_val>0], atol=.1).float().sum().item(), tot_nonzero_val + numpy.prod(prd_val[tgt_val>0].shape).item()
             logger.info(json.dumps({
@@ -88,7 +91,7 @@ def train_world(
                 "accuracy_rew_nz" : tpfn_nonzero_rew/(tot_nonzero_rew+1e-7),
                 "accuracy_val"    : tpfn_val/(tot_val+1e-7),
                 "accuracy_val_nz" : tpfn_nonzero_val/(tot_nonzero_val+1e-7),
-                "accuracy_obs"    : tpfn_obs/(tot_obs+1e-7),
+                #"accuracy_obs"    : tpfn_obs/(tot_obs+1e-7),
                 "full" : cached_data["mask"].sum().item(),
                 "nz" : (tgt_rew > 0).sum().item(),
                 "z" : (tgt_rew == 0).sum().item()

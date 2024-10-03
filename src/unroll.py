@@ -27,6 +27,7 @@ def unroll(
     done_cache        = []
     logprobs_cache    = []
     entropy_cache     = []
+    logits_cache      = []
 
     for step in range(1, unroll_steps+1):
         observation_cache.append(observations)
@@ -36,8 +37,9 @@ def unroll(
         actions  = policy_result["actions"]
         logprobs = policy_result.get("logprobs",torch.empty(0))
         entropy  = policy_result.get("entropy" ,torch.empty(0))
+        logits   = policy_result.get("logits"  ,torch.empty(0))
 
-        observations, rewards, dones, _ = world.step(actions.transpose(0,1))
+        observations, rewards, dones, _ = world.step(torch.clamp(actions.transpose(0,1),-1,1))
         observations = torch.stack(observations).transpose(0,1)
         rewards      = torch.stack(rewards     ).transpose(0,1)
         dones        = dones.unsqueeze(-1).repeat(1,observations.size(1))
@@ -46,6 +48,7 @@ def unroll(
         reward_cache   .append(rewards)
         logprobs_cache .append(logprobs)
         entropy_cache  .append(entropy)
+        logits_cache   .append(logits)
 
     observation_cache = torch.stack(observation_cache)
     action_cache      = torch.stack(action_cache)
@@ -53,6 +56,7 @@ def unroll(
     done_cache        = torch.stack(done_cache)
     logprobs_cache    = torch.stack(logprobs_cache)
     entropy_cache     = torch.stack(entropy_cache)
+    logits_cache      = torch.stack(logits_cache)
 
     return { 
             "logprobs"      : logprobs_cache,
@@ -60,6 +64,7 @@ def unroll(
             "actions"       : action_cache,
             "observations"  : observation_cache, 
             "rewards"       : reward_cache, 
+            "logits"        : logits_cache,
             "dones"         : done_cache,
 
             "last_dones"        : dones,

@@ -9,3 +9,6 @@ vmas
 moviepy
 torchrl
 benchmarl
+transformers
+wheel
+mamba_ssm

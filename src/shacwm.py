@@ -86,8 +86,10 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 512, dropout=0.0, activation="Tanh", device = device)
-    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=128, heads=2, feedforward_size=512, dropout=0.0, activation="relu", device=device)
+    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=3, hidden_size=32, heads=1, feedforward_size=256, dropout=0.0, activation="relu", device=device)
+    #world_model = models.AxisWorld(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=64, feedforward_size=256, heads=1, dropout=0.0, activation="relu", device=device)
+    #world_model = models.MambaWorld(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=3, hidden_size=32, expansion_factor=16, dropout=0.0, device=device)
 
     if compile:
         policy_model = torch.compile(policy_model)
@@ -98,7 +100,7 @@ def run(
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
         world_model .load_state_dict(checkpoint[ "world_state_dict"])
     
-    world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=0.0001) 
+    world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=0.001) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=0.001)
     
     world_model_cache = {

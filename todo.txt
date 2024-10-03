@@ -1,2 +1,4 @@
 try observation/reward centering
 try with bias
+
+---dropout seems to make things a lot worse

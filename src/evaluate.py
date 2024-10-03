@@ -27,7 +27,8 @@ def evaluate(
         proxy = world_model(eval_episode["observations"][0].unsqueeze(1), eval_episode["actions"][:world_model.steps].transpose(0,1))[0].transpose(0,1)
         rewards = rewards[:world_model.steps]
 
-    print(eval_episode["actions"][:10,0])
+    print(eval_episode["logits"][:10,0])
+    #print(eval_episode["actions"][:10,0])
 
     logger.info(json.dumps({
         "episode"            : episode,
