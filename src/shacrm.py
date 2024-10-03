@@ -90,9 +90,9 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    value_model  = models.ValueAFO (observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
-    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
-    reward_model = models.RewardAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 1024, dropout=0.0, activation="ReLU", device = device)
+    value_model  = models.ValueAFO (observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    reward_model = models.RewardAFO(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers = 1, hidden_size = 1024, dropout=0.0, activation="ReLU", device = device)
 
     if compile:
         policy_model = torch.compile(policy_model)
@@ -137,7 +137,7 @@ def run(
         # train actor model ###########################################
         trainers.train_policy(
             episode      = episode               ,
-            value_model  = value_model           ,
+            policy_model = policy_model          ,
             episode_data = episode_data          ,
             optimizer    = policy_model_optimizer,
             gammas       = gammas                ,

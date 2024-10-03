@@ -1,8 +1,22 @@
+import models
 import torch
 
-class Reward(torch.nn.Module):
-    def __init__(self, observation_size, action_size, agents, layers = 1, hidden_size=128, activation="Tanh", dropout=0.1, device="cuda:0"):
-        super().__init__()
+class Reward(models.Model):
+    """ base MLP Reward """
+    def __init__(
+        self, 
+        observation_size : int              ,
+        action_size      : int              ,
+        agents           : int              ,
+        steps            : int              ,
+        layers           : int   = 1        ,
+        hidden_size      : int   = 128      ,
+        dropout          : float = 0.0      ,
+        activation       : str   = "Tanh"   ,
+        device           : str   = "cuda:0"
+    ):
+        super().__init__(observation_size, action_size, agents, steps)
+
         self.first_act     = getattr(torch.nn, activation)()
         self.first_drop    = torch.nn.Dropout(dropout)
         self.first_norm    = torch.nn.LayerNorm(hidden_size, device=device)
@@ -12,31 +26,70 @@ class Reward(torch.nn.Module):
         self.hidden_drops  = torch.nn.ModuleList([torch.nn.Dropout(dropout) for _ in range(layers)])
         self.hidden_norms  = torch.nn.ModuleList([torch.nn.LayerNorm(hidden_size, device=device) for _ in range(layers)])
 
+
 class RewardAFO(Reward):
-    def __init__(self, observation_size, action_size, agents, layers = 1, hidden_size=128, activation="Tanh", dropout=0.1, device="cuda:0"):
-        super().__init__(observation_size, action_size, agents, layers, hidden_size, activation, dropout, device)
-        self.first_layer   = torch.nn.Linear((observation_size+action_size)*agents, hidden_size, device=device)
-        self.last_layer    = torch.nn.Linear(hidden_size, agents, bias=False, device=device)
+    """ 
+        Reward MLP.
+        The MLP sees all observations and all actions from all agents.
+    """
+    def __init__(
+        self, 
+        observation_size : int              ,
+        action_size      : int              ,
+        agents           : int              ,
+        steps            : int              ,
+        layers           : int   = 1        ,
+        hidden_size      : int   = 128      ,
+        dropout          : float = 0.0      ,
+        activation       : str   = "Tanh"   ,
+        device           : str   = "cuda:0"
+    ):
+
+        super().__init__(observation_size, action_size, agents, steps, layers, hidden_size, dropout, activation, device)
+
+        self.first_layer = torch.nn.Linear((observation_size+action_size)*agents, hidden_size, device=device)
+        self.last_layer  = torch.nn.Linear(hidden_size, agents, bias=False, device=device)
 
     def forward(self, obs, act):
         src = torch.cat([obs, act], dim=-1).flatten(-2,-1)
+
         hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(src))))
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):
             hidden = ln(hidden + drop(act(layer(hidden))))
-        value = self.last_layer(hidden)
-        return value
+        
+        return self.last_layer(hidden)
 
 class RewardOFA(Reward):
-    def __init__(self, observation_size, action_size, agents, layers = 1, hidden_size=128, activation="Tanh", dropout=0.1, device="cuda:0"):
-        super().__init__(observation_size, action_size, agents, layers, hidden_size, activation, dropout, device)
+    """ 
+        MLP Reward.
+        One MLP for each agents.
+        MLP params shared by all agents.
+        The MLP sees only the observations and actions from its agent.
+    """
+    def __init__(
+        self, 
+        observation_size : int              ,
+        action_size      : int              ,
+        agents           : int              ,
+        steps            : int              ,
+        layers           : int   = 1        ,
+        hidden_size      : int   = 128      ,
+        dropout          : float = 0.0      ,
+        activation       : str   = "Tanh"   ,
+        device           : str   = "cuda:0"
+    ):        
+
+        super().__init__(observation_size, action_size, agents, steps, layers, hidden_size, dropout, activation, device)
+        
         self.first_layer   = torch.nn.Linear((observation_size+action_size), hidden_size, device=device)
         self.last_layer    = torch.nn.Linear(hidden_size, 1, bias=False, device=device)
 
     def forward(self, obs, act):
         src = torch.cat([obs, act], dim=-1)
+
         hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(src))))
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):
             hidden = ln(hidden + drop(act(layer(hidden))))
-        value = self.last_layer(hidden).squeeze(-1)
-        return value
+
+        return self.last_layer(hidden).squeeze(-1)
 

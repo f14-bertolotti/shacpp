@@ -86,10 +86,8 @@ def run(
     gammas[1:] = gamma_factor
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     
-    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
-    world_model = models.World(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=3, hidden_size=32, heads=1, feedforward_size=256, dropout=0.0, activation="relu", device=device)
-    #world_model = models.AxisWorld(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=1, hidden_size=64, feedforward_size=256, heads=1, dropout=0.0, activation="relu", device=device)
-    #world_model = models.MambaWorld(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=3, hidden_size=32, expansion_factor=16, dropout=0.0, device=device)
+    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    world_model = models.worlds.TransformerWorld(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=3, hidden_size=32, heads=1, feedforward_size=256, dropout=0.0, activation="ReLU", device=device)
 
     if compile:
         policy_model = torch.compile(policy_model)

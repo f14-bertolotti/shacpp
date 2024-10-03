@@ -1,11 +1,23 @@
-from utils import layer_init
+import models
 import torch
+import utils
 
-class Policy(torch.nn.Module):
-    def __init__(self, observation_size, action_size, agents, hidden_size=128, layers = 1, dropout=0.1, activation="Tanh", device="cuda:0"):
-        super().__init__()
-        self.agents = agents
-        self.actions_size = action_size
+class Policy(models.Model):
+    """ base MLP Policy """
+
+    def __init__(
+        self,
+        observation_size : int              ,
+        action_size      : int              ,
+        agents           : int              ,
+        steps            : int              ,
+        hidden_size      : int   = 128      ,
+        layers           : int   = 1        ,
+        dropout          : float = 0.0      ,
+        activation       : str   = "Tanh"   ,
+        device           : str   = "cuda:0"
+    ):
+        super().__init__(observation_size, action_size, agents, steps)
 
         self.first_act     = getattr(torch.nn, activation)()
         self.first_drop    = torch.nn.Dropout(dropout)
@@ -49,11 +61,30 @@ class Policy(torch.nn.Module):
 
 
 class PolicyAFO(Policy):
-    def __init__(self, observation_size, action_size, agents, hidden_size=128, layers = 1, dropout=0.1, activation="Tanh", device="cuda:0"):
-        super().__init__(observation_size, action_size, agents, hidden_size, layers, dropout, activation, device)
+    """ 
+        MLP Policy. 
+        The MLP see all observations from all agents.
+        The MLP outputs actions for all agents.
+    """
+
+    def __init__(
+        self, 
+        observation_size : int              ,
+        action_size      : int              ,
+        agents           : int              ,
+        steps            : int              ,
+        hidden_size      : int   = 128      ,
+        layers           : int   = 1        ,
+        dropout          : float = 0.0      ,
+        activation       : str   = "Tanh"   ,
+        device           : str   = "cuda:0"
+    ):
+
+        super().__init__(observation_size, action_size, agents, steps, hidden_size, layers, dropout, activation, device)
+
         self.first_layer = torch.nn.Linear(observation_size*agents, hidden_size, device=device)
         self.last_layer  = torch.nn.Linear(hidden_size, agents*action_size, bias=False, device=device)
-        self.last_layer  = layer_init(self.last_layer, 1.141)
+        self.last_layer  = utils.layer_init(self.last_layer, 1.141)
 
     def forward(self, observations):
         observations = observations.flatten(-2,-1)
@@ -69,11 +100,31 @@ class PolicyAFO(Policy):
         }
 
 class PolicyOFA(Policy):
-    def __init__(self, observation_size, action_size, agents, hidden_size=128, layers = 1, dropout=0.1, activation="Tanh", device="cuda:0"):
-        super().__init__(observation_size, action_size, agents, hidden_size, layers, dropout, activation, device)
+    """ 
+        MLP Policy.
+        One MLP shared between all agents.
+        The MLP see only the observations from its agent.
+        The MLP outputs actions only for its agents.
+    """
+
+    def __init__(
+        self, 
+        observation_size : int              ,
+        action_size      : int              ,
+        agents           : int              ,
+        steps            : int              ,
+        hidden_size      : int   = 128      ,
+        layers           : int   = 1        ,
+        dropout          : float = 0.0      ,
+        activation       : str   = "Tanh"   ,
+        device           : str   = "cuda:0"
+    ):
+
+        super().__init__(observation_size, action_size, agents, steps, hidden_size, layers, dropout, activation, device)
+
         self.first_layer = torch.nn.Linear(observation_size, hidden_size, device=device)
         self.last_layer  = torch.nn.Linear(hidden_size, action_size, bias=False, device=device)
-        self.last_layer  = layer_init(self.last_layer, 1.141)
+        self.last_layer  = utils.layer_init(self.last_layer, 1.141)
 
     def forward(self, observations):
         hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(observations))))
