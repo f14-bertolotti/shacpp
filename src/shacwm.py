@@ -82,16 +82,37 @@ def run(
     
     world_model_dataset_size = 10000
     
-    gammas = torch.ones(train_steps, device=device, dtype=torch.float)
-    gammas[1:] = gamma_factor
-    gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
+    gammas = utils.gamma_tensor(train_steps, train_envs, agents, gamma_factor).to(device)
     
-    policy_model = models.PolicyAFO(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers = 1, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
-    world_model = models.worlds.TransformerWorld(observation_size = observation_size, action_size = action_size, agents = agents, steps=train_steps, layers=3, hidden_size=32, heads=1, feedforward_size=256, dropout=0.0, activation="ReLU", device=device)
+    policy_model = models.PolicyAFO(
+        observation_size = observation_size ,
+        action_size      = action_size      ,
+        agents           = agents           ,
+        steps            = train_steps      ,
+        layers           = 1                ,
+        hidden_size      = 2048             ,
+        dropout          = 0.0              ,
+        activation       = "Tanh"           ,
+        device           = device
+    )
+
+    world_model = models.worlds.TransformerWorld(
+        observation_size = observation_size ,
+        action_size      = action_size      ,
+        agents           = agents           ,
+        steps            = train_steps      ,
+        layers           = 3                ,
+        hidden_size      = 32               ,
+        heads            = 1                ,
+        feedforward_size = 256              ,
+        dropout          = 0.0              ,
+        activation       = "ReLU"           ,
+        device           = device
+    )
 
     if compile:
-        policy_model = torch.compile(policy_model)
-        world_model  = torch.compile(world_model)
+        policy_model : models.Model = torch.compile(policy_model)
+        world_model  : models.Model = torch.compile(world_model)
 
     if restore_path:
         checkpoint = torch.load(restore_path)
@@ -113,7 +134,6 @@ def run(
     }
    
     prev_observations, prev_dones, eval_reward = None, None, 0
-    
     for episode in (bar:=tqdm.tqdm(range(1, episodes))):
         
         # unroll episode #############################################
@@ -125,10 +145,11 @@ def run(
             policy_model  = policy_model.sample,
         )
 
+        # compute rewards and values #################################
         results = world_model(episode_data["observations"][0].unsqueeze(1), episode_data["actions"].transpose(0,1))
         episode_data["proxy_rewards"], episode_data["values"] = results[0].transpose(0,1), results[1].transpose(0,1)
     
-        # train actor model ###########################################
+        # train actor model ##########################################
         trainers.train_policy(
             episode      = episode               ,
             policy_model = policy_model          ,
@@ -140,30 +161,19 @@ def run(
          
         # train world model ##########################################
         trainers.train_world(
-            episode         = episode                   ,
-            model           = world_model              ,
-            optimizer       = world_model_optimizer    ,
-            episode_data    = episode_data              ,
-            cached_data     = world_model_cache        ,
-            batch_size      = world_batch_size         ,
-            training_epochs = world_epochs             ,
+            episode         = episode               ,
+            model           = world_model           ,
+            optimizer       = world_model_optimizer ,
+            episode_data    = episode_data          ,
+            cached_data     = world_model_cache     ,
+            batch_size      = world_batch_size      ,
+            training_epochs = world_epochs          ,
+            slam            = lambda_factor         ,
+            gamma           = gamma_factor          ,
             logger          = world_logger
         )
 
-        ## train value model ###########################################
-        #trainers.train_value(
-        #    episode         = episode               ,
-        #    model           = value_model           ,
-        #    optimizer       = value_model_optimizer ,
-        #    episode_data    = episode_data          ,
-        #    training_epochs = value_epochs          ,
-        #    batch_size      = value_batch_size      ,
-        #    slam            = lambda_factor         ,
-        #    gamma           = gamma_factor          ,
-        #    logger          = value_logger
-        #)
-    
-    
+        # checkpoint #################################################
         if episode % etv == 0:
             torch.save({
                 "policy_state_dict" : policy_model.state_dict(),   
@@ -171,6 +181,7 @@ def run(
             }, os.path.join(dir,"models.pkl"))
 
     
+        # evaluation #################################################
         if episode % etv == 0:
             eval_data = evaluate(
                 episode      = episode      ,
@@ -184,11 +195,15 @@ def run(
             eval_reward = eval_data["rewards"]
             del eval_data
         
+        # update progress bar ########################################
         done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
         bar.set_description(f"reward:{eval_reward:5.3f}, dones:{done_train_envs:3d}")
 
+        # set up next iteration ######################################
         prev_observations = episode_data["last_observations"].detach()
         prev_dones        = episode_data["last_dones"       ].detach()
+
+        # cleanup ####################################################
         del episode_data
 
 if __name__ == "__main__":

@@ -20,22 +20,7 @@ def pert(low:torch.Tensor, peak:torch.Tensor, high:torch.Tensor, lamb:int=8):
     beta  = 1 + lamb * (high - peak) / r
     return low + torch.distributions.Beta(alpha, beta).sample() * r
 
-#@torch.no_grad()
-#def compute_values(values, rewards, dones, slam, gamma):
-#    steps, envirs, agents = values.shape
-#
-#    target_values = torch.zeros(steps, envirs, agents, dtype=torch.float32, device=values.device)
-#    Ai = torch.zeros(envirs, agents, dtype=torch.float32, device=values.device)
-#    Bi = torch.zeros(envirs, agents, dtype=torch.float32, device=values.device)
-#    lam = torch.ones(envirs, agents, dtype=torch.float32, device=values.device)
-#
-#    for i in reversed(range(steps)):
-#        lam = slam * lam * (1. - dones[i]) + dones[i]
-#        Ai = (1.0 - dones[i]) * (slam * gamma * Ai + gamma * values[i] + (1. - lam) / (1. - slam) * rewards[i])
-#        Bi = gamma * (values[i] * dones[i] + Bi * (1.0 - dones[i])) + rewards[i]
-#        target_values[i] = (1.0 - slam) * Ai + lam * Bi
-#
-#    return target_values
+
 @torch.no_grad()
 def compute_values(values, rewards, dones, slam, gamma):
     steps, envirs, agents = values.size(0), values.size(1), values.size(2)
@@ -69,11 +54,11 @@ def seed_everything(seed):
     numpy.random.seed(seed)
     torch.manual_seed(seed)
 
-def get_file_logger(path):
-    logger = logging.getLogger(path)
-    logger.setLevel(logging.INFO)
-
+def get_file_logger(path:str) -> logging.Logger:
+    """ Create a logger that writes to a file """
+    logger  = logging.  getLogger(path)
     handler = logging.FileHandler(path)
+    logger .setLevel(logging.INFO)
     handler.setLevel(logging.INFO)
 
     formatter = logging.Formatter(json.dumps(json.loads("""
@@ -91,10 +76,10 @@ def get_file_logger(path):
             "message" : "MESSAGE" 
         }
     """), indent=None, separators=(",",":")).replace("\"MESSAGE\"","%(message)s"))
+
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
-
 
 def chain(*decs):
     def deco(f):
@@ -169,8 +154,19 @@ def ppo_loss(new_values, old_values, new_logprobs, old_logprobs, advantages, ret
 
     return ploss + vloss * vfcoef - entcoef * eloss 
 
+
 def save_locals(dir, locals):
+    """ Save the locals dictionary to a json file """
     return json.dump(locals, open(os.path.join(dir, "locals.json"), "w"), indent=4)
+
+
+def gamma_tensor(train_steps, train_envs, agents, gamma_factor):    
+    """ returns a tensor of shape (train_steps, train_envs, agents) with the gamma factors """
+    gammas = torch.ones(train_steps, dtype=torch.float)
+    gammas[1:] = gamma_factor
+    gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
+    return gammas
+
 
 class FeedForward(torch.nn.Module):
     """ FeedForward Module with Skip Connection """
@@ -190,5 +186,6 @@ class FeedForward(torch.nn.Module):
 
     def forward(self, x):
         return self.lnrm(x + self.lin2(self.actv(self.lin1(self.drop(x)))))
+
 
 

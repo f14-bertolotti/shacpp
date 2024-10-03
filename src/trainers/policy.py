@@ -1,16 +1,18 @@
-import torch, json
-import utils
-import random
+import logging
+import torch
+import json
 
 def train_policy(
-        episode,
-        policy_model,
-        episode_data,
-        optimizer,
-        gammas,
-        logger,
-        clip_coefficient = .5
+        episode          : int                    ,
+        policy_model     : torch.nn.Module        ,
+        episode_data     : dict[str, torch.Tensor],
+        optimizer        : torch.optim.Optimizer  ,
+        gammas           : torch.Tensor           ,
+        logger           : logging.Logger         ,
+        clip_coefficient : float = .5             ,
     ):
+    """ Train the policy model """
+
     steps, envs = episode_data["observations"].size(0), episode_data["observations"].size(1)
     
     # compute value cache mask
@@ -25,6 +27,7 @@ def train_policy(
     loss.backward()
     torch.nn.utils.clip_grad_norm_(policy_model.parameters(), clip_coefficient)
     optimizer.step()
+
     logger.info(json.dumps({
             "episode" : episode,
             "loss"    : loss.item(),
