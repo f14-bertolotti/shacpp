@@ -27,16 +27,12 @@ def evaluate(
         proxy = world_model(eval_episode["observations"][0].unsqueeze(1), eval_episode["actions"][:world_model.steps].transpose(0,1))[0].transpose(0,1)
         rewards = rewards[:world_model.steps]
 
-    print(eval_episode["logits"][:10,0])
-    #print(eval_episode["actions"][:10,0])
-
     logger.info(json.dumps({
         "episode"            : episode,
         "done"               : eval_episode["dones"][-1,:,0].sum().int().item(),
         "reward"             : rewards.sum().item() / envs,
     } | ({} if proxy is None else {
         "reward_acc" : proxy.isclose(rewards, atol=.1).float().mean().item(),
-        "reward_acc_nz" : proxy[rewards > 0].isclose(rewards[rewards > 0], atol=.1).float().mean().item(),
     })))
 
     return {

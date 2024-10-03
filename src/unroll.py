@@ -39,7 +39,7 @@ def unroll(
         entropy  = policy_result.get("entropy" ,torch.empty(0))
         logits   = policy_result.get("logits"  ,torch.empty(0))
 
-        observations, rewards, dones, _ = world.step(torch.clamp(actions.transpose(0,1),-1,1))
+        observations, rewards, dones, _ = world.step(actions.transpose(0,1))
         observations = torch.stack(observations).transpose(0,1)
         rewards      = torch.stack(rewards     ).transpose(0,1)
         dones        = dones.unsqueeze(-1).repeat(1,observations.size(1))
