@@ -155,9 +155,9 @@ def ppo_loss(new_values, old_values, new_logprobs, old_logprobs, advantages, ret
     return ploss + vloss * vfcoef - entcoef * eloss 
 
 
-def save_locals(dir, locals):
+def save_config(dir:str, config:dict, name="locals.json", indent=4) -> None:
     """ Save the locals dictionary to a json file """
-    return json.dump(locals, open(os.path.join(dir, "locals.json"), "w"), indent=4)
+    return json.dump(config, open(os.path.join(dir, name), "w"), indent=indent)
 
 
 def gamma_tensor(train_steps, train_envs, agents, gamma_factor):    

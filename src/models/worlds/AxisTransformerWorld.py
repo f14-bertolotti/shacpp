@@ -54,7 +54,6 @@ class AxisTransformerWorld(models.Model):
         for layer in self.layers:
             shape = hidden.shape
             hidden = layer(hidden.flatten(0,1)).view(shape).transpose(1,2)
-            hidden = hidden
 
         rew = self.hid2rew(hidden)[:,1:].squeeze(-1)
         val = self.hid2val(hidden)[:,1:].squeeze(-1)

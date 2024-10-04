@@ -1,14 +1,8 @@
-jsonpickle
 matplotlib
+moviepy
 click
 numpy
 torch
 PyQt5
 tqdm
 vmas
-moviepy
-torchrl
-benchmarl
-transformers
-wheel
-mamba_ssm

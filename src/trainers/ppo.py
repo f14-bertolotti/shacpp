@@ -1,92 +1,133 @@
-import utils, torch, json
+from unroll import unroll
+from evaluate import evaluate
 
-def train_ppo(
-        policy_model,
-        value_model,
-        policy_optimizer,
-        value_optimizer,
-        episode_data,
-        ppo_logger,
-        epochs = 4,
-        batch_size = 128,
-        gamma = .99,
-        gaelm = .95,
-        value_clip = True,
-        clip_coefficient = .2,
-        value_coefficient = .5,
-        entropy_coefficient = .0,
-        max_grad_norm = 1,
+import trainers
+import models
+import torch
+import utils
+import vmas
+import tqdm
+import os
+
+def ppo(
+        dir                    : str                                    ,
+        episodes               : int                                    ,
+        observation_size       : int                                    ,
+        action_size            : int                                    ,
+        agents                 : int                                    ,
+        train_envs             : int                                    ,
+        train_steps            : int                                    ,
+        eval_envs              : int                                    ,
+        eval_steps             : int                                    ,
+        policy_model           : models.Model                           ,
+        value_model            : models.Model                           ,
+        policy_model_optimizer : torch.optim.Optimizer                  ,
+        value_model_optimizer  : torch.optim.Optimizer                  ,
+        train_world            : vmas.simulator.environment.Environment ,
+        eval_world             : vmas.simulator.environment.Environment ,
+        batch_size             : int                                    ,
+        epochs                 : int                                    ,
+        gamma_factor           : float                                  ,
+        etr                    : int                                    ,
+        etv                    : int                                    ,
+        compile                : bool                                   ,
+        restore_path           : str                                    ,
+        max_reward             : float                                  ,
     ):
 
+    ppo_logger    = utils.get_file_logger(os.path.join(dir,"ppo.log"))
+    eval_logger   = utils.get_file_logger(os.path.join(dir,"eval.log"))
+
+    if compile:
+        policy_model = torch.compile(policy_model)
+        value_model  = torch.compile(value_model)
+
+    checkpoint = dict()
+    if restore_path:
+        checkpoint = torch.load(restore_path)
+        policy_model.load_state_dict(checkpoint["policy_state_dict"])
+        value_model.load_state_dict(checkpoint["value_state_dict"])
     
-    values = value_model(episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
-    advantages = utils.compute_advantages(
-        value_model = value_model                       ,
-        rewards     = episode_data["rewards"]           ,
-        next_obs    = episode_data["last_observations"] ,
-        values      = values                            ,
-        dones       = episode_data["dones"]             ,
-        next_done   = episode_data["last_dones"]        ,
-        gamma       = gamma                             ,
-        gaelambda   = gaelm                             ,
-    )
+    prev_observations : torch.Tensor = torch.empty(train_envs, agents, observation_size)
+    prev_dones        : torch.Tensor = torch.empty(train_envs, agents, 1)
+    eval_reward       : float        = 0
+    best_reward       : float        = checkpoint.get("best_reward", float("-inf"))
+    for episode in (bar:=tqdm.tqdm(range(checkpoint.get("episode", 0)+1, episodes))):
+        
+        # unroll episode #############################################
+        episode_data = unroll(
+            observations  = (None if episode == 1 or episode % etr == 0 else prev_observations), 
+            dones         = (None if episode == 1 or episode % etr == 0 else prev_dones),
+            world         = train_world,
+            unroll_steps  = train_steps,
+            policy_model  = policy_model.sample,
+        )
 
-    returns = utils.compute_returns(
-        advantages = advantages, 
-        values = values,
-    )
+        # train policy and value models ##############################
+        trainers.ppo_policy_value(
+            policy_model     = policy_model,
+            value_model      = value_model,
+            policy_optimizer = policy_model_optimizer,
+            value_optimizer  = value_model_optimizer,
+            episode_data     = episode_data,
+            batch_size       = batch_size,
+            ppo_logger       = ppo_logger,
+            gamma            = gamma_factor,
+            epochs           = epochs
+        )
 
+        # save checkpoint ############################################
+        if episode % etv == 0:
+            torch.save({
+                "policy_state_dict" : policy_model.state_dict(),   
+                "value_state_dict"  : value_model.state_dict(),
+                "best_reward"       : best_reward,
+                "episode"           : episode
+            }, os.path.join(dir,"models.pkl"))
 
-    dataloader = torch.utils.data.DataLoader(
-        torch.utils.data.TensorDataset(
-            episode_data["observations"].detach().flatten(0,1),
-            episode_data["logprobs"    ].detach().flatten(0,1),
-            episode_data["actions"     ].detach().flatten(0,1),
-            values                      .detach().flatten(0,1),
-            advantages                  .detach().flatten(0,1),
-            returns                     .detach().flatten(0,1),
-        ),
-        collate_fn = torch.utils.data.default_collate,
-        batch_size = batch_size,
-        drop_last = True,
-        shuffle = True, 
-    )
+        # evaluate ###################################################
+        if episode % etv == 0:
+            policy_model.eval()
+            eval_data = evaluate(
+                episode      = episode      ,
+                policy_model = policy_model ,
+                world        = eval_world   ,
+                steps        = eval_steps   ,
+                envs         = eval_envs    ,
+                logger       = eval_logger
+            ) 
+            policy_model.train()
+            eval_reward = eval_data["rewards"]
 
-    for epoch in range(epochs):
-        for step, (observations, old_logprobs, actions, old_values, advantages, returns) in enumerate(dataloader):
-            value_optimizer.zero_grad()
-            policy_optimizer.zero_grad()
+            # save best model ##########################################
+            if eval_reward > best_reward:
+                best_reward = eval_reward
+                torch.save({
+                    "policy_state_dict" : policy_model.state_dict(),   
+                    "value_state_dict"  : value_model .state_dict(),
+                    "episode"           : episode,
+                    "best_reward"       : best_reward
+                }, os.path.join(dir,"best.pkl"))
+            del eval_data
+            
+        # update progress bar ########################################
+        done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
+        bar.set_description(f"reward:{eval_reward:5.3f}, dones:{done_train_envs:3d}")
 
-            policy_result = policy_model.eval_action(observations = observations, actions = actions)
-            new_logprobs, entropy = policy_result["logprobs"], policy_result["entropy"]
-            new_values = value_model(observations)
+        # set up next iteration ######################################        
+        prev_observations = episode_data["last_observations"].detach().clone()
+        prev_dones        = episode_data["last_dones"       ].detach().clone()
 
-            loss = utils.ppo_loss(
-                new_values   = new_values,
-                old_values   = old_values,
-                new_logprobs = new_logprobs,
-                old_logprobs = old_logprobs,
-                advantages   = advantages,
-                returns      = returns,
-                entropy      = entropy,
-                vclip        = value_clip,
-                clipcoef     = clip_coefficient,
-                vfcoef       = value_coefficient,
-                entcoef      = entropy_coefficient
-            )
+        # end if max reward #########################################
+        if eval_reward >= max_reward: 
+            torch.save({
+                "policy_state_dict" : policy_model.state_dict(),   
+                "value_state_dict"  : value_model .state_dict(),
+                "episode"           : episode,
+                "best_reward"       : best_reward
+            }, os.path.join(dir,"max.pkl"))
+            break
 
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_( value_model.parameters(), max_grad_norm)
-            torch.nn.utils.clip_grad_norm_(policy_model.parameters(), max_grad_norm)
-            value_optimizer.step()
-            policy_optimizer.step()
-
-            ppo_logger.info(json.dumps({
-                "epoch"     : epoch,
-                "step"      : step,
-                "loss"      : loss.item(),
-                "entropy"   : entropy.mean().item(),
-                "advantages": advantages.mean().item(),
-                "returns"   : returns.mean().item(),
-            }))
+        # clean up ##################################################
+        del episode_data
 
