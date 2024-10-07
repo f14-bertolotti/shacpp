@@ -16,7 +16,6 @@ class Shacwm:
 
         self.world_layers           = 1
         self.world_hidden_size      = 64
-        self.world_heads            = 1
         self.world_feedforward_size = 256
         self.world_dropout          = 0.0
         self.world_activation       = "ReLU"
@@ -25,7 +24,7 @@ class Shacwm:
         self.policy_learning_rate   = 0.001
 
         self.cache_size             = 10000
-        self.world_batch_size       = 1000
+        self.world_batch_size       = 2000
         self.world_epochs           = 4
 
         self.gamma_factor           = 0.99

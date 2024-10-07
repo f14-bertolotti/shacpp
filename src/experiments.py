@@ -6,6 +6,9 @@ import click
 def cli(): pass
 
 @cli.command()
+def shacwm_a7(): experiments.shacwm_a7()
+
+@cli.command()
 def shacwm_a3(): experiments.shacwm_a3()
 
 @cli.command()

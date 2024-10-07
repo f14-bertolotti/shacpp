@@ -1,6 +1,38 @@
 import models
 import torch
 
+class FeedForward(torch.nn.Module):
+    def __init__(self, hidden_size, feedforward_size, dropout, device):
+        super().__init__()
+        self.lin1 = torch.nn.Linear(hidden_size, feedforward_size, device=device)
+        self.lin2 = torch.nn.Linear(feedforward_size, hidden_size, device=device)
+        self.lnrm = torch.nn.LayerNorm(hidden_size, device=device)
+        self.drop = torch.nn.Dropout(dropout)
+    def forward(self, x):
+        return self.lnrm(x + self.lin2(self.drop(torch.nn.functional.relu(self.lin1(x)))))
+
+class SelfAttention(torch.nn.Module):
+    def __init__(self, hidden_size, device):
+        super().__init__()
+        self.qlin = torch.nn.Linear(hidden_size, hidden_size, device=device)
+        self.klin = torch.nn.Linear(hidden_size, hidden_size, device=device)
+        self.vlin = torch.nn.Linear(hidden_size, hidden_size, device=device)
+    def forward(self, x):
+        q = self.qlin(x)
+        k = self.klin(x)
+        v = self.vlin(x)
+        s = q @ k.transpose(-2,-1) / (q.shape[-1]**0.5)
+        a = torch.nn.functional.softmax(s, dim=-1)
+        return a @ v
+
+class TransformerLayer(torch.nn.Module):
+    def __init__(self, hidden_size, feedforward_size, dropout, device):
+        super().__init__()
+        self.attn = SelfAttention(hidden_size, device)
+        self.ffwd = FeedForward(hidden_size, feedforward_size, dropout, device)
+    def __call__(self, x):
+        return self.ffwd(self.attn(x))
+
 class AxisTransformerWorld(models.Model):
     """ World Model AxisTransformer. """
     def __init__(
@@ -10,10 +42,9 @@ class AxisTransformerWorld(models.Model):
         agents           : int,
         steps            : int,
         layers           : int   = 3        ,
-        hidden_size      : int   = 128      ,
-        heads            : int   = 2        ,
-        feedforward_size : int   = 512      ,
         dropout          : float = 0.0      ,
+        hidden_size      : int   = 128      ,
+        feedforward_size : int   = 512      ,
         activation       : str   = "ReLU"   ,
         device           : str   = "cuda:0"
     ):
@@ -27,19 +58,14 @@ class AxisTransformerWorld(models.Model):
 
         self.ln = torch.nn.LayerNorm(hidden_size, device=device)
 
-        self.layers = torch.nn.ModuleList([torch.nn.TransformerEncoder(
-            torch.nn.TransformerEncoderLayer(
-                dim_feedforward = feedforward_size ,
-                d_model         = hidden_size      ,
-                activation      = activation       ,
-                device          = device           ,
-                nhead           = heads            ,
-                dropout         = dropout          ,
-                batch_first     = True
-            ), 
-            num_layers = 1,
-            enable_nested_tensor = False
-        ) for _ in range(layers*2)])
+        self.layers = torch.nn.ModuleList([
+            TransformerLayer(
+                hidden_size = hidden_size,
+                feedforward_size = feedforward_size,
+                dropout = dropout,
+                device = device
+            ) for _ in range(layers*2)
+        ])
 
         self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
@@ -48,12 +74,11 @@ class AxisTransformerWorld(models.Model):
     def forward(self, obs, act):
         hidobs = self.obs2hid(obs)
         hidact = self.act2hid(act) + self.actpos
-
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
 
         for layer in self.layers:
-            shape = hidden.shape
-            hidden = layer(hidden.flatten(0,1)).view(shape).transpose(1,2)
+            hidden = layer(hidden)
+            hidden = hidden.transpose(1,2)
 
         rew = self.hid2rew(hidden)[:,1:].squeeze(-1)
         val = self.hid2val(hidden)[:,1:].squeeze(-1)

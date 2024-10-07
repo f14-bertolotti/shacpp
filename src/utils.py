@@ -167,7 +167,6 @@ def gamma_tensor(train_steps, train_envs, agents, gamma_factor):
     gammas = gammas.cumprod(0).unsqueeze(-1).unsqueeze(-1).repeat(1,train_envs,agents)
     return gammas
 
-
 class FeedForward(torch.nn.Module):
     """ FeedForward Module with Skip Connection """
     def __init__(

@@ -10,11 +10,11 @@ import os
 
 def run():
     config = experiments.configs.shacwm
-    config.dir              = "data/shacwm-a3"
-    config.observation_size = 13
+    config.dir              = "data/shacwm-a7"
+    config.observation_size = 25
     config.action_size      = 2
-    config.agents           = 3
-    config.max_reward       = 3
+    config.agents           = 7
+    config.max_reward       = 7
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
