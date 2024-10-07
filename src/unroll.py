@@ -14,7 +14,7 @@ def unroll(
     if dones is not None and observations is not None and reset_dones:
         for i in dones[:,0].nonzero():
             observations[i] = torch.stack(world.reset_at(i)).transpose(0,1)[i]
-    
+
     if observations is None and dones is None: 
         observations = torch.stack(world.reset()).transpose(0,1)
         dones        = torch.zeros(observations.size(0), observations.size(1), device=observations.device).bool()
@@ -32,7 +32,6 @@ def unroll(
     for step in range(1, unroll_steps+1):
         observation_cache.append(observations)
         done_cache       .append(dones)
-        
         policy_result = policy_model(observations)
         actions  = policy_result["actions"]
         logprobs = policy_result.get("logprobs",torch.empty(0))

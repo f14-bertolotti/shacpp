@@ -20,7 +20,13 @@ def pert(low:torch.Tensor, peak:torch.Tensor, high:torch.Tensor, lamb:int=8):
     beta  = 1 + lamb * (high - peak) / r
     return low + torch.distributions.Beta(alpha, beta).sample() * r
 
-
+@torch.no_grad()
+def random_dispatch(rewards, size, lamb=8):
+    beta  = (1 / (rewards + 1/lamb) + 1e-5) * torch.ones_like(rewards)
+    alpha = (lamb/beta + 1e-5) * torch.ones_like(rewards)
+    result = (torch.distributions.Beta(alpha, beta).sample() * (size-1)).round().to(torch.long)
+    return result
+    
 @torch.no_grad()
 def compute_values(values, rewards, dones, slam, gamma):
     steps, envirs, agents = values.size(0), values.size(1), values.size(2)

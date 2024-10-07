@@ -5,13 +5,11 @@ import models
 import torch
 import utils
 import utils
-import vmas
 import os
 
 def run():
-
-    config = experiments.configs.ppo
-    config.dir              = "data/ppo-a3"
+    config = experiments.configs.shacwm
+    config.dir              = "data/shacwm-dispersion-a3"
     config.observation_size = 13
     config.action_size      = 2
     config.agents           = 3
@@ -22,36 +20,6 @@ def run():
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
 
-    train_world = vmas.simulator.environment.Environment(
-        environments.scenarios.Dispersion(
-            device = config.device ,
-            radius = .05           ,
-            agents = config.agents ,
-        ),
-        n_agents           = config.agents     ,
-        num_envs           = config.train_envs ,
-        device             = config.device     ,
-        grad_enabled       = False             ,
-        continuous_actions = True              ,
-        dict_spaces        = False             ,
-        seed               = config.seed       ,
-    )
-
-    eval_world = vmas.simulator.environment.Environment(
-        environments.scenarios.Dispersion(
-            device = config.device ,
-            radius = .05           ,
-            agents = config.agents ,
-        ),
-        n_agents           = config.agents    ,
-        num_envs           = config.eval_envs ,
-        device             = config.device    ,
-        grad_enabled       = False            ,
-        continuous_actions = True             ,
-        dict_spaces        = False            ,
-        seed               = config.seed      ,
-    )
-    
     policy_model = models.PolicyAFO(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
@@ -64,22 +32,41 @@ def run():
         device           = config.device
     )
 
-    value_model  = models.ValueAFO(
-        observation_size = config.observation_size  ,
-        action_size      = config.action_size       ,
-        agents           = config.agents            ,
-        steps            = config.train_steps       ,
-        layers           = config.value_layers      ,
-        hidden_size      = config.value_hidden_size ,
-        dropout          = config.value_dropout     ,
-        activation       = config.value_activation  ,
+    world_model = models.worlds.AxisTransformerWorld(
+        observation_size = config.observation_size       ,
+        action_size      = config.action_size            ,
+        agents           = config.agents                 ,
+        steps            = config.train_steps            ,
+        layers           = config.world_layers           ,
+        hidden_size      = config.world_hidden_size      ,
+        feedforward_size = config.world_feedforward_size ,
+        dropout          = config.world_dropout          ,
+        activation       = config.world_activation       ,
         device           = config.device
     )
 
-    policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=config.policy_learning_rate)
-    value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=config. value_learning_rate)
+    train_world = environments.get_environment(
+        name         = "dispersion"      ,
+        envs         = config.train_envs ,
+        agents       = config.agents     ,
+        device       = config.device     ,
+        grad_enabled = False             ,
+        seed         = config.seed
+    )
 
-    trainers.ppo(
+    eval_world = environments.get_environment(
+        name         = "dispersion"     ,
+        envs         = config.eval_envs ,
+        agents       = config.agents    ,
+        device       = config.device    ,
+        grad_enabled = False            ,
+        seed         = config.seed
+    )
+
+    world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=config. world_learning_rate) 
+    policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=config.policy_learning_rate)
+
+    trainers.shacwm(
         dir                    = config.dir              ,
         episodes               = config.episodes         ,
         observation_size       = config.observation_size ,
@@ -87,21 +74,24 @@ def run():
         agents                 = config.agents           ,
         train_envs             = config.train_envs       ,
         train_steps            = config.train_steps      ,
-        eval_envs              = config.eval_envs        ,
         eval_steps             = config.eval_steps       ,
+        eval_envs              = config.eval_envs        ,
         policy_model           = policy_model            ,
-        value_model            = value_model             ,
+        world_model            = world_model             ,
+        world_model_optimizer  = world_model_optimizer   ,
         policy_model_optimizer = policy_model_optimizer  ,
-        value_model_optimizer  = value_model_optimizer   ,
         train_world            = train_world             ,
         eval_world             = eval_world              ,
-        batch_size             = config.batch_size       ,
-        epochs                 = config.epochs           ,
+        cache_size             = config.cache_size       ,
+        world_batch_size       = config.world_batch_size ,
+        world_epochs           = config.world_epochs     ,
         gamma_factor           = config.gamma_factor     ,
+        lambda_factor          = config.lambda_factor    ,
         etr                    = config.etr              ,
         etv                    = config.etv              ,
         compile                = config.compile          ,
         restore_path           = config.restore_path     ,
+        device                 = config.device           ,
         max_reward             = config.max_reward       ,
     )
 

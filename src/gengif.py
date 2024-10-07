@@ -1,17 +1,22 @@
 from moviepy.editor import ImageSequenceClip
-from Dispersion import Dispersion as DispersionScenario
-import models, click, utils, torch, vmas
+import environments
+import models 
+import click
+import utils
+import torch
+import vmas
 
 @click.command()
-@click.option("--seed"              , "seed"              , type=int          , default=42       , help="random seed"                                )
-@click.option("--observation-size"  , "observation_size"  , type=int          , default=2        , help="observation size"                           )
-@click.option("--action-size"       , "action_size"       , type=int          , default=11       , help="action size"                                )
-@click.option("--agents"            , "agents"            , type=int          , default=5        , help="number of agents"                           )
-@click.option("--steps"             , "steps"             , type=int          , default=64       , help="number of steps for the evaluation rollout" )
-@click.option("--device"            , "device"            , type=str          , default="cuda:0" , help="device"                                     )
-@click.option("--output-path"       , "output_path"       , type=click.Path() , default="x.gif"  , help="output path"                                )
-@click.option("--input-path"        , "input_path"        , type=click.Path() , default=None     , help="input model path"                           )
-@click.option("--compile"           , "compile"           , type=bool         , default=False    , help="compile the model"                          )
+@click.option("--seed"             , "seed"             , type=int          , default=42           , help="random seed"                                )
+@click.option("--observation-size" , "observation_size" , type=int          , default=2            , help="observation size"                           )
+@click.option("--action-size"      , "action_size"      , type=int          , default=11           , help="action size"                                )
+@click.option("--env-name"         , "env_name"         , type=str          , default="dispersion" , help="environment name"                           )
+@click.option("--agents"           , "agents"           , type=int          , default=5            , help="number of agents"                           )
+@click.option("--steps"            , "steps"            , type=int          , default=64           , help="number of steps for the evaluation rollout" )
+@click.option("--device"           , "device"           , type=str          , default="cuda:0"     , help="device"                                     )
+@click.option("--output-path"      , "output_path"      , type=click.Path() , default="x.gif"      , help="output path"                                )
+@click.option("--input-path"       , "input_path"       , type=click.Path() , default=None         , help="input model path"                           )
+@click.option("--compile"          , "compile"          , type=bool         , default=False        , help="compile the model"                          )
 def run(
         seed,
         agents,
@@ -21,27 +26,31 @@ def run(
         device,
         output_path,
         input_path,
+        env_name,
         compile,
     ):
     utils.seed_everything(seed)
-
-    world = vmas.simulator.environment.Environment(
-        DispersionScenario(
-            device = device,
-            radius = .05,
-            agents = agents,
-        ),
-        n_agents           = agents ,
-        num_envs           = 1      ,
-        device             = device ,
-        shared_reward      = False  ,
-        grad_enabled       = False  ,
-        continuous_actions = True   ,
-        dict_spaces        = False  ,
-        seed               = None   ,
+    
+    world = environments.get_environment(
+        name         = env_name,
+        envs         = 1       ,
+        agents       = agents  ,
+        device       = device  ,
+        grad_enabled = False   ,
+        seed         = seed    ,
     )
     
-    policy = models.Policy(observation_size = observation_size, action_size = action_size, agents = agents, layers = 2, hidden_size = 2048, dropout=0.0, activation="Tanh", device = device)
+    policy = models.PolicyOFA(
+        observation_size = observation_size ,
+        action_size      = action_size      ,
+        agents           = agents           ,
+        steps            = steps            ,
+        layers           = 1                ,
+        hidden_size      = 64             ,
+        dropout          = 0.0              ,
+        activation       = "Tanh"           ,
+        device           = device
+    )
 
     if compile: policy = torch.compile(policy)
     if input_path: policy.load_state_dict(torch.load(input_path)["policy_state_dict"])

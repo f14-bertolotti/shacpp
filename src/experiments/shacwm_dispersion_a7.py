@@ -1,16 +1,14 @@
 import environments
 import experiments
-import trainers
 import models
 import torch
 import utils
 import utils
-import vmas
 import os
 
 def run():
     config = experiments.configs.shacwm
-    config.dir              = "data/shacwm-a7"
+    config.dir              = "data/shacwm-dispersion-a7"
     config.observation_size = 25
     config.action_size      = 2
     config.agents           = 7
@@ -46,34 +44,22 @@ def run():
         device           = config.device
     )
 
-    train_world = vmas.simulator.environment.Environment(
-        environments.scenarios.Dispersion(
-            device = config.device ,
-            radius = .05           ,
-            agents = config.agents ,
-        ),
-        n_agents           = config.agents     ,
-        num_envs           = config.train_envs ,
-        device             = config.device     ,
-        grad_enabled       = False             ,
-        continuous_actions = True              ,
-        dict_spaces        = False             ,
-        seed               = config.seed       ,
+    train_world = environments.get_environment(
+        name         = "dispersion"      ,
+        envs         = config.train_envs ,
+        agents       = config.agents     ,
+        device       = config.device     ,
+        grad_enabled = False             ,
+        seed         = config.seed
     )
 
-    eval_world = vmas.simulator.environment.Environment(
-        environments.scenarios.Dispersion(
-            device = config.device ,
-            radius = .05           ,
-            agents = config.agents ,
-        ),
-        n_agents           = config.agents    ,
-        num_envs           = config.eval_envs ,
-        device             = config.device    ,
-        grad_enabled       = False            ,
-        continuous_actions = True             ,
-        dict_spaces        = False            ,
-        seed               = config.seed      ,
+    eval_world = environments.get_environment(
+        name         = "dispersion"     ,
+        envs         = config.eval_envs ,
+        agents       = config.agents    ,
+        device       = config.device    ,
+        grad_enabled = False            ,
+        seed         = config.seed
     )
 
     world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=config. world_learning_rate) 

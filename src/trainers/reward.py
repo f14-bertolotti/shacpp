@@ -1,5 +1,8 @@
 import json, utils, numpy, torch
 
+max_reward = float("-inf")
+min_reward = float("+inf")
+
 def train_reward(
         episode         ,
         model           ,
@@ -12,12 +15,22 @@ def train_reward(
         logger          ,
     ):
 
-    peak_cache = episode_data["rewards"].flatten(0,1).sum(1)
-    indexes = utils.pert(
-        low  = cached_data["pert_low"],
-        high = cached_data["pert_high"],
-        peak = (peak_cache - peak_cache.min()) / (peak_cache.max() - peak_cache.min() + 1e-5) * (cache_size-1),
-    ).round().to(torch.long)
+    global max_reward, min_reward
+
+    rewards = (episode_data["rewards"]).flatten(0,1).sum(1)
+    #rewards[rewards > 0] += 10
+    max_reward = max(max_reward, rewards.max().item())
+    min_reward = min(min_reward, rewards.min().item())
+
+    normalized_reward = (rewards - min_reward) / (max_reward - min_reward + 1e-5)
+    indexes = utils.random_dispatch(normalized_reward, cache_size, lamb=64)
+    #print("-"*100)
+    #print(indexes[rewards <= 0][:33])
+    #print(normalized_reward[rewards == 0][:33])
+    #print(normalized_reward[rewards > 0][:33])
+    #print(indexes[rewards > 0][:33])
+
+    #print("="*100)
 
     cached_data["mask"        ][indexes] = episode_data["dones"][:,:,0].flatten(0,1).detach().logical_not()
     cached_data["observations"][indexes] = episode_data["observations"].flatten(0,1).detach()
@@ -51,6 +64,8 @@ def train_reward(
                 "epoch"           : epoch,
                 "step"            : step,
                 "loss"            : loss.item(),
+                "filled"          : cached_data["mask"].sum().item(),
+                "filled_gt0"      : cached_data["mask"].logical_and(cached_data["rewards"].sum(-1)>0).sum().item(),
                 "accuracy"        : tpfn/(tot+1e-7),
             }))
 
