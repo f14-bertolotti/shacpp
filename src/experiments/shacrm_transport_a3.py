@@ -20,7 +20,6 @@ def run():
     config.reward_epochs    = 1
     config.value_epochs     = 1
     config.compile          = False
-    config.cache_size       = 40000
     config.policy_hidden_size = 64
 
     os.makedirs(config.dir, exist_ok=False)

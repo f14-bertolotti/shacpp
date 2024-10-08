@@ -26,6 +26,20 @@ def random_dispatch(rewards, size, lamb=8):
     alpha = (lamb/beta + 1e-5) * torch.ones_like(rewards)
     result = (torch.distributions.Beta(alpha, beta).sample() * (size-1)).round().to(torch.long)
     return result
+
+
+min_reward = float('+inf')
+max_reward = float('-inf')
+@torch.no_grad()
+def bin_dispatch(rewards:torch.Tensor, bins:int, size:int) -> torch.Tensor:
+    global min_reward, max_reward
+    min_reward = min(min_reward, rewards.min().item())
+    max_reward = max(max_reward, rewards.max().item())
+    rewards = (rewards - min_reward) / (max_reward - min_reward + 1e-5)
+    bin_idx = (rewards * (bins-1)).round()
+    cache_idx = bin_idx * size + torch.randint(0, size, (rewards.size(0),), device=rewards.device)
+    print(cache_idx.max())
+    return cache_idx.to(torch.long)
     
 @torch.no_grad()
 def compute_values(values, rewards, dones, slam, gamma):

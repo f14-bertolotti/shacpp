@@ -1,7 +1,7 @@
 import json, utils, numpy, torch
 
-max_reward = float("-inf")
-min_reward = float("+inf")
+#max_reward = float("-inf")
+#min_reward = float("+inf")
 
 def train_reward(
         episode         ,
@@ -15,19 +15,20 @@ def train_reward(
         logger          ,
     ):
 
-    global max_reward, min_reward
+    #global max_reward, min_reward
 
     rewards = (episode_data["rewards"]).flatten(0,1).sum(1)
     #rewards[rewards > 0] += 10
-    max_reward = max(max_reward, rewards.max().item())
-    min_reward = min(min_reward, rewards.min().item())
+    #max_reward = max(max_reward, rewards.max().item())
+    #min_reward = min(min_reward, rewards.min().item())
 
-    normalized_reward = (rewards - min_reward) / (max_reward - min_reward + 1e-5)
-    indexes = utils.random_dispatch(normalized_reward, cache_size, lamb=64)
+    #normalized_reward = (rewards - min_reward) / (max_reward - min_reward + 1e-5)
+    indexes = utils.bin_dispatch(rewards, cache_size // 100, 100)
     #print("-"*100)
+    #print(indexes.max())
     #print(indexes[rewards <= 0][:33])
-    #print(normalized_reward[rewards == 0][:33])
-    #print(normalized_reward[rewards > 0][:33])
+    #print(rewards[rewards <= 0][:33])
+    #print(rewards[rewards > 0][:33])
     #print(indexes[rewards > 0][:33])
 
     #print("="*100)
