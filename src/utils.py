@@ -38,7 +38,6 @@ def bin_dispatch(rewards:torch.Tensor, bins:int, size:int) -> torch.Tensor:
     rewards = (rewards - min_reward) / (max_reward - min_reward + 1e-5)
     bin_idx = (rewards * (bins-1)).round()
     cache_idx = bin_idx * size + torch.randint(0, size, (rewards.size(0),), device=rewards.device)
-    print(cache_idx.max())
     return cache_idx.to(torch.long)
     
 @torch.no_grad()

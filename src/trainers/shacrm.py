@@ -31,6 +31,7 @@ def shacrm(
         cache_size             : int                                    ,
         reward_batch_size      : int                                    ,
         reward_epochs          : int                                    ,
+        reward_bins            : int                                    ,
         value_batch_size       : int                                    ,
         value_epochs           : int                                    ,
         gamma_factor           : float                                  ,
@@ -108,6 +109,7 @@ def shacrm(
             batch_size      = reward_batch_size         ,
             cache_size      = cache_size                ,
             training_epochs = reward_epochs             ,
+            bins            = reward_bins               ,
             logger          = reward_logger
         )
 

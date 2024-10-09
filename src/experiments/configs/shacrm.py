@@ -11,13 +11,14 @@ class Shacrm:
 
         self.reward_batch_size      = 2000
         self.reward_epochs          = 4
+        self.reward_bins            = 10
 
         self.value_batch_size       = 2000
         self.value_epochs           = 4
 
         self.policy_layers          = 1
         self.policy_hidden_size     = 2048
-        self.policy_dropout         = 0.0
+        self.policy_dropout         = 0.3
         self.policy_activation      = "Tanh"
 
         self.value_layers           = 1
@@ -42,6 +43,8 @@ class Shacrm:
         self.compile                = True
         self.restore_path           = None
         self.device                 = "cuda:0"
+
+        self.max_reward             = float("+inf")
 
 
 shacrm = Shacrm()

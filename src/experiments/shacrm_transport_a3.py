@@ -17,6 +17,7 @@ def run():
     config.max_reward       = float("+inf")
 
     config.etr              = 5
+    config.reward_bins      = 100
     config.reward_epochs    = 1
     config.value_epochs     = 1
     config.compile          = False
@@ -105,6 +106,7 @@ def run():
         cache_size             = config.cache_size        ,
         reward_batch_size      = config.reward_batch_size ,
         reward_epochs          = config.reward_epochs     ,
+        reward_bins            = config.reward_bins       ,
         value_batch_size       = config.value_batch_size  ,
         value_epochs           = config.value_epochs      ,
         gamma_factor           = config.gamma_factor      ,

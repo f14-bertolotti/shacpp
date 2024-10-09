@@ -10,6 +10,7 @@ def train_reward(
         cached_data     ,
         batch_size      ,
         cache_size      ,
+        bins            ,
         training_epochs ,
         optimizer       ,
         logger          ,
@@ -23,7 +24,7 @@ def train_reward(
     #min_reward = min(min_reward, rewards.min().item())
 
     #normalized_reward = (rewards - min_reward) / (max_reward - min_reward + 1e-5)
-    indexes = utils.bin_dispatch(rewards, cache_size // 100, 100)
+    indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
     #print("-"*100)
     #print(indexes.max())
     #print(indexes[rewards <= 0][:33])
