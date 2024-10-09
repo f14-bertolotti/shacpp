@@ -32,7 +32,7 @@ def ppo(
         etv                    : int                                    ,
         compile                : bool                                   ,
         restore_path           : str                                    ,
-        max_reward             : float                                  ,
+        early_stopping         : dict                                   ,
     ):
 
     ppo_logger    = utils.get_file_logger(os.path.join(dir,"ppo.log"))
@@ -52,6 +52,8 @@ def ppo(
     prev_dones        : torch.Tensor = torch.empty(train_envs, agents, 1)
     eval_reward       : float        = 0
     best_reward       : float        = checkpoint.get("best_reward", float("-inf"))
+    patience          : int          = 0
+    max_reward        : float        = float("-inf")
     for episode in (bar:=tqdm.tqdm(range(checkpoint.get("episode", 0)+1, episodes))):
         
         # unroll episode #############################################
@@ -76,18 +78,18 @@ def ppo(
             epochs           = epochs
         )
 
-        # save checkpoint ############################################
+        # checkpoint ##################################################
         if episode % etv == 0:
             torch.save({
                 "policy_state_dict" : policy_model.state_dict(),   
-                "value_state_dict"  : value_model.state_dict(),
+                "reward_state_dict" : reward_model.state_dict(),
+                "value_state_dict"  : value_model .state_dict(),
                 "best_reward"       : best_reward,
-                "episode"           : episode
+                "episode"           : episode,
             }, os.path.join(dir,"models.pkl"))
 
-        # evaluate ###################################################
+        # evaluation #################################################
         if episode % etv == 0:
-            policy_model.eval()
             eval_data = evaluate(
                 episode      = episode      ,
                 policy_model = policy_model ,
@@ -96,8 +98,8 @@ def ppo(
                 envs         = eval_envs    ,
                 logger       = eval_logger
             ) 
-            policy_model.train()
             eval_reward = eval_data["rewards"]
+            max_reward  = eval_data["max_reward"]
 
             # save best model ##########################################
             if eval_reward > best_reward:
@@ -105,29 +107,31 @@ def ppo(
                 torch.save({
                     "policy_state_dict" : policy_model.state_dict(),   
                     "value_state_dict"  : value_model .state_dict(),
+                    "best_reward"       : best_reward,
                     "episode"           : episode,
-                    "best_reward"       : best_reward
                 }, os.path.join(dir,"best.pkl"))
+
+            # early_stopping #########################################
+            patience = patience + 1 if eval_reward >= max_reward * early_stopping["max_reward_fraction"] else 0
+            if patience >= early_stopping["patience"]: break
+
             del eval_data
-            
+
         # update progress bar ########################################
         done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
-        bar.set_description(f"reward:{eval_reward:5.3f}, dones:{done_train_envs:3d}")
+        bar.set_description(f"reward:{eval_reward:5.3f}, max:{max_reward:5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
+        # set up next iteration ######################################
+        prev_observations = episode_data["last_observations"].detach()
+        prev_dones        = episode_data["last_dones"       ].detach()
 
-        # set up next iteration ######################################        
-        prev_observations = episode_data["last_observations"].detach().clone()
-        prev_dones        = episode_data["last_dones"       ].detach().clone()
-
-        # end if max reward #########################################
-        if eval_reward >= max_reward: 
-            torch.save({
-                "policy_state_dict" : policy_model.state_dict(),   
-                "value_state_dict"  : value_model .state_dict(),
-                "episode"           : episode,
-                "best_reward"       : best_reward
-            }, os.path.join(dir,"max.pkl"))
-            break
-
-        # clean up ##################################################
+        # clean up ###################################################
         del episode_data
+
+    torch.save({
+        "policy_state_dict" : policy_model.state_dict(),   
+        "value_state_dict"  : value_model .state_dict(),
+        "episode"           : episodes,
+        "best_reward"       : best_reward
+    }, os.path.join(dir,"last.pkl"))
+
 

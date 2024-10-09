@@ -1,12 +1,12 @@
 import torch
 
 def unroll(
-        policy_model,
-        world,
-        observations = None,
-        dones        = None,
-        unroll_steps = 64,
-        reset_dones  = False
+        policy_model         ,
+        world                ,
+        observations = None  ,
+        dones        = None  ,
+        unroll_steps = 64    ,
+        reset_dones  = False ,
     ):
 
     world.world.zero_grad()
@@ -19,6 +19,8 @@ def unroll(
         observations = torch.stack(world.reset()).transpose(0,1)
         dones        = torch.zeros(observations.size(0), observations.size(1), device=observations.device).bool()
 
+
+    max_reward   = world.scenario.max_reward()
     observations = observations.detach()
 
     observation_cache = []
@@ -58,16 +60,17 @@ def unroll(
     logits_cache      = torch.stack(logits_cache)
 
     return { 
-            "logprobs"      : logprobs_cache,
-            "entropy"       : entropy_cache,
-            "actions"       : action_cache,
-            "observations"  : observation_cache, 
-            "rewards"       : reward_cache, 
-            "logits"        : logits_cache,
-            "dones"         : done_cache,
+            "logprobs"      : logprobs_cache    ,
+            "entropy"       : entropy_cache     ,
+            "actions"       : action_cache      ,
+            "observations"  : observation_cache ,
+            "rewards"       : reward_cache      ,
+            "logits"        : logits_cache      ,
+            "dones"         : done_cache        ,
+            "max_reward"    : max_reward        ,
 
-            "last_dones"        : dones,
-            "last_observations" : observations
+            "last_dones"        : dones         ,
+            "last_observations" : observations  ,
     }
 
 

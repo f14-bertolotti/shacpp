@@ -21,14 +21,17 @@ def get_environment(name:str, envs:int, agents:int, device:str, grad_enabled:boo
             )
 
         case "transport" :
-            return vmas.make_env(
-                scenario="transport",
-                n_agents=agents,
-                num_envs=envs,
-                device=device,
-                continuous_actions=True,
-                seed=seed,
-                grad_enabled=grad_enabled,
+            return vmas.simulator.environment.Environment(
+                environments.scenarios.Transport(),
+                package_mass       = 3.0          ,
+                n_agents           = agents       ,
+                num_envs           = envs         ,
+                device             = device       ,
+                grad_enabled       = grad_enabled ,
+                continuous_actions = True         ,
+                dict_spaces        = False        ,
+                seed               = seed         ,
             )
+
         case _:
             raise ValueError(f"Unknown environment {name}.")

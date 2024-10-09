@@ -91,7 +91,7 @@ def run():
         compile                = config.compile          ,
         restore_path           = config.restore_path     ,
         device                 = config.device           ,
-        max_reward             = config.max_reward       ,
+        early_stopping         = config.early_stopping   ,
     )
 
 if __name__ == "__main__":

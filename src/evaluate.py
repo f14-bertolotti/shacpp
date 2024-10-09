@@ -36,7 +36,8 @@ def evaluate(
     })))
 
     return {
-        "rewards" : rewards.sum().item() / envs
+        "rewards" : rewards.sum().item() / envs,
+        "max_reward" : eval_episode["max_reward"]
     }
 
 

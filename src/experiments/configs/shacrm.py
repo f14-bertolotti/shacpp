@@ -46,5 +46,11 @@ class Shacrm:
 
         self.max_reward             = float("+inf")
 
+        self.early_stopping = {
+            "patience" : 10,
+            "max_reward_fraction" : 0.9,
+        }
+
+
 
 shacrm = Shacrm()

@@ -1,8 +1,5 @@
 import json, utils, numpy, torch
 
-#max_reward = float("-inf")
-#min_reward = float("+inf")
-
 def train_reward(
         episode         ,
         model           ,
@@ -16,23 +13,8 @@ def train_reward(
         logger          ,
     ):
 
-    #global max_reward, min_reward
-
     rewards = (episode_data["rewards"]).flatten(0,1).sum(1)
-    #rewards[rewards > 0] += 10
-    #max_reward = max(max_reward, rewards.max().item())
-    #min_reward = min(min_reward, rewards.min().item())
-
-    #normalized_reward = (rewards - min_reward) / (max_reward - min_reward + 1e-5)
     indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
-    #print("-"*100)
-    #print(indexes.max())
-    #print(indexes[rewards <= 0][:33])
-    #print(rewards[rewards <= 0][:33])
-    #print(rewards[rewards > 0][:33])
-    #print(indexes[rewards > 0][:33])
-
-    #print("="*100)
 
     cached_data["mask"        ][indexes] = episode_data["dones"][:,:,0].flatten(0,1).detach().logical_not()
     cached_data["observations"][indexes] = episode_data["observations"].flatten(0,1).detach()

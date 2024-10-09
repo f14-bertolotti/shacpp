@@ -1,4 +1,5 @@
-try observation/reward centering
-try with bias
 
 ---dropout seems to make things a lot worse
+
+reward is using bin_dispatch (should the other use bin_dispatch too?)
+

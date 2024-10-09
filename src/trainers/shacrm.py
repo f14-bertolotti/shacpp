@@ -41,7 +41,7 @@ def shacrm(
         compile                : bool                                   ,
         restore_path           : str                                    ,
         device                 : str                                    ,
-        max_reward             : float                                  ,
+        early_stopping         : dict                                   ,
     ):
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
@@ -76,8 +76,10 @@ def shacrm(
     prev_dones        : torch.Tensor = torch.empty(train_envs, agents, 1)
     eval_reward       : float        = 0
     best_reward       : float        = checkpoint.get("best_reward", float("-inf"))
+    patience          : int          = 0
+    max_reward        : float        = float("-inf")
     for episode in (bar:=tqdm.tqdm(range(checkpoint.get("episode", 0)+1, episodes))):
-        
+
         # unroll episode #############################################
         episode_data = unroll(
             observations  = (None if episode == 1 or episode % etr == 0 or prev_dones[:,0].all() else prev_observations), 
@@ -148,6 +150,7 @@ def shacrm(
                 logger       = eval_logger
             ) 
             eval_reward = eval_data["rewards"]
+            max_reward  = eval_data["max_reward"]
 
             # save best model ##########################################
             if eval_reward > best_reward:
@@ -159,27 +162,28 @@ def shacrm(
                     "best_reward"       : best_reward,
                     "episode"           : episode,
                 }, os.path.join(dir,"best.pkl"))
+
+            # early_stopping #########################################
+            patience = patience + 1 if eval_reward >= max_reward * early_stopping["max_reward_fraction"] else 0
+            if patience >= early_stopping["patience"]: break
+
             del eval_data
-        
+
         # update progress bar ########################################
         done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
-        bar.set_description(f"reward:{eval_reward:5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
-
+        bar.set_description(f"reward:{eval_reward:5.3f}, max:{max_reward:5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
         # set up next iteration ######################################
         prev_observations = episode_data["last_observations"].detach()
         prev_dones        = episode_data["last_dones"       ].detach()
 
-        # end if max reward #########################################
-        if eval_reward >= max_reward: 
-            torch.save({
-                "policy_state_dict" : policy_model.state_dict(),   
-                "value_state_dict"  : value_model .state_dict(),
-                "episode"           : episode,
-                "best_reward"       : best_reward
-            }, os.path.join(dir,"max.pkl"))
-            break
-
         # clean up ###################################################
         del episode_data
+
+    torch.save({
+        "policy_state_dict" : policy_model.state_dict(),   
+        "value_state_dict"  : value_model .state_dict(),
+        "episode"           : episodes,
+        "best_reward"       : best_reward
+    }, os.path.join(dir,"last.pkl"))
 
 

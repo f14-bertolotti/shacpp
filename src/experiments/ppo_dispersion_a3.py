@@ -89,7 +89,7 @@ def run():
         etv                    = config.etv              ,
         compile                = config.compile          ,
         restore_path           = config.restore_path     ,
-        max_reward             = config.max_reward       ,
+        early_stopping         = config.early_stopping   ,
     )
 
 if __name__ == "__main__":

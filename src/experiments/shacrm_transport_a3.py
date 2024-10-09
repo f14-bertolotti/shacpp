@@ -20,7 +20,6 @@ def run():
     config.reward_bins      = 100
     config.reward_epochs    = 1
     config.value_epochs     = 1
-    config.compile          = False
     config.policy_hidden_size = 64
 
     os.makedirs(config.dir, exist_ok=False)
@@ -116,7 +115,7 @@ def run():
         compile                = config.compile           ,
         restore_path           = config.restore_path      ,
         device                 = config.device            ,
-        max_reward             = config.max_reward
+        early_stopping         = config.early_stopping    ,
     ) 
 
 if __name__ == "__main__":
