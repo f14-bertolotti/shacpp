@@ -23,7 +23,7 @@ def get_environment(name:str, envs:int, agents:int, device:str, grad_enabled:boo
         case "transport" :
             return vmas.simulator.environment.Environment(
                 environments.scenarios.Transport(),
-                package_mass       = 3.0          ,
+                package_mass       = 10.0         ,
                 n_agents           = agents       ,
                 num_envs           = envs         ,
                 device             = device       ,

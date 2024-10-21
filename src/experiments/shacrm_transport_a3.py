@@ -17,10 +17,15 @@ def run():
     config.max_reward       = float("+inf")
 
     config.etr              = 5
+    config.eval_steps       = 512
     config.reward_bins      = 100
     config.reward_epochs    = 1
     config.value_epochs     = 1
+    config.policy_dropout  = 0.0
     config.policy_hidden_size = 64
+    config.episodes = 100000
+    config.cache_size = 100000
+    config.device = "cuda:0"
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
@@ -39,7 +44,7 @@ def run():
         device           = config.device
     )
 
-    policy_model = models.PolicyOFA(
+    policy_model = models.PolicyAFO(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
@@ -50,6 +55,7 @@ def run():
         activation       = config.policy_activation  ,
         device           = config.device
     )
+
     reward_model = models.RewardAFO(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,

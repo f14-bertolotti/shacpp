@@ -38,7 +38,7 @@ def train_reward(
         for step, (obs, act, tgt) in enumerate(dataloader,1):
             optimizer.zero_grad()
             prd = model(obs,act)
-            loss = ((prd[tgt==0] - tgt[tgt==0])**2).mean() + ((prd[tgt>0] - tgt[tgt>0])**2).mean()
+            loss = ((prd - tgt)**2).mean() #+ ((prd[tgt>0] - tgt[tgt>0])**2).mean()
             loss.backward()
             optimizer.step()
 

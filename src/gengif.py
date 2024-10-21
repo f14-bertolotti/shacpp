@@ -40,23 +40,26 @@ def run(
         seed         = seed    ,
     )
     
-    policy = models.PolicyOFA(
+    policy = models.PolicyAFO(
         observation_size = observation_size ,
         action_size      = action_size      ,
         agents           = agents           ,
         steps            = steps            ,
         layers           = 1                ,
-        hidden_size      = 64             ,
+        hidden_size      = 64               ,
         dropout          = 0.0              ,
         activation       = "Tanh"           ,
         device           = device
     )
 
     if compile: policy = torch.compile(policy)
-    if input_path: policy.load_state_dict(torch.load(input_path)["policy_state_dict"])
+    if input_path: 
+        checkpoint = torch.load(input_path)
+        print("restoring from:", input_path)
+        print("checkpoint ep :", checkpoint["episode"])
+        policy.load_state_dict(checkpoint["policy_state_dict"])
     
     frames, observation = [], torch.stack(world.reset()).transpose(0,1)
-    actions = torch.zeros((*observation.shape[:-1],2), device=device)
     
     with torch.no_grad():
         policy.eval()
@@ -65,6 +68,9 @@ def run(
             frames.append(world.render(mode="rgb_array"))
             observation, reward, done, info = world.step(actions.transpose(0,1))
             observation = torch.stack(observation).transpose(0,1)
+            print(f"{torch.stack(reward).sum().item():3.2f} ", end=" ")
+
+        print()
     
     
     clip = ImageSequenceClip(frames, fps=30)

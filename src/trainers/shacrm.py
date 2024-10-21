@@ -61,7 +61,7 @@ def shacrm(
         checkpoint = torch.load(restore_path, weights_only=False)
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
         reward_model.load_state_dict(checkpoint["reward_state_dict"])
-        value_model .load_state_dict(checkpoint["value_state_dict"])
+        value_model .load_state_dict(checkpoint["value_state_dict" ])
     
     cache = {
         "observations" : torch.zeros(cache_size, agents, observation_size, device=device),
@@ -72,8 +72,8 @@ def shacrm(
         "pert_high"    : torch.ones (train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False) * (cache_size-1)
     }
    
-    prev_observations : torch.Tensor = torch.empty(train_envs, agents, observation_size)
-    prev_dones        : torch.Tensor = torch.empty(train_envs, agents, 1)
+    prev_observations : torch.Tensor = torch.zeros(train_envs, observation_size, device=device)
+    prev_dones        : torch.Tensor = torch.ones (train_envs, agents, device=device)
     eval_reward       : float        = 0
     best_reward       : float        = checkpoint.get("best_reward", float("-inf"))
     patience          : int          = 0
