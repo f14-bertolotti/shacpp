@@ -23,7 +23,9 @@ class Shacwm:
         self.world_learning_rate    = 0.001
         self.policy_learning_rate   = 0.001
 
-        self.cache_size             = 10000
+        self.cache_size             = 100000
+        self.world_bins             = 100
+
         self.world_batch_size       = 2000
         self.world_epochs           = 4
 

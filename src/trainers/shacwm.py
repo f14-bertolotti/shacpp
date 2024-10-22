@@ -26,6 +26,7 @@ def shacwm(
         train_world            : vmas.simulator.environment.Environment ,
         eval_world             : vmas.simulator.environment.Environment ,
         cache_size             : int                                    ,
+        world_bins             : int                                    ,
         world_batch_size       : int                                    ,
         world_epochs           : int                                    ,
         gamma_factor           : float                                  ,
@@ -104,6 +105,8 @@ def shacwm(
             episode_data    = episode_data          ,
             cached_data     = cache                 ,
             batch_size      = world_batch_size      ,
+            cache_size      = cache_size            ,
+            bins            = world_bins            ,
             training_epochs = world_epochs          ,
             slam            = lambda_factor         ,
             gamma           = gamma_factor          ,
@@ -113,8 +116,8 @@ def shacwm(
         # checkpoint ##################################################
         if episode % etv == 0:
             torch.save({
-                "policy_state_dict" : policy_model.state_dict().cpu(),
-                "world_state_dict"  :  world_model.state_dict().cpu(),
+                "policy_state_dict" : policy_model.state_dict(),
+                "world_state_dict"  :  world_model.state_dict(),
                 "best_reward"       : best_reward,
                 "episode"           : episode,
             }, os.path.join(dir,"models.pkl"))
@@ -137,8 +140,8 @@ def shacwm(
             if eval_reward > best_reward:
                 best_reward = eval_reward
                 torch.save({
-                    "policy_state_dict" : policy_model.state_dict().cpu(),
-                    "world_state_dict"  :  world_model.state_dict().cpu(),
+                    "policy_state_dict" : policy_model.state_dict(),
+                    "world_state_dict"  :  world_model.state_dict(),
                     "best_reward"       : best_reward,
                     "episode"           : episode,
                 }, os.path.join(dir,"best.pkl"))
@@ -160,8 +163,8 @@ def shacwm(
         del episode_data
 
     torch.save({
-        "policy_state_dict" : policy_model.state_dict().cpu(),
-        "world_state_dict"  :  world_model.state_dict().cpu(),
+        "policy_state_dict" : policy_model.state_dict(),
+        "world_state_dict"  :  world_model.state_dict(),
         "episode"           : episodes,
         "best_reward"       : best_reward
     }, os.path.join(dir,"last.pkl"))

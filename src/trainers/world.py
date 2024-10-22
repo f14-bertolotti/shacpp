@@ -10,6 +10,8 @@ def train_world(
         episode_data     : dict[str,torch.Tensor] ,
         cached_data      : dict[str,torch.Tensor] ,
         batch_size       : int                    ,
+        cache_size       : int                    ,
+        bins             : int                    ,
         training_epochs  : int                    ,
         optimizer        : torch.optim.Optimizer  ,
         logger           : logging.Logger         ,
@@ -19,22 +21,19 @@ def train_world(
     ):
 
     target_values = utils.compute_values(
-        values  = episode_data["values"] ,
-        rewards = episode_data["rewards"],
-        dones   = episode_data["dones"].float()  ,
-        slam    = slam                   ,
+        values  = episode_data["values"]        ,
+        rewards = episode_data["rewards"]       ,
+        dones   = episode_data["dones"].float() ,
+        slam    = slam                          ,
         gamma   = gamma
     )
  
-    peak_cache = episode_data["rewards"].transpose(0,1).sum(-1).sum(-1)
-    indexes = utils.pert(
-        low  = cached_data["pert_low"],
-        high = cached_data["pert_high"],
-        peak = (peak_cache - peak_cache.min()) / (peak_cache.max() - peak_cache.min() + 1e-5) * (cached_data["observations"].size(0)-1),
-    ).round().to(torch.long)
+    rewards = (episode_data["rewards"]).flatten(0,1).sum(1)
+    indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
 
     alive   = episode_data["dones"][0,:,0].logical_not()
     indexes = indexes[alive]
+
 
     cached_data["mask"        ][indexes] = True
     cached_data["observations"][indexes] = episode_data["observations"     ].transpose(0,1)[alive].detach()
