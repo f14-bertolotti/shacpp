@@ -46,7 +46,7 @@ def ppo(
     if restore_path:
         checkpoint = torch.load(restore_path)
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
-        value_model.load_state_dict(checkpoint["value_state_dict"])
+        value_model .load_state_dict(checkpoint["value_state_dict"])
     
     prev_observations : torch.Tensor = torch.empty(train_envs, agents, observation_size)
     prev_dones        : torch.Tensor = torch.empty(train_envs, agents, 1)
@@ -81,9 +81,8 @@ def ppo(
         # checkpoint ##################################################
         if episode % etv == 0:
             torch.save({
-                "policy_state_dict" : policy_model.state_dict(),   
-                "reward_state_dict" : reward_model.state_dict(),
-                "value_state_dict"  : value_model .state_dict(),
+                "policy_state_dict" : policy_model.state_dict().cpu(),   
+                "value_state_dict"  : value_model .state_dict().cpu(),
                 "best_reward"       : best_reward,
                 "episode"           : episode,
             }, os.path.join(dir,"models.pkl"))
@@ -105,8 +104,8 @@ def ppo(
             if eval_reward > best_reward:
                 best_reward = eval_reward
                 torch.save({
-                    "policy_state_dict" : policy_model.state_dict(),   
-                    "value_state_dict"  : value_model .state_dict(),
+                    "policy_state_dict" : policy_model.state_dict().cpu(),   
+                    "value_state_dict"  : value_model .state_dict().cpu(),
                     "best_reward"       : best_reward,
                     "episode"           : episode,
                 }, os.path.join(dir,"best.pkl"))
@@ -128,8 +127,8 @@ def ppo(
         del episode_data
 
     torch.save({
-        "policy_state_dict" : policy_model.state_dict(),   
-        "value_state_dict"  : value_model .state_dict(),
+        "policy_state_dict" : policy_model.state_dict().cpu(),   
+        "value_state_dict"  : value_model .state_dict().cpu(),
         "episode"           : episodes,
         "best_reward"       : best_reward
     }, os.path.join(dir,"last.pkl"))

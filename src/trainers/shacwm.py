@@ -113,8 +113,8 @@ def shacwm(
         # checkpoint ##################################################
         if episode % etv == 0:
             torch.save({
-                "policy_state_dict" : policy_model.state_dict(),   
-                "world_state_dict"  : world_model.state_dict(),
+                "policy_state_dict" : policy_model.state_dict().cpu(),
+                "world_state_dict"  :  world_model.state_dict().cpu(),
                 "best_reward"       : best_reward,
                 "episode"           : episode,
             }, os.path.join(dir,"models.pkl"))
@@ -137,8 +137,8 @@ def shacwm(
             if eval_reward > best_reward:
                 best_reward = eval_reward
                 torch.save({
-                    "policy_state_dict" : policy_model.state_dict(),   
-                    "world_state_dict"  : world_model.state_dict(),
+                    "policy_state_dict" : policy_model.state_dict().cpu(),
+                    "world_state_dict"  :  world_model.state_dict().cpu(),
                     "best_reward"       : best_reward,
                     "episode"           : episode,
                 }, os.path.join(dir,"best.pkl"))
@@ -160,8 +160,8 @@ def shacwm(
         del episode_data
 
     torch.save({
-        "policy_state_dict" : policy_model.state_dict(),   
-        "world_state_dict"  : world_model.state_dict(),
+        "policy_state_dict" : policy_model.state_dict().cpu(),
+        "world_state_dict"  :  world_model.state_dict().cpu(),
         "episode"           : episodes,
         "best_reward"       : best_reward
     }, os.path.join(dir,"last.pkl"))
