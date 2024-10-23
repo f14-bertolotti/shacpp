@@ -14,8 +14,10 @@ def run():
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
-    config.max_reward       = float("+inf")
-    config.eval_steps       = 512
+
+    config.eval_steps = 512
+    config.policy_dropout = 0.3
+    config.polict_hidden_size = 64
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
