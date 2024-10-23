@@ -3,8 +3,8 @@ import torch
 
 class Transport(transport.Scenario):
 
-    def max_reward(self):
-        return sum([(torch.linalg.vector_norm(
-            package.state.pos - package.goal.state.pos, dim=1
-        ) - min(self.package_width/2, self.package_length/2) - 0.15).mean().item() * self.shaping_factor * len(self.world.agents) for package in self.packages])
+    def max_rewards(self):
+        distances = sum([self.world.get_distance(package, package.goal) for package in self.packages])
+        max_rewards = distances * self.shaping_factor * len(self.world.agents)
+        return max_rewards
 

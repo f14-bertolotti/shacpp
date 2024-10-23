@@ -20,7 +20,8 @@ def unroll(
         dones        = torch.zeros(observations.size(0), observations.size(1), device=observations.device).bool()
 
 
-    max_reward   = world.scenario.max_reward()
+    max_reward   = world.scenario.max_rewards()
+
     observations = observations.detach()
 
     observation_cache = []
