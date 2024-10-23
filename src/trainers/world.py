@@ -28,12 +28,11 @@ def train_world(
         gamma   = gamma
     )
  
-    rewards = (episode_data["rewards"]).flatten(0,1).sum(1)
+    rewards = (episode_data["rewards"]).sum(0).sum(1)
     indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
 
     alive   = episode_data["dones"][0,:,0].logical_not()
     indexes = indexes[alive]
-
 
     cached_data["mask"        ][indexes] = True
     cached_data["observations"][indexes] = episode_data["observations"     ].transpose(0,1)[alive].detach()

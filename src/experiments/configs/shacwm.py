@@ -24,14 +24,14 @@ class Shacwm:
         self.policy_learning_rate   = 0.001
 
         self.cache_size             = 100000
-        self.world_bins             = 100
+        self.reward_bins             = 100
 
         self.world_batch_size       = 2000
         self.world_epochs           = 4
 
         self.gamma_factor           = 0.99
         self.lambda_factor          = 0.95
-        
+
         self.etr                    = 5
         self.etv                    = 10
 
