@@ -13,7 +13,6 @@ def run():
     config.observation_size = 13
     config.action_size      = 2
     config.agents           = 3
-    config.max_reward       = 3
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
@@ -83,6 +82,7 @@ def run():
         train_world            = train_world             ,
         eval_world             = eval_world              ,
         cache_size             = config.cache_size       ,
+        reward_bins            = config.reward_bins      ,
         world_batch_size       = config.world_batch_size ,
         world_epochs           = config.world_epochs     ,
         gamma_factor           = config.gamma_factor     ,
