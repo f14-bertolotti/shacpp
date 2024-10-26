@@ -58,5 +58,5 @@ class Dispersion(dispersion.Scenario):
                 landmark.is_rendering[env_index] = True
 
     def max_rewards(self):
-        return torch.ones(self.world.batch_dim(), device=self.device) * self.agents
+        return torch.ones(self.world.batch_dim, device=self.device) * self.agents
 
