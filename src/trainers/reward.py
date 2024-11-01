@@ -38,7 +38,7 @@ def train_reward(
         for step, (obs, act, tgt) in enumerate(dataloader,1):
             optimizer.zero_grad()
             prd = model(obs,act)
-            loss = ((prd - tgt)**2).mean() #+ ((prd[tgt>0] - tgt[tgt>0])**2).mean()
+            loss = ((prd - tgt)**2).mean()
             loss.backward()
             optimizer.step()
 
@@ -48,8 +48,6 @@ def train_reward(
                 "epoch"           : epoch,
                 "step"            : step,
                 "loss"            : loss.item(),
-                "filled"          : cached_data["mask"].sum().item(),
-                "filled_gt0"      : cached_data["mask"].logical_and(cached_data["rewards"].sum(-1)>0).sum().item(),
                 "accuracy"        : tpfn/(tot+1e-7),
             }))
 
