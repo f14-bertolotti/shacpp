@@ -17,12 +17,12 @@ class SelfAttention(torch.nn.Module):
         self.qlin = torch.nn.Linear(hidden_size, hidden_size, device=device)
         self.klin = torch.nn.Linear(hidden_size, hidden_size, device=device)
         self.vlin = torch.nn.Linear(hidden_size, hidden_size, device=device)
-    def forward(self, x):
+    def forward(self, x, mask):
         q = self.qlin(x)
         k = self.klin(x)
         v = self.vlin(x)
         s = q @ k.transpose(-2,-1) / (q.shape[-1]**0.5)
-        a = torch.nn.functional.softmax(s, dim=-1)
+        a = torch.nn.functional.softmax(s + (0 if mask is None else mask), dim=-1)
         return a @ v
 
 class TransformerLayer(torch.nn.Module):
@@ -30,8 +30,8 @@ class TransformerLayer(torch.nn.Module):
         super().__init__()
         self.attn = SelfAttention(hidden_size, device)
         self.ffwd = FeedForward(hidden_size, feedforward_size, dropout, device)
-    def __call__(self, x):
-        return self.ffwd(self.attn(x))
+    def __call__(self, x, mask=None):
+        return self.ffwd(self.attn(x,mask=mask))
 
 class AxisTransformerWorld(models.Model):
     """ World Model AxisTransformer. """
@@ -60,24 +60,26 @@ class AxisTransformerWorld(models.Model):
 
         self.layers = torch.nn.ModuleList([
             TransformerLayer(
-                hidden_size = hidden_size,
+                hidden_size      = hidden_size,
                 feedforward_size = feedforward_size,
-                dropout = dropout,
-                device = device
+                dropout          = dropout,
+                device           = device
             ) for _ in range(layers*2)
         ])
 
         self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2obs = torch.nn.Linear(hidden_size, observation_size, device = device)
+        self.step_mask = torch.nn.Transformer.generate_square_subsequent_mask(steps+1, device=device)
 
     def forward(self, obs, act):
         hidobs = self.obs2hid(obs)
         hidact = self.act2hid(act) + self.actpos
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
 
-        for layer in self.layers:
-            hidden = layer(hidden)
+
+        for i,layer in enumerate(self.layers):
+            hidden = layer(hidden, mask=self.step_mask if i%2==1 else None )
             hidden = hidden.transpose(1,2)
 
         rew = self.hid2rew(hidden)[:,1:].squeeze(-1)
