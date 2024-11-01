@@ -10,17 +10,17 @@ class Shacwm:
         self.eval_steps             = 64
 
         self.policy_layers          = 1
-        self.policy_hidden_size     = 128
+        self.policy_hidden_size     = 2048
         self.policy_dropout         = 0.3
         self.policy_activation      = "Tanh"
 
         self.value_layers           = 1
-        self.value_hidden_size      = 128
+        self.value_hidden_size      = 2048
         self.value_dropout          = 0.0
         self.value_activation       = "Tanh"
 
         self.reward_layers          = 1
-        self.reward_hidden_size     = 128
+        self.reward_hidden_size     = 2048
         self.reward_dropout         = 0.0
         self.reward_activation      = "ReLU"
 
