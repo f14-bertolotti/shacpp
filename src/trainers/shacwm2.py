@@ -101,8 +101,8 @@ def shacwm2(
 
         # compute rewards and values #################################
         obs = world_model(episode_data["observations"][0].unsqueeze(1), episode_data["actions"].transpose(0,1))[2].transpose(0,1)[1:]
-        episode_data["proxy_rewards"] = reward_model(obs, episode_data["actions"])
-        episode_data["values"]        = value_model (obs)
+        episode_data["proxy_rewards"] = reward_model(obs.flatten(0,1), episode_data["actions"].flatten(0,1)).view(episode_data["rewards"].shape)
+        episode_data["values"]        = value_model (obs.flatten(0,1)).view(episode_data["rewards"].shape)
     
         # train actor model ##########################################
         trainers.train_policy(
@@ -163,6 +163,8 @@ def shacwm2(
             torch.save({
                 "policy_state_dict" : policy_model.state_dict(),
                 "world_state_dict"  :  world_model.state_dict(),
+                "reward_state_dict" : reward_model.state_dict(),
+                "value_state_dict"  : value_model.state_dict() ,
                 "best_reward"       : best_reward,
                 "episode"           : episode,
             }, os.path.join(dir,"models.pkl"))
@@ -187,6 +189,8 @@ def shacwm2(
                 torch.save({
                     "policy_state_dict" : policy_model.state_dict(),
                     "world_state_dict"  :  world_model.state_dict(),
+                    "reward_state_dict" : reward_model.state_dict(),
+                    "value_state_dict"  : value_model.state_dict() ,
                     "best_reward"       : best_reward,
                     "episode"           : episode,
                 }, os.path.join(dir,"best.pkl"))
@@ -209,6 +213,8 @@ def shacwm2(
     torch.save({
         "policy_state_dict" : policy_model.state_dict(),
         "world_state_dict"  :  world_model.state_dict(),
+        "reward_state_dict" : reward_model.state_dict(),
+        "value_state_dict"  : value_model.state_dict() ,
         "episode"           : episodes,
         "best_reward"       : best_reward
     }, os.path.join(dir,"last.pkl"))
