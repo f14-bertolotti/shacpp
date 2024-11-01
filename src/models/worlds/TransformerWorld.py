@@ -46,6 +46,10 @@ class TransformerWorld(models.Model):
         self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2obs = torch.nn.Linear(hidden_size, observation_size, device = device)
 
+        self.mask = torch.tensor([[0 if i1 <= i2 else 1 for i1 in range(steps+1) for j1 in range(agents)] for i2 in range(steps+1) for j2 in range(agents)], dtype=torch.float)
+        self.mask[self.mask == 1] = float("-inf")
+        self.mask = self.mask.to(device)
+
     def forward(self, obs, act):
 
         hidobs = self.obs2hid(obs)
@@ -53,7 +57,7 @@ class TransformerWorld(models.Model):
 
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
 
-        encoded = self.encoder(hidden.flatten(1,2)).view(hidden.shape)
+        encoded = self.encoder(hidden.flatten(1,2), mask=self.mask).view(hidden.shape)
 
         rew = self.hid2rew(encoded)[:,1:].squeeze(-1)
         val = self.hid2val(encoded)[:,1:].squeeze(-1)
