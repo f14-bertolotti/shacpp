@@ -37,6 +37,8 @@ def shacwm(
         restore_path           : str                                    ,
         device                 : str                                    ,
         early_stopping         : dict                                   ,
+        world_clip_coefficient : float                                  ,
+        policy_clip_coefficient: float                                  ,
     ):
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
@@ -94,6 +96,7 @@ def shacwm(
             optimizer    = policy_model_optimizer,
             gammas       = gammas                ,
             logger       = policy_logger         ,
+            clip_coefficient = policy_clip_coefficient,
         )
          
         # train world model ##########################################
@@ -109,7 +112,8 @@ def shacwm(
             training_epochs = world_epochs          ,
             slam            = lambda_factor         ,
             gamma           = gamma_factor          ,
-            logger          = world_logger
+            logger          = world_logger          ,
+            clip_coefficient= world_clip_coefficient,
         )
 
         # checkpoint ##################################################
