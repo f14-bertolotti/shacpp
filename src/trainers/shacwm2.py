@@ -42,9 +42,16 @@ def shacwm2(
         etr                    : int                                    ,
         etv                    : int                                    ,
         compile                : bool                                   ,
-        restore_path           : str                                    ,
+        restore_path           : str|None                               ,
         device                 : str                                    ,
         early_stopping         : dict                                   ,
+        value_clip_coefficient : float                                  ,
+        reward_clip_coefficient: float                                  ,
+        world_clip_coefficient : float                                  ,
+        policy_clip_coefficient: float                                  ,
+        world_ett              : int                                    ,
+        reward_ett             : int                                    ,
+        value_ett              : int
     ):
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
@@ -76,7 +83,7 @@ def shacwm2(
         world_model  = torch.compile(world_model)
 
     checkpoint = dict()
-    if restore_path:
+    if restore_path is not None:
         checkpoint = torch.load(restore_path, weights_only=False)
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
         world_model .load_state_dict(checkpoint[ "world_state_dict"])
@@ -105,56 +112,61 @@ def shacwm2(
         episode_data["values"]        = value_model (obs.flatten(0,1)).view(episode_data["rewards"].shape)
     
         # train actor model ##########################################
-        trainers.train_policy(
+        trainers.routines.train_policy(
             episode      = episode               ,
             policy_model = policy_model          ,
             episode_data = episode_data          ,
             optimizer    = policy_model_optimizer,
             gammas       = gammas                ,
             logger       = policy_logger         ,
+            clip_coefficient = policy_clip_coefficient
         )
          
         # train world model ##########################################
-        trainers.train_world2(
-            episode         = episode               ,
-            model           = world_model           ,
-            optimizer       = world_model_optimizer ,
-            episode_data    = episode_data          ,
-            cached_data     = world_cache           ,
-            batch_size      = world_batch_size      ,
-            cache_size      = cache_size            ,
-            bins            = reward_bins           ,
-            training_epochs = world_epochs          ,
-            slam            = lambda_factor         ,
-            gamma           = gamma_factor          ,
-            logger          = world_logger
+        trainers.routines.train_world2(
+            episode          = episode               ,
+            model            = world_model           ,
+            optimizer        = world_model_optimizer ,
+            episode_data     = episode_data          ,
+            cached_data      = world_cache           ,
+            batch_size       = world_batch_size      ,
+            cache_size       = cache_size            ,
+            bins             = reward_bins           ,
+            training_epochs  = world_epochs          ,
+            logger           = world_logger          ,
+            ett              = world_ett            ,
+            clip_coefficient = world_clip_coefficient
         )
 
         # train reward model ##########################################
-        trainers.train_reward(
-            episode         = episode                   ,
-            model           = reward_model              ,
-            optimizer       = reward_model_optimizer    ,
-            episode_data    = episode_data              ,
-            cached_data     = reward_cache              ,
-            batch_size      = reward_batch_size         ,
-            cache_size      = cache_size                ,
-            training_epochs = reward_epochs             ,
-            bins            = reward_bins               ,
-            logger          = reward_logger
+        trainers.routines.train_reward(
+            episode          = episode                   ,
+            model            = reward_model              ,
+            optimizer        = reward_model_optimizer    ,
+            episode_data     = episode_data              ,
+            cached_data      = reward_cache              ,
+            batch_size       = reward_batch_size         ,
+            cache_size       = cache_size                ,
+            training_epochs  = reward_epochs             ,
+            bins             = reward_bins               ,
+            logger           = reward_logger             ,
+            ett              = reward_ett                ,
+            clip_coefficient = reward_clip_coefficient
         )
 
         # train value model ###########################################
-        trainers.train_value(
-            episode         = episode               ,
-            model           = value_model           ,
-            optimizer       = value_model_optimizer ,
-            episode_data    = episode_data          ,
-            training_epochs = value_epochs          ,
-            batch_size      = value_batch_size      ,
-            slam            = lambda_factor         ,
-            gamma           = gamma_factor          ,
-            logger          = value_logger
+        trainers.routines.train_value(
+            episode          = episode               ,
+            model            = value_model           ,
+            optimizer        = value_model_optimizer ,
+            episode_data     = episode_data          ,
+            training_epochs  = value_epochs          ,
+            batch_size       = value_batch_size      ,
+            slam             = lambda_factor         ,
+            gamma            = gamma_factor          ,
+            logger           = value_logger          ,
+            ett              = value_ett             ,
+            clip_coefficient = value_clip_coefficient
         )
  
 

@@ -34,7 +34,7 @@ def shacwm(
         etr                    : int                                    ,
         etv                    : int                                    ,
         compile                : bool                                   ,
-        restore_path           : str                                    ,
+        restore_path           : str|None                               ,
         device                 : str                                    ,
         early_stopping         : dict                                   ,
         world_clip_coefficient : float                                  ,
@@ -63,7 +63,7 @@ def shacwm(
         world_model  = torch.compile(world_model)
 
     checkpoint = dict()
-    if restore_path:
+    if restore_path is not None:
         checkpoint = torch.load(restore_path, weights_only=False)
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
         world_model .load_state_dict(checkpoint[ "world_state_dict"])
@@ -89,18 +89,18 @@ def shacwm(
         episode_data["proxy_rewards"], episode_data["values"] = results[0].transpose(0,1), results[1].transpose(0,1)
     
         # train actor model ##########################################
-        trainers.train_policy(
-            episode      = episode               ,
-            policy_model = policy_model          ,
-            episode_data = episode_data          ,
-            optimizer    = policy_model_optimizer,
-            gammas       = gammas                ,
-            logger       = policy_logger         ,
+        trainers.routines.train_policy(
+            episode          = episode               ,
+            policy_model     = policy_model          ,
+            episode_data     = episode_data          ,
+            optimizer        = policy_model_optimizer,
+            gammas           = gammas                ,
+            logger           = policy_logger         ,
             clip_coefficient = policy_clip_coefficient,
         )
          
         # train world model ##########################################
-        trainers.train_world(
+        trainers.routines.train_world(
             episode         = episode               ,
             model           = world_model           ,
             optimizer       = world_model_optimizer ,

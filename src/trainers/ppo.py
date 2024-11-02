@@ -31,7 +31,7 @@ def ppo(
         etr                    : int                                    ,
         etv                    : int                                    ,
         compile                : bool                                   ,
-        restore_path           : str                                    ,
+        restore_path           : str|None                               ,
         early_stopping         : dict                                   ,
     ):
 
@@ -43,7 +43,7 @@ def ppo(
         value_model  = torch.compile(value_model)
 
     checkpoint = dict()
-    if restore_path:
+    if restore_path is not None:
         checkpoint = torch.load(restore_path)
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
         value_model .load_state_dict(checkpoint["value_state_dict"])
@@ -65,7 +65,7 @@ def ppo(
         )
 
         # train policy and value models ##############################
-        trainers.ppo_policy_value(
+        trainers.routines.ppo_policy_value(
             policy_model     = policy_model,
             value_model      = value_model,
             policy_optimizer = policy_model_optimizer,

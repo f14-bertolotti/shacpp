@@ -39,6 +39,9 @@ class Shacwm:
         self.restore_path           = None
         self.device                 = "cuda:0"
 
+        self.world_clip_coefficient  = 1
+        self.policy_clip_coefficient = 1
+
         self.early_stopping = {
             "max_reward_fraction" : 0.9,
         }

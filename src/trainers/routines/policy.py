@@ -1,15 +1,16 @@
 import logging
+import models
 import torch
 import json
 
 def train_policy(
         episode          : int                    ,
-        policy_model     : torch.nn.Module        ,
+        policy_model     : models.Model           ,
         episode_data     : dict[str, torch.Tensor],
         optimizer        : torch.optim.Optimizer  ,
         gammas           : torch.Tensor           ,
         logger           : logging.Logger         ,
-        clip_coefficient : float = .5             ,
+        clip_coefficient : float|None = .5             ,
     ):
     """ Train the policy model """
 
@@ -24,8 +25,9 @@ def train_policy(
     optimizer.zero_grad()
     loss = -((episode_data["proxy_rewards"] * gammas * episode_data["dones"].logical_not()).sum() + ((gammas * episode_data["values"])[live_steps,live_runs]).sum()) / (steps * envs)
 
+    # backward pass
     loss.backward()
-    torch.nn.utils.clip_grad_norm_(policy_model.parameters(), clip_coefficient)
+    if clip_coefficient is not None: torch.nn.utils.clip_grad_norm_(policy_model.parameters(), clip_coefficient)
     optimizer.step()
 
     logger.info(json.dumps({

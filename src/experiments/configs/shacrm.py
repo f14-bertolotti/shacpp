@@ -47,10 +47,15 @@ class Shacrm:
 
         self.max_reward             = float("+inf")
 
+        self.value_clip_coefficient  = 1
+        self.reward_clip_coefficient = 1
+        self.policy_clip_coefficient = 1
+        self.reward_ett              = 1
+        self.value_ett               = 1
+        self.policy_ett              = 1
+
         self.early_stopping = {
             "max_reward_fraction" : 0.9,
         }
-
-
 
 shacrm = Shacrm()

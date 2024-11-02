@@ -39,13 +39,13 @@ class Shacwm:
         self.reward_bins            = 100
 
         self.world_batch_size       = 2000
-        self.world_epochs           = 1
+        self.world_epochs           = 4
 
         self.reward_batch_size      = 2000
-        self.reward_epochs          = 1
+        self.reward_epochs          = 4
 
         self.value_batch_size       = 2000
-        self.value_epochs           = 1
+        self.value_epochs           = 4
 
         self.gamma_factor           = 0.99
         self.lambda_factor          = 0.95
@@ -56,6 +56,15 @@ class Shacwm:
         self.compile                = True
         self.restore_path           = None
         self.device                 = "cuda:0"
+
+        self.value_clip_coefficient  = 1
+        self.reward_clip_coefficient = 1
+        self.world_clip_coefficient  = 1
+        self.policy_clip_coefficient = 1
+        self.world_ett               = 4
+        self.reward_ett              = 4
+        self.value_ett               = 4
+
 
         self.early_stopping = {
             "max_reward_fraction" : 0.9,
