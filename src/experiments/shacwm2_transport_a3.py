@@ -71,7 +71,9 @@ def run():
         dropout          = config.world_dropout          ,
         activation       = config.world_activation       ,
         heads            = 1                             ,
-        device           = config.device
+        device           = config.device                 ,
+        compute_reward   = False                         ,
+        compute_value    = False                         ,
     )
 
     train_world = environments.get_environment(

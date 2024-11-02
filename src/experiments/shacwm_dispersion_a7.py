@@ -95,6 +95,7 @@ def run():
         early_stopping          = config.early_stopping          ,
         world_clip_coefficient  = config.world_clip_coefficient  ,
         policy_clip_coefficient = config.policy_clip_coefficient ,
+        world_ett               = config.world_ett               ,
     )
 
 if __name__ == "__main__":

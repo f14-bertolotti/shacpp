@@ -69,19 +69,19 @@ def train_world(
                 optimizer.zero_grad()
                 
                 # forward pass
-                prd_rew, prd_val, prd_obs = model(obs[:,0].unsqueeze(1),act)
+                prediction = model(obs[:,0].unsqueeze(1),act)
 
                 # reward losses
                 gtz = (tgt_rew  > 0)
-                lr1 = ((prd_rew[gtz] - tgt_rew[gtz])**2).mean()
-                lr2 = ((prd_rew[gtz.logical_not()] - tgt_rew[gtz.logical_not()])**2).mean()
+                lr1 = ((prediction["rewards"][gtz] - tgt_rew[gtz])**2).mean()
+                lr2 = ((prediction["rewards"][gtz.logical_not()] - tgt_rew[gtz.logical_not()])**2).mean()
                 lr  = lr1 + lr2
 
                 # observation loss
-                lo = (((prd_obs[:,:-1] - obs)**2).sum(1) + (prd_obs[:,-1] - last)**2).mean() / prd_obs.size(1)
+                lo = (((prediction["observations"][:,:-1] - obs)**2).sum(1) + (prediction["observations"][:,-1] - last)**2).mean() / prediction["observations"].size(1)
 
                 # value loss
-                lv = ((prd_val - tgt_val)**2).mean()
+                lv = ((prediction["values"] - tgt_val)**2).mean()
 
                 loss = lr + lo + lv
 

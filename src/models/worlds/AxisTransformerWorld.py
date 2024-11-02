@@ -46,10 +46,14 @@ class AxisTransformerWorld(models.Model):
         hidden_size      : int   = 128      ,
         feedforward_size : int   = 512      ,
         activation       : str   = "ReLU"   ,
-        device           : str   = "cuda:0"
+        device           : str   = "cuda:0" ,
+        compute_reward   : bool  = True     ,
+        compute_value    : bool  = True     ,
     ):
         super().__init__(observation_size, action_size, agents, steps)
         activation = {"ReLU":"relu", "GELU":"gelu"}[activation]
+        self.compute_reward = compute_reward
+        self.compute_value  = compute_value
 
         self.obs2hid = torch.nn.Linear(observation_size, hidden_size, device = device)
         self.act2hid = torch.nn.Linear(action_size     , hidden_size, device = device)
@@ -67,8 +71,8 @@ class AxisTransformerWorld(models.Model):
             ) for _ in range(layers*2)
         ])
 
-        self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
-        self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
+        if self.compute_reward: self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
+        if self.compute_value : self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2obs = torch.nn.Linear(hidden_size, observation_size, device = device)
         self.step_mask = torch.nn.Transformer.generate_square_subsequent_mask(steps+1, device=device)
 
@@ -77,14 +81,14 @@ class AxisTransformerWorld(models.Model):
         hidact = self.act2hid(act) + self.actpos
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
 
-
         for i,layer in enumerate(self.layers):
             hidden = layer(hidden, mask=self.step_mask if i%2==1 else None )
             hidden = hidden.transpose(1,2)
 
-        rew = self.hid2rew(hidden)[:,1:].squeeze(-1)
-        val = self.hid2val(hidden)[:,1:].squeeze(-1)
-        obs = self.hid2obs(hidden)
-        return rew, val, obs
+        return {
+            "observations" : self.hid2obs(hidden),
+            "rewards"      : self.hid2rew(hidden)[:,1:].squeeze(-1) if self.compute_reward else None,
+            "values"       : self.hid2val(hidden)[:,1:].squeeze(-1) if self.compute_value  else None
+        } 
 
 

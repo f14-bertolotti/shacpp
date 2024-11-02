@@ -28,7 +28,7 @@ def evaluate(
     if reward_model is not None: 
         proxy = reward_model(eval_episode["observations"].flatten(0,1), eval_episode["actions"].flatten(0,1)).view(eval_episode["rewards"].shape)
     if  world_model is not None:
-        proxy = world_model(eval_episode["observations"][0].unsqueeze(1), eval_episode["actions"][:world_model.steps].transpose(0,1))[0].transpose(0,1)
+        proxy = world_model(eval_episode["observations"][0].unsqueeze(1), eval_episode["actions"][:world_model.steps].transpose(0,1))["rewards"].transpose(0,1)
         rewards = rewards[:world_model.steps]
 
     policy_model.train()

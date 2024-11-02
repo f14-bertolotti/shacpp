@@ -39,6 +39,7 @@ def shacwm(
         early_stopping         : dict                                   ,
         world_clip_coefficient : float                                  ,
         policy_clip_coefficient: float                                  ,
+        world_ett              : int                                    ,
     ):
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
@@ -86,7 +87,7 @@ def shacwm(
 
         # compute rewards and values #################################
         results = world_model(episode_data["observations"][0].unsqueeze(1), episode_data["actions"].transpose(0,1))
-        episode_data["proxy_rewards"], episode_data["values"] = results[0].transpose(0,1), results[1].transpose(0,1)
+        episode_data["proxy_rewards"], episode_data["values"] = results["rewards"].transpose(0,1), results["values"].transpose(0,1)
     
         # train actor model ##########################################
         trainers.routines.train_policy(
@@ -101,19 +102,20 @@ def shacwm(
          
         # train world model ##########################################
         trainers.routines.train_world(
-            episode         = episode               ,
-            model           = world_model           ,
-            optimizer       = world_model_optimizer ,
-            episode_data    = episode_data          ,
-            cached_data     = cache                 ,
-            batch_size      = world_batch_size      ,
-            cache_size      = cache_size            ,
-            bins            = reward_bins           ,
-            training_epochs = world_epochs          ,
-            slam            = lambda_factor         ,
-            gamma           = gamma_factor          ,
-            logger          = world_logger          ,
-            clip_coefficient= world_clip_coefficient,
+            episode          = episode               ,
+            model            = world_model           ,
+            optimizer        = world_model_optimizer ,
+            episode_data     = episode_data          ,
+            cached_data      = cache                 ,
+            batch_size       = world_batch_size      ,
+            cache_size       = cache_size            ,
+            bins             = reward_bins           ,
+            training_epochs  = world_epochs          ,
+            slam             = lambda_factor         ,
+            gamma            = gamma_factor          ,
+            logger           = world_logger          ,
+            clip_coefficient = world_clip_coefficient,
+            ett              = world_ett             ,
         )
 
         # checkpoint ##################################################

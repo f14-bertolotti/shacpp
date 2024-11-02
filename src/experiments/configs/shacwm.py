@@ -41,6 +41,7 @@ class Shacwm:
 
         self.world_clip_coefficient  = 1
         self.policy_clip_coefficient = 1
+        self.world_ett               = 1
 
         self.early_stopping = {
             "max_reward_fraction" : 0.9,

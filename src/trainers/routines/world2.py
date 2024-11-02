@@ -56,7 +56,7 @@ def train_world2(
                 optimizer.zero_grad()
                 
                 # forward pass
-                _, _, prd_obs = model(obs[:,0].unsqueeze(1),act)
+                prd_obs = model(obs[:,0].unsqueeze(1),act)["observations"]
 
                 # observation loss
                 loss = (((prd_obs[:,:-1] - obs)**2).sum(1) + (prd_obs[:,-1] - last)**2).mean() / prd_obs.size(1)
