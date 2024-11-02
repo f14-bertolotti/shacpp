@@ -35,17 +35,21 @@ class Shacwm:
         self.reward_learning_rate   = 0.001
         self.value_learning_rate    = 0.001
 
-        self.cache_size             = 100000
+        self.world_cache_size       = 100000
+        self.reward_cache_size      = 100000
+        self.value_cache_size       = 10000
+
+        self.world_bins             = 100
         self.reward_bins            = 100
+        self.value_bins             = 10
 
         self.world_batch_size       = 2000
-        self.world_epochs           = 4
-
-        self.reward_batch_size      = 2000
-        self.reward_epochs          = 4
-
         self.value_batch_size       = 2000
-        self.value_epochs           = 4
+        self.reward_batch_size      = 2000
+
+        self.world_epochs           = 10
+        self.reward_epochs          = 10
+        self.value_epochs           = 10
 
         self.gamma_factor           = 0.99
         self.lambda_factor          = 0.95
@@ -61,9 +65,9 @@ class Shacwm:
         self.reward_clip_coefficient = 1
         self.world_clip_coefficient  = 1
         self.policy_clip_coefficient = 1
-        self.world_ett               = 4
-        self.reward_ett              = 4
-        self.value_ett               = 4
+        self.world_ett               = 10
+        self.reward_ett              = 10
+        self.value_ett               = 10
 
 
         self.early_stopping = {

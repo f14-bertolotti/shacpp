@@ -29,8 +29,12 @@ def shacwm2(
         value_model_optimizer  : torch.optim.Optimizer                  ,
         train_world            : vmas.simulator.environment.Environment ,
         eval_world             : vmas.simulator.environment.Environment ,
-        cache_size             : int                                    ,
+        reward_cache_size      : int                                    ,
+        world_cache_size       : int                                    ,
+        value_cache_size       : int                                    ,
         reward_bins            : int                                    ,
+        value_bins             : int                                    ,
+        world_bins             : int                                    ,
         world_batch_size       : int                                    ,
         reward_batch_size      : int                                    ,
         value_batch_size       : int                                    ,
@@ -63,17 +67,23 @@ def shacwm2(
     gammas = utils.gamma_tensor(train_steps, train_envs, agents, gamma_factor).to(device)
 
     world_cache = {
-        "observations" : torch.zeros(cache_size, train_steps, agents, observation_size, device=device),
-        "actions"      : torch.zeros(cache_size, train_steps, agents, action_size, device=device),
-        "last_obs"     : torch.zeros(cache_size, agents, observation_size, device=device),
-        "mask"         : torch.zeros(cache_size, dtype=torch.bool, device=device),
+        "observations" : torch.zeros(world_cache_size, train_steps, agents, observation_size, device=device),
+        "actions"      : torch.zeros(world_cache_size, train_steps, agents, action_size, device=device),
+        "last_obs"     : torch.zeros(world_cache_size, agents, observation_size, device=device),
+        "mask"         : torch.zeros(world_cache_size, dtype=torch.bool, device=device),
     }
 
     reward_cache = {
-        "observations" : torch.zeros(cache_size, agents, observation_size, device=device),
-        "actions"      : torch.zeros(cache_size, agents,      action_size, device=device),
-        "rewards"      : torch.zeros(cache_size, agents, device=device),
-        "mask"         : torch.zeros(cache_size, dtype=torch.bool, device=device),
+        "observations" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
+        "actions"      : torch.zeros(reward_cache_size, agents,      action_size, device=device),
+        "rewards"      : torch.zeros(reward_cache_size, agents, device=device),
+        "mask"         : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
+    }
+
+    value_cache = {
+        "observations" : torch.zeros(value_cache_size, agents, observation_size, device=device),
+        "targets"      : torch.zeros(value_cache_size, agents, device=device),
+        "mask"         : torch.zeros(value_cache_size, dtype=torch.bool, device=device),
     }
 
     if compile:
@@ -113,45 +123,45 @@ def shacwm2(
     
         # train actor model ##########################################
         trainers.routines.train_policy(
-            episode      = episode               ,
-            policy_model = policy_model          ,
-            episode_data = episode_data          ,
-            optimizer    = policy_model_optimizer,
-            gammas       = gammas                ,
-            logger       = policy_logger         ,
-            clip_coefficient = policy_clip_coefficient
+            episode      = episode                     ,
+            policy_model = policy_model                ,
+            episode_data = episode_data                ,
+            optimizer    = policy_model_optimizer      ,
+            gammas       = gammas                      ,
+            logger       = policy_logger               ,
+            clip_coefficient = policy_clip_coefficient ,
         )
          
         # train world model ##########################################
         trainers.routines.train_world2(
-            episode          = episode               ,
-            model            = world_model           ,
-            optimizer        = world_model_optimizer ,
-            episode_data     = episode_data          ,
-            cached_data      = world_cache           ,
-            batch_size       = world_batch_size      ,
-            cache_size       = cache_size            ,
-            bins             = reward_bins           ,
-            training_epochs  = world_epochs          ,
-            logger           = world_logger          ,
-            ett              = world_ett            ,
-            clip_coefficient = world_clip_coefficient
+            episode          = episode                ,
+            model            = world_model            ,
+            optimizer        = world_model_optimizer  ,
+            episode_data     = episode_data           ,
+            cached_data      = world_cache            ,
+            batch_size       = world_batch_size       ,
+            cache_size       = world_cache_size       ,
+            bins             = world_bins             ,
+            training_epochs  = world_epochs           ,
+            logger           = world_logger           ,
+            ett              = world_ett              ,
+            clip_coefficient = world_clip_coefficient ,
         )
 
         # train reward model ##########################################
         trainers.routines.train_reward(
-            episode          = episode                   ,
-            model            = reward_model              ,
-            optimizer        = reward_model_optimizer    ,
-            episode_data     = episode_data              ,
-            cached_data      = reward_cache              ,
-            batch_size       = reward_batch_size         ,
-            cache_size       = cache_size                ,
-            training_epochs  = reward_epochs             ,
-            bins             = reward_bins               ,
-            logger           = reward_logger             ,
-            ett              = reward_ett                ,
-            clip_coefficient = reward_clip_coefficient
+            episode          = episode                 ,
+            model            = reward_model            ,
+            optimizer        = reward_model_optimizer  ,
+            episode_data     = episode_data            ,
+            cached_data      = reward_cache            ,
+            batch_size       = reward_batch_size       ,
+            cache_size       = reward_cache_size       ,
+            training_epochs  = reward_epochs           ,
+            bins             = reward_bins             ,
+            logger           = reward_logger           ,
+            ett              = reward_ett              ,
+            clip_coefficient = reward_clip_coefficient ,
         )
 
         # train value model ###########################################
@@ -160,10 +170,13 @@ def shacwm2(
             model            = value_model           ,
             optimizer        = value_model_optimizer ,
             episode_data     = episode_data          ,
+            cached_data      = value_cache           ,
             training_epochs  = value_epochs          ,
             batch_size       = value_batch_size      ,
+            cache_size       = value_cache_size      ,
             slam             = lambda_factor         ,
             gamma            = gamma_factor          ,
+            bins             = value_bins            ,
             logger           = value_logger          ,
             ett              = value_ett             ,
             clip_coefficient = value_clip_coefficient

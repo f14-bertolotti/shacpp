@@ -24,10 +24,10 @@ class Shacwm:
         self.policy_learning_rate   = 0.001
 
         self.cache_size             = 100000
-        self.reward_bins             = 100
+        self.reward_bins            = 100
 
         self.world_batch_size       = 2000
-        self.world_epochs           = 4
+        self.world_epochs           = 10
 
         self.gamma_factor           = 0.99
         self.lambda_factor          = 0.95
@@ -41,7 +41,7 @@ class Shacwm:
 
         self.world_clip_coefficient  = 1
         self.policy_clip_coefficient = 1
-        self.world_ett               = 1
+        self.world_ett               = 10
 
         self.early_stopping = {
             "max_reward_fraction" : 0.9,

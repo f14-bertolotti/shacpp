@@ -9,8 +9,11 @@ def train_value(
         model            : models.Model           ,
         optimizer        : torch.optim.Optimizer  ,
         episode_data     : dict[str,torch.Tensor] ,
+        cached_data      : dict[str,torch.Tensor] ,
         training_epochs  : int                    ,
         batch_size       : int                    ,
+        cache_size       : int                    ,
+        bins             : int                    ,
         logger           : logging.Logger         ,
         slam             : float = .95            ,
         gamma            : float = .99            ,
@@ -22,21 +25,26 @@ def train_value(
         No caching is performed, the training is performed every 'ett' episodes.
     """
 
+    target_values = utils.compute_values(
+        values  = episode_data["values"] ,
+        rewards = episode_data["rewards"],
+        dones   = episode_data["dones"].float()  ,
+        slam    = slam                   ,
+        gamma   = gamma
+    )
 
-    
+    values = (target_values).flatten(0,1).sum(1)
+    indexes = utils.bin_dispatch(values, bins, cache_size // bins)
+
+    cached_data["mask"        ][indexes] = episode_data["dones"][:,:,0].flatten(0,1).detach().logical_not()
+    cached_data["observations"][indexes] = episode_data["observations"].flatten(0,1).detach()
+    cached_data["targets"     ][indexes] = target_values               .flatten(0,1).detach()
+
     if episode % ett == 0: 
-        target_values = utils.compute_values(
-            values  = episode_data["values"] ,
-            rewards = episode_data["rewards"],
-            dones   = episode_data["dones"].float()  ,
-            slam    = slam                   ,
-            gamma   = gamma
-        )
-
         dataloader = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(
-                episode_data["observations"].flatten(0,1).detach(),
-                target_values               .flatten(0,1).detach(),
+                cached_data["observations"][cached_data["mask"]],
+                cached_data["targets"]     [cached_data["mask"]],
             ),
             collate_fn = torch.utils.data.default_collate,
             batch_size = batch_size,

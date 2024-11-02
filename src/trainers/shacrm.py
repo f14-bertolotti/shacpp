@@ -28,12 +28,14 @@ def shacrm(
         value_model_optimizer  : torch.optim.Optimizer                  ,
         train_world            : vmas.simulator.environment.Environment ,
         eval_world             : vmas.simulator.environment.Environment ,
-        cache_size             : int                                    ,
+        reward_cache_size      : int                                    ,
         reward_batch_size      : int                                    ,
         reward_epochs          : int                                    ,
         reward_bins            : int                                    ,
+        value_cache_size       : int                                    ,
         value_batch_size       : int                                    ,
         value_epochs           : int                                    ,
+        value_bins             : int                                    ,
         gamma_factor           : float                                  ,
         lambda_factor          : float                                  ,
         etr                    : int                                    ,
@@ -68,14 +70,19 @@ def shacrm(
         reward_model.load_state_dict(checkpoint["reward_state_dict"])
         value_model .load_state_dict(checkpoint["value_state_dict" ])
     
-    cache = {
-        "observations" : torch.zeros(cache_size, agents, observation_size, device=device),
-        "actions"      : torch.zeros(cache_size, agents,      action_size, device=device),
-        "rewards"      : torch.zeros(cache_size, agents, device=device),
-        "mask"         : torch.zeros(cache_size, dtype=torch.bool, device=device),
-        "pert_low"     : torch.zeros(train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False),
-        "pert_high"    : torch.ones (train_envs * train_steps, dtype = torch.float32 , device=device, requires_grad=False) * (cache_size-1)
+    reward_cache = {
+        "observations" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
+        "actions"      : torch.zeros(reward_cache_size, agents,      action_size, device=device),
+        "rewards"      : torch.zeros(reward_cache_size, agents, device=device),
+        "mask"         : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
     }
+
+    value_cache = {
+        "observations" : torch.zeros(value_cache_size, agents, observation_size, device=device),
+        "targets"      : torch.zeros(value_cache_size, agents, device=device),
+        "mask"         : torch.zeros(value_cache_size, dtype=torch.bool, device=device),
+    }
+ 
    
     prev_observations : torch.Tensor = torch.zeros(train_envs, observation_size, device=device)
     prev_dones        : torch.Tensor = torch.ones (train_envs, agents, device=device)
@@ -112,9 +119,9 @@ def shacrm(
             model           = reward_model             ,
             optimizer       = reward_model_optimizer   ,
             episode_data    = episode_data             ,
-            cached_data     = cache                    ,
+            cached_data     = reward_cache             ,
             batch_size      = reward_batch_size        ,
-            cache_size      = cache_size               ,
+            cache_size      = reward_cache_size        ,
             training_epochs = reward_epochs            ,
             bins            = reward_bins              ,
             logger          = reward_logger            ,
@@ -128,8 +135,11 @@ def shacrm(
             model                  = value_model            ,
             optimizer              = value_model_optimizer  ,
             episode_data           = episode_data           ,
+            cached_data            = value_cache            ,
             training_epochs        = value_epochs           ,
             batch_size             = value_batch_size       ,
+            cache_size             = value_cache_size       ,
+            bins                   = value_bins             ,
             slam                   = lambda_factor          ,
             gamma                  = gamma_factor           ,
             logger                 = value_logger           ,

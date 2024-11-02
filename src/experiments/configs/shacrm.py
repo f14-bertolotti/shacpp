@@ -10,10 +10,10 @@ class Shacrm:
         self.eval_steps             = 64
 
         self.reward_batch_size      = 2000
-        self.reward_epochs          = 1
+        self.reward_epochs          = 10
 
         self.value_batch_size       = 2000
-        self.value_epochs           = 1
+        self.value_epochs           = 10
 
         self.policy_layers          = 1
         self.policy_hidden_size     = 2048
@@ -34,8 +34,10 @@ class Shacrm:
         self.policy_learning_rate   = 0.001
         self.reward_learning_rate   = 0.001
 
-        self.cache_size             = 100000
+        self.reward_cache_size      = 100000
         self.reward_bins            = 100
+        self.value_cache_size       = 10000
+        self.value_bins             = 10
 
         self.gamma_factor           = 0.99
         self.lambda_factor          = 0.95
@@ -50,9 +52,9 @@ class Shacrm:
         self.value_clip_coefficient  = 1
         self.reward_clip_coefficient = 1
         self.policy_clip_coefficient = 1
-        self.reward_ett              = 1
-        self.value_ett               = 1
-        self.policy_ett              = 1
+        self.reward_ett              = 10
+        self.value_ett               = 10
+        self.policy_ett              = 10
 
         self.early_stopping = {
             "max_reward_fraction" : 0.9,
