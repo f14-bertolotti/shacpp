@@ -18,6 +18,8 @@ def train_value(
         slam             : float = .95            ,
         gamma            : float = .99            ,
         clip_coefficient : float|None = .5        ,
+        stop_threshold   : float|None = None      ,
+        tolerance        : float = .1             ,
         ett              : int = 1                ,
     ):
     """
@@ -53,6 +55,7 @@ def train_value(
         )
         
         for epoch in range(1, training_epochs+1):
+            tpfn,tot = 0,0
             for step, (obs, tgt) in enumerate(dataloader, 1):
                 optimizer.zero_grad()
 
@@ -61,6 +64,9 @@ def train_value(
 
                 # compute loss
                 loss = ((prd - tgt)**2).mean()
+
+                # compute accuracy
+                tpfn,tot = tpfn + torch.isclose(prd, tgt, atol=tolerance).float().sum().item(), tot + tgt.numel()
         
                 # backward pass
                 loss.backward()
@@ -74,5 +80,7 @@ def train_value(
                     "step"            : step,
                     "loss"            : loss.item(),
                 }))
+
+            if stop_threshold is not None and tpfn/(tot+1e-7) > stop_threshold: break
 
 

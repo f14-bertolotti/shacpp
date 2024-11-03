@@ -53,6 +53,12 @@ def shacwm2(
         reward_clip_coefficient: float                                  ,
         world_clip_coefficient : float                                  ,
         policy_clip_coefficient: float                                  ,
+        world_tolerance        : float                                  ,
+        reward_tolerance       : float                                  ,
+        value_tolerance        : float                                  ,
+        world_stop_threshold   : float                                  ,
+        reward_stop_threshold  : float                                  ,
+        value_stop_threshold   : float                                  ,
         world_ett              : int                                    ,
         reward_ett             : int                                    ,
         value_ett              : int
@@ -145,6 +151,8 @@ def shacwm2(
             training_epochs  = world_epochs           ,
             logger           = world_logger           ,
             ett              = world_ett              ,
+            stop_threshold   = world_stop_threshold   ,
+            tolerance        = world_tolerance        ,
             clip_coefficient = world_clip_coefficient ,
         )
 
@@ -161,6 +169,8 @@ def shacwm2(
             bins             = reward_bins             ,
             logger           = reward_logger           ,
             ett              = reward_ett              ,
+            stop_threshold   = reward_stop_threshold   ,
+            tolerance        = reward_tolerance        ,
             clip_coefficient = reward_clip_coefficient ,
         )
 
@@ -179,9 +189,10 @@ def shacwm2(
             bins             = value_bins            ,
             logger           = value_logger          ,
             ett              = value_ett             ,
+            stop_threshold   = value_stop_threshold  ,
+            tolerance        = value_tolerance       ,
             clip_coefficient = value_clip_coefficient
         )
- 
 
         # checkpoint ##################################################
         if episode % etv == 0:

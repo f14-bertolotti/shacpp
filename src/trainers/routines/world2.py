@@ -16,6 +16,8 @@ def train_world2(
         optimizer        : torch.optim.Optimizer  ,
         logger           : logging.Logger         ,
         clip_coefficient : float|None = .5        ,
+        stop_threshold   : float|None = None      ,
+        tolerance        : float = .1             ,
         ett              : int = 1                ,
     ):
     """
@@ -63,7 +65,7 @@ def train_world2(
 
                 # accuracy metric
                 tot  += prd_obs.numel()
-                tpfn += prd_obs[:,:-1].isclose(obs,atol=.1).sum().item() + prd_obs[:,-1].isclose(last,atol=.1).sum().item()
+                tpfn += prd_obs[:,:-1].isclose(obs,atol=tolerance).sum().item() + prd_obs[:,-1].isclose(last,atol=tolerance).sum().item()
 
                 # backpropagation
                 loss.backward()
@@ -75,8 +77,10 @@ def train_world2(
                     "episode"         : episode,
                     "epoch"           : epoch,
                     "step"            : step,
-                    "accuracy"        : tpfn / tot,
+                    "accuracy"        : tpfn / (tot + 1e-7),
                     "observation_loss": loss.item(),
                 }))
+
+            if stop_threshold is not None and tpfn/(tot+1e-7) > stop_threshold: break
 
 

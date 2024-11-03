@@ -37,11 +37,11 @@ class Shacwm:
 
         self.world_cache_size       = 100000
         self.reward_cache_size      = 100000
-        self.value_cache_size       = 10000
+        self.value_cache_size       = 100000
 
         self.world_bins             = 100
         self.reward_bins            = 100
-        self.value_bins             = 10
+        self.value_bins             = 100
 
         self.world_batch_size       = 2000
         self.value_batch_size       = 2000
@@ -55,7 +55,7 @@ class Shacwm:
         self.lambda_factor          = 0.95
 
         self.etr                    = 5
-        self.etv                    = 10
+        self.etv                    = 100
 
         self.compile                = True
         self.restore_path           = None
@@ -65,9 +65,16 @@ class Shacwm:
         self.reward_clip_coefficient = 1
         self.world_clip_coefficient  = 1
         self.policy_clip_coefficient = 1
-        self.world_ett               = 10
-        self.reward_ett              = 10
-        self.value_ett               = 10
+        self.world_ett               = 20
+        self.reward_ett              = 20
+        self.value_ett               = 20
+
+        self.value_stop_threshold    = 0.9
+        self.reward_stop_threshold   = 0.9
+        self.world_stop_threshold    = 0.9
+        self.value_tolerance         = 0.1
+        self.reward_tolerance        = 0.1
+        self.world_tolerance         = 0.1
 
 
         self.early_stopping = {

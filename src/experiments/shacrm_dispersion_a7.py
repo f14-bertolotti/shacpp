@@ -116,6 +116,10 @@ def run():
         value_clip_coefficient = config.value_clip_coefficient  ,
         reward_ett             = config.reward_ett              ,
         value_ett              = config.value_ett               ,
+        reward_stop_threshold   = config.reward_stop_threshold   ,
+        value_stop_threshold    = config.value_stop_threshold    ,
+        reward_tolerance        = config.reward_tolerance        ,
+        value_tolerance         = config.value_tolerance         ,
     ) 
 
 if __name__ == "__main__":

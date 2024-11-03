@@ -44,6 +44,10 @@ def shacrm(
         restore_path           : str|None                               ,
         device                 : str                                    ,
         early_stopping         : dict                                   ,
+        reward_tolerance       : float                                  ,
+        value_tolerance        : float                                  ,
+        reward_stop_threshold  : float                                  ,
+        value_stop_threshold   : float                                  ,
         policy_clip_coefficient: float                                  ,
         reward_clip_coefficient: float                                  ,
         value_clip_coefficient : float                                  ,
@@ -126,6 +130,8 @@ def shacrm(
             bins            = reward_bins              ,
             logger          = reward_logger            ,
             clip_coefficient= reward_clip_coefficient  ,
+            stop_threshold  = reward_stop_threshold    ,
+            tolerance       = reward_tolerance         ,
             ett             = reward_ett               ,
         )
 
@@ -143,6 +149,8 @@ def shacrm(
             slam                   = lambda_factor          ,
             gamma                  = gamma_factor           ,
             logger                 = value_logger           ,
+            stop_threshold         = value_stop_threshold   ,
+            tolerance              = value_tolerance        ,
             clip_coefficient       = value_clip_coefficient ,
             ett                    = value_ett              ,
         )

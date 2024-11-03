@@ -143,7 +143,13 @@ def run():
         policy_clip_coefficient = config.policy_clip_coefficient ,
         world_ett               = config.world_ett               ,
         reward_ett              = config.reward_ett              ,
-        value_ett               = config.value_ett
+        value_ett               = config.value_ett               ,
+        world_stop_threshold    = config.world_stop_threshold    ,
+        reward_stop_threshold   = config.reward_stop_threshold   ,
+        value_stop_threshold    = config.value_stop_threshold    ,
+        world_tolerance         = config.world_tolerance         ,
+        reward_tolerance        = config.reward_tolerance        ,
+        value_tolerance         = config.value_tolerance         ,
     )
 
 if __name__ == "__main__":

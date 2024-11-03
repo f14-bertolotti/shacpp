@@ -17,6 +17,8 @@ def train_reward(
         optimizer       : torch.optim.Optimizer  ,
         logger          : logging.Logger         ,
         clip_coefficient: float|None = .5        ,
+        stop_threshold  : float|None = None      ,
+        tolerance       : float = .1             ,
         ett             : int = 1                ,
     ):
 
@@ -51,7 +53,7 @@ def train_reward(
                 if clip_coefficient is not None: torch.nn.utils.clip_grad_norm_(model.parameters(), clip_coefficient)
                 optimizer.step()
 
-                tpfn,tot = tpfn + torch.isclose(prd, tgt, atol=.1).float().sum().item(), tot + numpy.prod(prd.shape).item() 
+                tpfn,tot = tpfn + torch.isclose(prd, tgt, atol=tolerance).float().sum().item(), tot + prd.numel() 
                 logger.info(json.dumps({
                     "episode"         : episode,
                     "epoch"           : epoch,
@@ -59,4 +61,5 @@ def train_reward(
                     "loss"            : loss.item(),
                     "accuracy"        : tpfn/(tot+1e-7),
                 }))
-
+            
+            if stop_threshold is not None and tpfn/(tot+1e-7) > stop_threshold: break

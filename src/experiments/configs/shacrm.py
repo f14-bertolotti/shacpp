@@ -56,6 +56,13 @@ class Shacrm:
         self.value_ett               = 10
         self.policy_ett              = 10
 
+        self.value_stop_threshold    = 0.9
+        self.reward_stop_threshold   = 0.9
+        self.world_stop_threshold    = 0.9
+        self.value_tolerance         = 0.1
+        self.reward_tolerance        = 0.1
+        self.world_tolerance         = 0.1
+
         self.early_stopping = {
             "max_reward_fraction" : 0.9,
         }
