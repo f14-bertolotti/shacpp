@@ -9,7 +9,7 @@ def unroll(
         reset_dones  = False ,
     ):
 
-    world.world.zero_grad()
+    world.scenario.zero_grad()
 
     if dones is not None and observations is not None and reset_dones:
         for i in dones[:,0].nonzero():
@@ -18,7 +18,6 @@ def unroll(
     if observations is None and dones is None: 
         observations = torch.stack(world.reset()).transpose(0,1)
         dones        = torch.zeros(observations.size(0), observations.size(1), device=observations.device).bool()
-
 
     max_reward   = world.scenario.max_rewards()
 
