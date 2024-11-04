@@ -103,8 +103,12 @@ def shacrm(
             unroll_steps  = train_steps,
             policy_model  = policy_model.sample,
         )
+        reward_model.eval()
+        value_model .eval()
         episode_data["proxy_rewards"] = reward_model(episode_data["observations"].flatten(0,1), episode_data["actions"].flatten(0,1)).view(episode_data["rewards"].shape)
         episode_data["values"]        = value_model (episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
+        reward_model.train()
+        value_model .train()
     
         # train actor model ###########################################
         trainers.routines.train_policy(

@@ -123,9 +123,15 @@ def shacwm2(
         )
 
         # compute rewards and values #################################
+        reward_model.eval()
+        value_model .eval()
+        world_model .eval()
         obs = world_model(episode_data["observations"][0].unsqueeze(1), episode_data["actions"].transpose(0,1))["observations"].transpose(0,1)[1:]
         episode_data["proxy_rewards"] = reward_model(obs.flatten(0,1), episode_data["actions"].flatten(0,1)).view(episode_data["rewards"].shape)
         episode_data["values"]        = value_model (obs.flatten(0,1)).view(episode_data["rewards"].shape)
+        reward_model.train()
+        value_model .train()
+        world_model .train()
     
         # train actor model ##########################################
         trainers.routines.train_policy(
