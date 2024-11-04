@@ -17,7 +17,7 @@ def run():
 
     config.eval_steps = 512
     config.policy_dropout = 0.3
-    config.polict_hidden_size = 64
+    config.policy_hidden_size = 64
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
