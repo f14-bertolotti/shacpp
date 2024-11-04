@@ -1,3 +1,4 @@
+from trainers.shac    import shac
 from trainers.shacwm2 import shacwm2
 from trainers.shacwm  import shacwm
 from trainers.shacrm  import shacrm
