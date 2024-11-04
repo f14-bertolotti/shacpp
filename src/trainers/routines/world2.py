@@ -5,46 +5,49 @@ import utils
 import json
 
 def train_world2(
-        episode          : int                    ,
-        model            : models.Model           ,
-        episode_data     : dict[str,torch.Tensor] ,
-        cached_data      : dict[str,torch.Tensor] ,
-        batch_size       : int                    ,
-        cache_size       : int                    ,
-        bins             : int                    ,
-        training_epochs  : int                    ,
-        optimizer        : torch.optim.Optimizer  ,
-        logger           : logging.Logger         ,
-        clip_coefficient : float|None = .5        ,
-        stop_threshold   : float|None = None      ,
-        tolerance        : float = .1             ,
-        ett              : int = 1                ,
+        episode          : int                                ,
+        model            : models.Model                       ,
+        episode_data     : dict[str,torch.Tensor]             ,
+        batch_size       : int                                ,
+        bins             : int                                ,
+        training_epochs  : int                                ,
+        optimizer        : torch.optim.Optimizer              ,
+        logger           : logging.Logger                     ,
+        cached_data      : dict[str,torch.Tensor]|None = None ,
+        cache_size       : int|None = None                    ,
+        clip_coefficient : float|None = .5                    ,
+        stop_threshold   : float|None = None                  ,
+        tolerance        : float = .1                         ,
+        ett              : int = 1                            ,
     ):
     """
         Training routine for the world model. It trains 'model' to match the observations of the environment.
         Training data are cached at each iteration, but the training is performed only every 'ett' episodes.
     """
+
+    use_cache = cached_data is not None and cache_size is not None
  
-    # cache episode data
-    rewards = (episode_data["rewards"]).sum(0).sum(1)
-    indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
-
     alive   = episode_data["dones"][0,:,0].logical_not()
-    indexes = indexes[alive]
+    if use_cache:
+        rewards = (episode_data["rewards"]).sum(0).sum(1)
+        indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
 
-    cached_data["mask"        ][indexes] = True
-    cached_data["observations"][indexes] = episode_data["observations"     ].transpose(0,1)[alive].detach()
-    cached_data["actions"     ][indexes] = episode_data["actions"          ].transpose(0,1)[alive].detach()
-    cached_data["last_obs"    ][indexes] = episode_data["last_observations"][alive].detach() 
+        # cache episode data
+        indexes = indexes[alive]
+
+        cached_data["mask"        ][indexes] = True
+        cached_data["observations"][indexes] = episode_data["observations"     ].transpose(0,1)[alive].detach()
+        cached_data["actions"     ][indexes] = episode_data["actions"          ].transpose(0,1)[alive].detach()
+        cached_data["last_obs"    ][indexes] = episode_data["last_observations"][alive].detach() 
 
     if episode % ett == 0: 
 
         # buid dataloader
         dataloader = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(
-                cached_data["observations"][cached_data["mask"]],
-                cached_data["actions"     ][cached_data["mask"]],
-                cached_data["last_obs"    ][cached_data["mask"]]
+                cached_data["observations"][cached_data["mask"]] if use_cache else episode_data["observations"     ].detach().transpose(0,1)[alive],
+                cached_data["actions"     ][cached_data["mask"]] if use_cache else episode_data["actions"          ].detach().transpose(0,1)[alive],
+                cached_data["last_obs"    ][cached_data["mask"]] if use_cache else episode_data["last_observations"].detach()[alive]
             ),
             collate_fn = torch.utils.data.default_collate,
             batch_size = batch_size,
