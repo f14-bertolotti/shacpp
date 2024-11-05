@@ -60,19 +60,22 @@ def game(
     reward_path ,
     keyargs     ,
 ):
-    checkpoint = torch.load(reward_path, weights_only=True) 
-    reward_model = models.RewardAFO(
-         observation_size = 11     ,
-         action_size      = 2      ,
-         agents           = agents ,
-         steps            = 32     ,
-         layers           = 1      ,
-         hidden_size      = 2048   ,
-         dropout          = 0      ,
-         activation       = "ReLU" ,
-         device           = "cpu"
-    )
-    reward_model.load_state_dict({k.replace("_orig_mod.",""):v for k,v in checkpoint["reward_state_dict"].items()})
+
+    reward_model = None
+    if reward_path is not None:
+        checkpoint = torch.load(reward_path, weights_only=True) 
+        reward_model = models.RewardAFO(
+             observation_size = 11     ,
+             action_size      = 2      ,
+             agents           = agents ,
+             steps            = 32     ,
+             layers           = 1      ,
+             hidden_size      = 2048   ,
+             dropout          = 0      ,
+             activation       = "ReLU" ,
+             device           = "cpu"
+        )
+        reward_model.load_state_dict({k.replace("_orig_mod.",""):v for k,v in checkpoint["reward_state_dict"].items()})
 
     Game(
         make_env(
