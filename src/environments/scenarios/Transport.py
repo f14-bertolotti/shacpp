@@ -19,39 +19,9 @@ class Transport(transport.Scenario):
                 * self.shaping_factor
             )
 
-    def reward(self, agent):
-        is_first = agent == self.world.agents[0]
+    def diffreward(self, prevs, nexts):
+        prevs_dist_to_goal = [torch.linalg.vector_norm(prev[:,4:6], dim=-1) for prev in prevs]
+        nexts_dist_to_goal = [torch.linalg.vector_norm(next[:,4:6], dim=-1) for next in nexts]
+        rewards = [(prev_dist - next_dist)*100 for prev_dist, next_dist in zip(prevs_dist_to_goal, nexts_dist_to_goal)]
+        return rewards
 
-        if is_first:
-            self.rew = torch.zeros(
-                self.world.batch_dim,
-                device=self.world.device,
-                dtype=torch.float32,
-                requires_grad=True,
-            )
-
-            for package in self.packages:
-                package.dist_to_goal = torch.linalg.vector_norm(
-                    package.state.pos - package.goal.state.pos, dim=1
-                )
-                package.on_goal = self.world.is_overlapping(package, package.goal)
-                package.color = torch.tensor(
-                    Color.RED.value,
-                    device=self.world.device,
-                    dtype=torch.float32,
-                ).repeat(self.world.batch_dim, 1)
-                package.color[package.on_goal] = torch.tensor(
-                    Color.GREEN.value,
-                    device=self.world.device,
-                    dtype=torch.float32,
-                )
-
-                package_shaping = package.dist_to_goal * self.shaping_factor
-                self.rew = self.rew.clone()
-                self.rew[~package.on_goal] += (
-                    package.global_shaping[~package.on_goal]
-                    - package_shaping[~package.on_goal]
-                )
-                package.global_shaping = package_shaping
-
-        return self.rew

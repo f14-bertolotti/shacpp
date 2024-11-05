@@ -43,6 +43,7 @@ def shac(
         policy_clip_coefficient: float                                  ,
         value_clip_coefficient : float                                  ,
         value_ett              : int                                    ,
+        use_diffreward         : bool = True                            ,
     ):
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
@@ -61,12 +62,6 @@ def shac(
         policy_model.load_state_dict(checkpoint["policy_state_dict"])
         value_model .load_state_dict(checkpoint["value_state_dict" ])
     
-    value_cache = {
-        "observations" : torch.zeros(value_cache_size, agents, observation_size, device=device),
-        "targets"      : torch.zeros(value_cache_size, agents, device=device),
-        "mask"         : torch.zeros(value_cache_size, dtype=torch.bool, device=device),
-    }
- 
     prev_observations : torch.Tensor = torch.zeros(train_envs, observation_size, device=device)
     prev_dones        : torch.Tensor = torch.ones (train_envs, agents, device=device)
     eval_reward       : float        = 0
@@ -81,6 +76,7 @@ def shac(
             world         = train_world,
             unroll_steps  = train_steps,
             policy_model  = policy_model.sample,
+            use_diffreward= use_diffreward,
         )
 
         value_model.eval()

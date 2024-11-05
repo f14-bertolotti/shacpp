@@ -1,12 +1,13 @@
 import torch
 
 def unroll(
-        policy_model         ,
-        world                ,
-        observations = None  ,
-        dones        = None  ,
-        unroll_steps = 64    ,
-        reset_dones  = False ,
+        policy_model           ,
+        world                  ,
+        observations   = None  ,
+        dones          = None  ,
+        unroll_steps   = 64    ,
+        reset_dones    = False ,
+        use_diffreward = False ,
     ):
 
     world.scenario.zero_grad()
@@ -39,8 +40,9 @@ def unroll(
         logprobs = policy_result.get("logprobs",torch.empty(0))
         entropy  = policy_result.get("entropy" ,torch.empty(0))
         logits   = policy_result.get("logits"  ,torch.empty(0))
-
+        prev = observations 
         observations, rewards, dones, _ = world.step(actions.transpose(0,1))
+        if use_diffreward: rewards = world.scenario.diffreward(prev.transpose(0,1), observations)
         observations = torch.stack(observations).transpose(0,1)
         rewards      = torch.stack(rewards     ).transpose(0,1)
         dones        = dones.unsqueeze(-1).repeat(1,observations.size(1))
