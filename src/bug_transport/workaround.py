@@ -1,58 +1,64 @@
-
-import vmas
+from vmas.simulator.utils import Color
+from vmas.scenarios import transport
 import torch
+import vmas
 
-env = vmas.make_env(
-    scenario           = "transport" ,
-    num_envs           = 32          ,
-    device             = "cpu"       ,
-    continuous_actions = True        ,
-    seed               = 42          ,
-    grad_enabled       = True        ,
+class Transport(transport.Scenario):
+
+    def diffreward(self, prevs, nexts):
+        prevs_dist_to_goal = [torch.linalg.vector_norm(prev[:,4:6], dim=-1) for prev in prevs]
+        nexts_dist_to_goal = [torch.linalg.vector_norm(next[:,4:6], dim=-1) for next in nexts]
+        rewards = [(prev_dist - next_dist)*100 for prev_dist, next_dist in zip(prevs_dist_to_goal, nexts_dist_to_goal)]
+        return rewards
+
+world = vmas.simulator.environment.Environment(
+    Transport()               ,
+    n_agents           = 3    ,
+    num_envs           = 32   ,
+    device             = "cpu",
+    grad_enabled       = True ,
+    continuous_actions = True ,
+    seed               = 42   ,
 )
 
 class NN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.lin = torch.nn.Linear(11, 2)
+        self.lin = torch.nn.Linear(11,2)
+        self.act = torch.nn.Tanh()
     def forward(self, obs):
-        return self.lin(obs)
+        return self.act(self.lin(obs))
 
 policy = NN()
 optimizer = torch.optim.Adam(policy.parameters(), lr=1e-3)
+optimizer.zero_grad()
 
-observations = env.reset()
-rewards_by_step = []
-for step in range(32):
+observations = world.reset()
+action_cache = []
+reward_cache = []
+observ_cache = []
+for step in range(16):
     actions = [policy(observation) for observation in observations]
-    observations, rewards, dones, _ = env.step(actions)
-    rewards_by_step.append(sum(rewards).sum())
+    prev = observations
+    observations, _, dones, _ = world.step(actions)
+    rewards = world.scenario.diffreward(observations, prev)
+ 
+    action_cache.append(actions)
+    reward_cache.append(rewards)
+    observ_cache.append(observations)
 
-loss = -sum(rewards_by_step)
+    for agent_obs in observations: agent_obs.retain_grad()
+    for agent_rew in rewards     : agent_rew.retain_grad()
+    for agent_act in actions     : agent_act.retain_grad()
+
+    
+loss = sum(rewards).sum()
 loss.backward()
 optimizer.step()
 
-### NEXT STEP ###
-optimizer.zero_grad()
-env.world.zero_grad()
-observations = [observation.detach() for observation in observations]
+for observations in observ_cache: 
+    for observation in observations: 
+        print(observation.grad.mean().item() if observation.grad is not None else None, end=" ")
+    print()
 
-### WORKAROUND ###
-for package in env.scenario.packages:
-    package.global_shaping = (
-        torch.linalg.vector_norm(
-            package.state.pos - package.goal.state.pos, dim=1
-        )
-        * env.scenario.shaping_factor
-    )
-##################
 
-rewards_by_step.clear()
-
-for step in range(32):
-    actions = [policy(observation) for observation in observations]
-    observations, rewards, dones, _ = env.step(actions)
-    rewards_by_step.append(sum(rewards).sum())
-
-loss = -sum(rewards_by_step)
-loss.backward()
