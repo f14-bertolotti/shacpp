@@ -26,7 +26,6 @@ def shac(
         value_model_optimizer  : torch.optim.Optimizer                  ,
         train_world            : vmas.simulator.environment.Environment ,
         eval_world             : vmas.simulator.environment.Environment ,
-        value_cache_size       : int                                    ,
         value_batch_size       : int                                    ,
         value_epochs           : int                                    ,
         value_bins             : int                                    ,

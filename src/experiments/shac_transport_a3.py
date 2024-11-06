@@ -83,7 +83,6 @@ def run():
         value_model_optimizer  = value_model_optimizer          ,
         train_world            = train_world                    ,
         eval_world             = eval_world                     ,
-        value_cache_size       = config.value_cache_size        ,
         value_batch_size       = config.value_batch_size        ,
         value_epochs           = config.value_epochs            ,
         value_bins             = config.value_bins              ,
