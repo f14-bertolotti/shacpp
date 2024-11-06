@@ -80,10 +80,11 @@ def shacwm2(
     }
 
     reward_cache = {
-        "observations" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
-        "actions"      : torch.zeros(reward_cache_size, agents,      action_size, device=device),
-        "rewards"      : torch.zeros(reward_cache_size, agents, device=device),
-        "mask"         : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
+        "prevobs" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
+        "nextobs" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
+        "actions" : torch.zeros(reward_cache_size, agents,      action_size, device=device),
+        "rewards" : torch.zeros(reward_cache_size, agents, device=device),
+        "mask"    : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
     }
 
     value_cache = {
@@ -126,9 +127,13 @@ def shacwm2(
         reward_model.eval()
         value_model .eval()
         world_model .eval()
-        obs = world_model(episode_data["observations"][0].unsqueeze(1), episode_data["actions"].transpose(0,1))["observations"].transpose(0,1)[1:]
-        episode_data["proxy_rewards"] = reward_model(obs.flatten(0,1), episode_data["actions"].flatten(0,1)).view(episode_data["rewards"].shape)
-        episode_data["values"]        = value_model (obs.flatten(0,1)).view(episode_data["rewards"].shape)
+        obs = world_model(episode_data["observations"][0].unsqueeze(1), episode_data["actions"].transpose(0,1))["observations"].transpose(0,1)
+        episode_data["proxy_rewards"] = reward_model(
+            obs[:-1].flatten(0,1), 
+            episode_data["actions"].flatten(0,1),
+            obs[+1:].flatten(0,1)
+        ).view(episode_data["rewards"].shape)
+        episode_data["values"]  = value_model (obs[1:].flatten(0,1)).view(episode_data["rewards"].shape)
         reward_model.train()
         value_model .train()
         world_model .train()

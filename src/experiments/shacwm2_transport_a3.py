@@ -16,6 +16,13 @@ def run():
     config.agents           = 3
 
     config.eval_steps = 512
+    config.reward_hidden_size = 64
+    config.value_hidden_size  = 64
+    config.policy_hidden_size = 64
+    config.reward_cache_size  = 10000
+    config.value_cache_size   = 10000
+    config.world_cache_size   = 10000
+    config.compile            = False
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
