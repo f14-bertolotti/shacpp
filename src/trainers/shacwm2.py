@@ -203,12 +203,16 @@ def shacwm2(
         # checkpoint ##################################################
         if episode % etv == 0:
             torch.save({
-                "policy_state_dict" : policy_model.state_dict(),
-                "world_state_dict"  :  world_model.state_dict(),
-                "reward_state_dict" : reward_model.state_dict(),
-                "value_state_dict"  : value_model.state_dict() ,
-                "best_reward"       : best_reward,
-                "episode"           : episode,
+                "policy_state_dict"           : policy_model.state_dict()           ,
+                "world_state_dict"            : world_model.state_dict()            ,
+                "reward_state_dict"           : reward_model.state_dict()           ,
+                "value_state_dict"            : value_model.state_dict()            ,
+                "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+                "world_optimizer_state_dict"  : world_model_optimizer.state_dict()  ,
+                "reward_optimizer_state_dict" : reward_model_optimizer.state_dict() ,
+                "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
+                "best_reward"                 : best_reward                         ,
+                "episode"                     : episode                             ,
             }, os.path.join(dir,"models.pkl"))
 
         # evaluation #################################################
@@ -216,7 +220,7 @@ def shacwm2(
             eval_data = evaluate(
                 episode      = episode      ,
                 policy_model = policy_model ,
-                reward_model = reward_model  ,
+                reward_model = reward_model ,
                 world        = eval_world   ,
                 steps        = eval_steps   ,
                 envs         = eval_envs    ,
@@ -229,13 +233,18 @@ def shacwm2(
             if eval_reward > best_reward:
                 best_reward = eval_reward
                 torch.save({
-                    "policy_state_dict" : policy_model.state_dict(),
-                    "world_state_dict"  :  world_model.state_dict(),
-                    "reward_state_dict" : reward_model.state_dict(),
-                    "value_state_dict"  : value_model.state_dict() ,
-                    "best_reward"       : best_reward,
-                    "episode"           : episode,
+                    "policy_state_dict"           : policy_model.state_dict()           ,
+                    "world_state_dict"            : world_model.state_dict()            ,
+                    "reward_state_dict"           : reward_model.state_dict()           ,
+                    "value_state_dict"            : value_model.state_dict()            ,
+                    "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+                    "world_optimizer_state_dict"  : world_model_optimizer.state_dict()  ,
+                    "reward_optimizer_state_dict" : reward_model_optimizer.state_dict() ,
+                    "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
+                    "best_reward"                 : best_reward                         ,
+                    "episode"                     : episode                             ,
                 }, os.path.join(dir,"best.pkl"))
+
 
             # early_stopping #########################################
             if (eval_reward >= (max_reward * early_stopping["max_reward_fraction"])).all(): break
@@ -253,12 +262,16 @@ def shacwm2(
         del episode_data
 
     torch.save({
-        "policy_state_dict" : policy_model.state_dict(),
-        "world_state_dict"  :  world_model.state_dict(),
-        "reward_state_dict" : reward_model.state_dict(),
-        "value_state_dict"  : value_model.state_dict() ,
-        "episode"           : episodes,
-        "best_reward"       : best_reward
+        "policy_state_dict"           : policy_model.state_dict()           ,
+        "world_state_dict"            : world_model.state_dict()            ,
+        "reward_state_dict"           : reward_model.state_dict()           ,
+        "value_state_dict"            : value_model.state_dict()            ,
+        "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+        "world_optimizer_state_dict"  : world_model_optimizer.state_dict()  ,
+        "reward_optimizer_state_dict" : reward_model_optimizer.state_dict() ,
+        "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
+        "episode"                     : episodes                            ,
+        "best_reward"                 : best_reward                         ,
     }, os.path.join(dir,"last.pkl"))
 
 

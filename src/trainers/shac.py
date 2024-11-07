@@ -117,10 +117,12 @@ def shac(
         # checkpoint ##################################################
         if episode % etv == 0:
             torch.save({
-                "policy_state_dict" : policy_model.state_dict(),   
-                "value_state_dict"  : value_model .state_dict(),
-                "best_reward"       : best_reward,
-                "episode"           : episode,
+                "policy_state_dict"           : policy_model.state_dict()           ,
+                "value_state_dict"            : value_model .state_dict()           ,
+                "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+                "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
+                "best_reward"                 : best_reward                         ,
+                "episode"                     : episode                             ,
             }, os.path.join(dir,"models.pkl"))
 
         # evaluation #################################################
@@ -140,10 +142,12 @@ def shac(
             if eval_reward > best_reward:
                 best_reward = eval_reward
                 torch.save({
-                    "policy_state_dict" : policy_model.state_dict(),
-                    "value_state_dict"  : value_model .state_dict(),
-                    "best_reward"       : best_reward,
-                    "episode"           : episode,
+                    "policy_state_dict"           : policy_model.state_dict()           ,
+                    "value_state_dict"            : value_model .state_dict()           ,
+                    "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+                    "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
+                    "best_reward"                 : best_reward                         ,
+                    "episode"                     : episode                             ,
                 }, os.path.join(dir,"best.pkl"))
 
             # early_stopping #########################################
@@ -162,10 +166,12 @@ def shac(
         del episode_data
 
     torch.save({
-        "policy_state_dict" : policy_model.state_dict(),   
-        "value_state_dict"  : value_model .state_dict(),
-        "episode"           : episodes,
-        "best_reward"       : best_reward
+        "policy_state_dict"           : policy_model.state_dict()           ,
+        "value_state_dict"            : value_model .state_dict()           ,
+        "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+        "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
+        "episode"                     : episodes                            ,
+        "best_reward"                 : best_reward
     }, os.path.join(dir,"last.pkl"))
 
 

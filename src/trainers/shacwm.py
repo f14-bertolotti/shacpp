@@ -123,10 +123,12 @@ def shacwm(
         # checkpoint ##################################################
         if episode % etv == 0:
             torch.save({
-                "policy_state_dict" : policy_model.state_dict(),
-                "world_state_dict"  :  world_model.state_dict(),
-                "best_reward"       : best_reward,
-                "episode"           : episode,
+                "policy_state_dict"           : policy_model.state_dict()           ,
+                "world_state_dict"            : world_model.state_dict()            ,
+                "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+                "world_optimizer_state_dict"  : world_model_optimizer.state_dict()  ,
+                "best_reward"                 : best_reward                         ,
+                "episode"                     : episode                             ,
             }, os.path.join(dir,"models.pkl"))
 
         # evaluation #################################################
@@ -149,6 +151,8 @@ def shacwm(
                 torch.save({
                     "policy_state_dict" : policy_model.state_dict(),
                     "world_state_dict"  :  world_model.state_dict(),
+                    "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+                    "world_optimizer_state_dict"  : world_model_optimizer.state_dict()  ,
                     "best_reward"       : best_reward,
                     "episode"           : episode,
                 }, os.path.join(dir,"best.pkl"))
@@ -169,10 +173,12 @@ def shacwm(
         del episode_data
 
     torch.save({
-        "policy_state_dict" : policy_model.state_dict(),
-        "world_state_dict"  :  world_model.state_dict(),
-        "episode"           : episodes,
-        "best_reward"       : best_reward
+        "policy_state_dict"           : policy_model.state_dict()           ,
+        "world_state_dict"            : world_model.state_dict()            ,
+        "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
+        "world_optimizer_state_dict"  : world_model_optimizer.state_dict()  ,
+        "episode"                     : episodes                            ,
+        "best_reward"                 : best_reward
     }, os.path.join(dir,"last.pkl"))
 
 
