@@ -11,26 +11,12 @@ class Policy(models.Model):
         action_size      : int              ,
         agents           : int              ,
         steps            : int              ,
-        hidden_size      : int   = 128      ,
-        layers           : int   = 1        ,
-        dropout          : float = 0.0      ,
-        activation       : str   = "Tanh"   ,
+        var              : float = 1.0      ,
         device           : str   = "cuda:0"
     ):
         super().__init__(observation_size, action_size, agents, steps)
 
-        self.first_act     = getattr(torch.nn, activation)()
-        self.first_drop    = torch.nn.Dropout(dropout)
-        self.first_norm    = torch.nn.LayerNorm(hidden_size, device=device)
-
-        self.hidden_layers = torch.nn.ModuleList([torch.nn.Linear(hidden_size, hidden_size, device=device)])
-        self.hidden_acts   = torch.nn.ModuleList([getattr(torch.nn, activation)() for _ in range(layers)])
-        self.hidden_drops  = torch.nn.ModuleList([torch.nn.Dropout(dropout) for _ in range(layers)])
-        self.hidden_norms  = torch.nn.ModuleList([torch.nn.LayerNorm(hidden_size, device=device) for _ in range(layers)])
-
-        self.last_act    = torch.nn.Tanh()
-
-        self.action_var = torch.ones((action_size,)).to(device)
+        self.action_var = var * torch.ones((action_size,)).to(device)
 
     def sample(self, observations):
         result        = self(observations)
@@ -76,11 +62,22 @@ class PolicyAFO(Policy):
         hidden_size      : int   = 128      ,
         layers           : int   = 1        ,
         dropout          : float = 0.0      ,
+        var              : float = 1.0      ,
         activation       : str   = "Tanh"   ,
         device           : str   = "cuda:0"
     ):
 
-        super().__init__(observation_size, action_size, agents, steps, hidden_size, layers, dropout, activation, device)
+        super().__init__(observation_size, action_size, agents, steps, var, device)
+        self.first_act     = getattr(torch.nn, activation)()
+        self.first_drop    = torch.nn.Dropout(dropout)
+        self.first_norm    = torch.nn.LayerNorm(hidden_size, device=device)
+
+        self.hidden_layers = torch.nn.ModuleList([torch.nn.Linear(hidden_size, hidden_size, device=device)])
+        self.hidden_acts   = torch.nn.ModuleList([getattr(torch.nn, activation)() for _ in range(layers)])
+        self.hidden_drops  = torch.nn.ModuleList([torch.nn.Dropout(dropout) for _ in range(layers)])
+        self.hidden_norms  = torch.nn.ModuleList([torch.nn.LayerNorm(hidden_size, device=device) for _ in range(layers)])
+
+        self.last_act    = torch.nn.Tanh()
 
         self.first_layer = torch.nn.Linear(observation_size*agents, hidden_size, device=device)
         self.last_layer  = torch.nn.Linear(hidden_size, agents*action_size, bias=False, device=device)
@@ -116,11 +113,22 @@ class PolicyOFA(Policy):
         hidden_size      : int   = 128      ,
         layers           : int   = 1        ,
         dropout          : float = 0.0      ,
+        var              : float = 1.0      ,
         activation       : str   = "Tanh"   ,
         device           : str   = "cuda:0"
     ):
 
-        super().__init__(observation_size, action_size, agents, steps, hidden_size, layers, dropout, activation, device)
+        super().__init__(observation_size, action_size, agents, steps, var, device)
+        self.first_act     = getattr(torch.nn, activation)()
+        self.first_drop    = torch.nn.Dropout(dropout)
+        self.first_norm    = torch.nn.LayerNorm(hidden_size, device=device)
+
+        self.hidden_layers = torch.nn.ModuleList([torch.nn.Linear(hidden_size, hidden_size, device=device)])
+        self.hidden_acts   = torch.nn.ModuleList([getattr(torch.nn, activation)() for _ in range(layers)])
+        self.hidden_drops  = torch.nn.ModuleList([torch.nn.Dropout(dropout) for _ in range(layers)])
+        self.hidden_norms  = torch.nn.ModuleList([torch.nn.LayerNorm(hidden_size, device=device) for _ in range(layers)])
+
+        self.last_act    = torch.nn.Tanh()
 
         self.first_layer = torch.nn.Linear(observation_size, hidden_size, device=device)
         self.last_layer  = torch.nn.Linear(hidden_size, action_size, bias=False, device=device)

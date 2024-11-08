@@ -10,19 +10,24 @@ import os
 def run():
 
     config = experiments.configs.shacwm2
-    config.dir              = "data/shacwm2-transport-a3"
+    config.dir              = "data/shacwm2-transport-a3-1var"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
 
     config.eval_steps = 512
-    config.reward_hidden_size = 64
-    config.value_hidden_size  = 64
-    config.policy_hidden_size = 64
-    config.reward_cache_size  = 10000
-    config.value_cache_size   = 10000
-    config.world_cache_size   = 10000
-    config.compile            = False
+
+    config.episodes = 100000
+    config.value_cache_size = 10000
+    config.value_bins = 10
+    config.etv = 100
+    config.world_ett = 10
+    config.reward_ett = 10
+    config.value_ett = 10
+    config.value_stop_threshold = None
+    config.reward_stop_threshold = None
+    config.world_stop_threshold = None
+    config.var = 5
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
@@ -50,6 +55,7 @@ def run():
         hidden_size      = config.policy_hidden_size ,
         dropout          = config.policy_dropout     ,
         activation       = config.policy_activation  ,
+        var              = config.var                ,
         device           = config.device
     )
 
