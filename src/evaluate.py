@@ -26,7 +26,8 @@ def evaluate(
     rewards = eval_episode["rewards"]
     proxy = None
     if reward_model is not None: 
-        proxy = reward_model(eval_episode["observations"].flatten(0,1), eval_episode["actions"].flatten(0,1)).view(eval_episode["rewards"].shape)
+        full_observations = torch.cat([eval_episode["observations"], eval_episode["last_observations"].unsqueeze(0)], 0)
+        proxy = reward_model(full_observations[:-1].flatten(0,1), eval_episode["actions"].flatten(0,1), full_observations[+1:].flatten(0,1)).view(eval_episode["rewards"].shape)
     if  world_model is not None:
         proxy = world_model(eval_episode["observations"][0].unsqueeze(1), eval_episode["actions"][:world_model.steps].transpose(0,1))["rewards"].transpose(0,1)
         rewards = rewards[:world_model.steps]
