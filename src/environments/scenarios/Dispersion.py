@@ -60,5 +60,3 @@ class Dispersion(dispersion.Scenario):
     def max_rewards(self):
         return torch.ones(self.world.batch_dim, device=self.device) * self.agents
 
-    def zero_grad(self):
-        self.world.zero_grad()

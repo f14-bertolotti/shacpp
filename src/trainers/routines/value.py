@@ -11,7 +11,7 @@ def train_value(
         episode_data     : dict[str,torch.Tensor]             ,
         training_epochs  : int                                ,
         batch_size       : int                                ,
-        bins             : int                                ,
+        bins             : int|None                           ,
         logger           : logging.Logger                     ,
         cached_data      : dict[str,torch.Tensor]|None = None ,
         cache_size       : int|None = None                    ,

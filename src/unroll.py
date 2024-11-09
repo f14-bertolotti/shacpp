@@ -10,7 +10,7 @@ def unroll(
         use_diffreward = False ,
     ):
 
-    world.scenario.zero_grad()
+    world.world.zero_grad()
 
     if dones is not None and observations is not None and reset_dones:
         for i in dones[:,0].nonzero():
@@ -42,7 +42,7 @@ def unroll(
         logits   = policy_result.get("logits"  ,torch.empty(0))
         prev = observations 
         observations, rewards, dones, _ = world.step(actions.transpose(0,1))
-        if use_diffreward: rewards = world.scenario.diffreward(prev.transpose(0,1), observations)
+        if use_diffreward: rewards = world.scenario.diffreward(prev.transpose(0,1), actions, observations)
         observations = torch.stack(observations).transpose(0,1)
         rewards      = torch.stack(rewards     ).transpose(0,1)
         dones        = dones.unsqueeze(-1).repeat(1,observations.size(1))

@@ -9,7 +9,7 @@ def train_world2(
         model            : models.Model                       ,
         episode_data     : dict[str,torch.Tensor]             ,
         batch_size       : int                                ,
-        bins             : int                                ,
+        bins             : int|None                           ,
         training_epochs  : int                                ,
         optimizer        : torch.optim.Optimizer              ,
         logger           : logging.Logger                     ,
