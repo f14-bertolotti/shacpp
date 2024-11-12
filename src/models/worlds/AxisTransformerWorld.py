@@ -77,7 +77,7 @@ class AxisTransformerWorld(models.Model):
         self.step_mask = torch.nn.Transformer.generate_square_subsequent_mask(steps+1, device=device)
 
     def forward(self, obs, act):
-        hidobs = self.obs2hid(obs)
+        hidobs = self.obs2hid(obs[:,[0]])
         hidact = self.act2hid(act) + self.actpos
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
 

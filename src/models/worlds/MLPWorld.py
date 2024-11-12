@@ -35,7 +35,7 @@ class MLPWorld(models.Model):
         self.hid2obs = torch.nn.Linear(hidden_size, agents * (steps+1) * observation_size, device=device)
 
     def forward(self, obs, act):
-        hidden = self.first_norm(self.first_act(self.first_layer(torch.cat([obs.flatten(1,3), act.flatten(1,3)], dim=1))))
+        hidden = self.first_norm(self.first_act(self.first_layer(torch.cat([obs[:,[0]].flatten(1,3), act.flatten(1,3)], dim=1))))
 
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):
             hidden = ln(hidden + drop(act(layer(hidden))))

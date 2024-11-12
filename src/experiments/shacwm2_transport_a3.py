@@ -10,7 +10,7 @@ import os
 def run():
 
     config = experiments.configs.shacwm2
-    config.dir              = "data/shacwm2-transport-a3-1var"
+    config.dir              = "data/shacwm2-transport-a3"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
@@ -77,10 +77,7 @@ def run():
         steps            = config.train_steps            ,
         layers           = config.world_layers           ,
         hidden_size      = config.world_hidden_size      ,
-        feedforward_size = config.world_feedforward_size ,
         dropout          = config.world_dropout          ,
-        activation       = config.world_activation       ,
-        heads            = 1                             ,
         device           = config.device                 ,
         compute_reward   = False                         ,
         compute_value    = False                         ,

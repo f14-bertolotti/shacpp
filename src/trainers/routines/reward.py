@@ -26,10 +26,10 @@ def train_reward(
     if use_cache:
         rewards = (episode_data["rewards"]).flatten(0,1).sum(1)
         indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
-        cached_data["mask"        ][indexes] = episode_data["dones"][:,:,0].flatten(0,1).detach().logical_not()
-        cached_data["observations"][indexes] = episode_data["observations"].flatten(0,1).detach()
-        cached_data["actions"     ][indexes] = episode_data["actions"]     .flatten(0,1).detach()
-        cached_data["rewards"     ][indexes] = episode_data["rewards"]     .flatten(0,1).detach()
+        cached_data["mask"        ][indexes] = episode_data["dones"][:-1,:,0]   .flatten(0,1).detach().logical_not()
+        cached_data["observations"][indexes] = episode_data["observations"][:-1].flatten(0,1).detach()
+        cached_data["actions"     ][indexes] = episode_data["actions"]          .flatten(0,1).detach()
+        cached_data["rewards"     ][indexes] = episode_data["rewards"]          .flatten(0,1).detach()
 
     if episode % ett == 0: 
         dataloader = torch.utils.data.DataLoader(

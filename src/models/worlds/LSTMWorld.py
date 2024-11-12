@@ -45,7 +45,7 @@ class LSTMWorld(models.Model):
 
     def forward(self, obs, act):
 
-        hidobs = self.obs2hid(obs)
+        hidobs = self.obs2hid(obs[:,[0]])
         hidact = self.act2hid(act) + self.actpos
 
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
