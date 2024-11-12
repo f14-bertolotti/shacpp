@@ -70,7 +70,7 @@ def run():
         device           = config.device
     )
 
-    world_model = models.worlds.TransformerWorld(
+    world_model = models.worlds.TransformerEncoderOnlyWorld(
         observation_size = config.observation_size       ,
         action_size      = config.action_size            ,
         agents           = config.agents                 ,
