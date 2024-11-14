@@ -9,7 +9,7 @@ def train_reward(
         model           : models.Model                       ,
         episode_data    : dict[str,torch.Tensor]             ,
         batch_size      : int                                ,
-        bins            : int                                ,
+        bins            : int|None                           ,
         training_epochs : int                                ,
         optimizer       : torch.optim.Optimizer              ,
         logger          : logging.Logger                     ,
@@ -22,16 +22,16 @@ def train_reward(
     ):
 
     use_cache = cached_data is not None and cache_size is not None
-    full_observations = torch.cat([episode_data["observations"], episode_data["last_observations"].unsqueeze(0)], 0)
 
     if use_cache:
         rewards = (episode_data["rewards"]).flatten(0,1).sum(1)
         indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
-        cached_data["mask"   ][indexes] = episode_data["dones"][:,:,0].flatten(0,1).detach().logical_not()
-        cached_data["prevobs"][indexes] = full_observations[:-1]      .flatten(0,1).detach()
-        cached_data["nextobs"][indexes] = full_observations[+1:]      .flatten(0,1).detach()
-        cached_data["actions"][indexes] = episode_data["actions"]     .flatten(0,1).detach()
-        cached_data["rewards"][indexes] = episode_data["rewards"]     .flatten(0,1).detach()
+
+        cached_data["mask"        ][indexes] = episode_data["dones"][:-1,:,0]   .flatten(0,1).detach().logical_not()
+        cached_data["nextobs"     ][indexes] = episode_data["observations"][1:] .flatten(0,1).detach()
+        cached_data["prevobs"     ][indexes] = episode_data["observations"][:-1].flatten(0,1).detach()
+        cached_data["actions"     ][indexes] = episode_data["actions"]          .flatten(0,1).detach()
+        cached_data["rewards"     ][indexes] = episode_data["rewards"]          .flatten(0,1).detach()
 
     if episode % ett == 0: 
         dataloader = torch.utils.data.DataLoader(

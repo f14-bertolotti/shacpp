@@ -19,7 +19,9 @@ def run():
 
     config.episodes = 100000
     config.value_cache_size = 10000
+    config.reward_cache_size = 10000
     config.value_bins = 10
+    config.reward_bins = 10
     config.etv = 100
     config.world_ett = 10
     config.reward_ett = 10
@@ -71,17 +73,14 @@ def run():
         device           = config.device
     )
 
-    world_model = models.worlds.TransformerWorld(
+    world_model = models.worlds.TransformerEncoderOnlyWorld(
         observation_size = config.observation_size       ,
         action_size      = config.action_size            ,
         agents           = config.agents                 ,
         steps            = config.train_steps            ,
         layers           = config.world_layers           ,
         hidden_size      = config.world_hidden_size      ,
-        feedforward_size = config.world_feedforward_size ,
         dropout          = config.world_dropout          ,
-        activation       = config.world_activation       ,
-        heads            = 1                             ,
         device           = config.device                 ,
         compute_reward   = False                         ,
         compute_value    = False                         ,

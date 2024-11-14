@@ -86,10 +86,8 @@ def shacwm(
         )
 
         # compute rewards and values #################################
-        world_model.eval()
         results = world_model(episode_data["observations"][0].unsqueeze(1), episode_data["actions"].transpose(0,1))
         episode_data["proxy_rewards"], episode_data["values"] = results["rewards"].transpose(0,1), results["values"].transpose(0,1)
-        world_model.train()
     
         # train actor model ##########################################
         trainers.routines.train_policy(

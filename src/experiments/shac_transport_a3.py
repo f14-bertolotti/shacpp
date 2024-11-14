@@ -16,6 +16,7 @@ def run():
     config.agents           = 3
 
     config.eval_steps = 512
+    config.etv = 100
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
@@ -85,7 +86,6 @@ def run():
         eval_world             = eval_world                     ,
         value_batch_size       = config.value_batch_size        ,
         value_epochs           = config.value_epochs            ,
-        value_bins             = config.value_bins              ,
         value_tolerance        = config.value_tolerance         ,
         value_stop_threshold   = config.value_stop_threshold    ,
         policy_clip_coefficient= config.policy_clip_coefficient ,

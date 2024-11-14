@@ -73,9 +73,8 @@ def shacwm2(
     gammas = utils.gamma_tensor(train_steps, train_envs, agents, gamma_factor).to(device)
 
     world_cache = {
-        "observations" : torch.zeros(world_cache_size, train_steps, agents, observation_size, device=device),
+        "observations" : torch.zeros(world_cache_size, train_steps+1, agents, observation_size, device=device),
         "actions"      : torch.zeros(world_cache_size, train_steps, agents, action_size, device=device),
-        "last_obs"     : torch.zeros(world_cache_size, agents, observation_size, device=device),
         "mask"         : torch.zeros(world_cache_size, dtype=torch.bool, device=device),
     }
 
@@ -124,19 +123,9 @@ def shacwm2(
         )
 
         # compute rewards and values #################################
-        reward_model.eval()
-        value_model .eval()
-        world_model .eval()
-        obs = world_model(episode_data["observations"][0].unsqueeze(1), episode_data["actions"].transpose(0,1))["observations"].transpose(0,1)
-        episode_data["proxy_rewards"] = reward_model(
-            obs[:-1].flatten(0,1), 
-            episode_data["actions"].flatten(0,1),
-            obs[+1:].flatten(0,1)
-        ).view(episode_data["rewards"].shape)
-        episode_data["values"]  = value_model (obs[1:].flatten(0,1)).view(episode_data["rewards"].shape)
-        reward_model.train()
-        value_model .train()
-        world_model .train()
+        obs = world_model(episode_data["observations"].transpose(0,1), episode_data["actions"].transpose(0,1))["observations"].transpose(0,1)
+        episode_data["proxy_rewards"] = reward_model(obs[:-1].flatten(0,1), episode_data["actions"].flatten(0,1), obs[1:].flatten(0,1)).view(episode_data["rewards"].shape)
+        episode_data["values"]        = value_model (obs[:-1].flatten(0,1)).view(episode_data["rewards"].shape)
     
         # train actor model ##########################################
         trainers.routines.train_policy(
@@ -257,11 +246,11 @@ def shacwm2(
             del eval_data
 
         # update progress bar ########################################
-        done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
+        done_train_envs = episode_data["dones"][-1,:,0].sum().int().item()
         bar.set_description(f"reward:{eval_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
         # set up next iteration ######################################
-        prev_observations = episode_data["last_observations"].detach()
-        prev_dones        = episode_data["last_dones"       ].detach()
+        prev_observations = episode_data["observations"][-1].detach()
+        prev_dones        = episode_data["dones"       ][-1].detach()
 
         # clean up ###################################################
         del episode_data

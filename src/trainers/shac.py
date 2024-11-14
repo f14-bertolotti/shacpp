@@ -28,7 +28,6 @@ def shac(
         eval_world             : vmas.simulator.environment.Environment ,
         value_batch_size       : int                                    ,
         value_epochs           : int                                    ,
-        value_bins             : int                                    ,
         gamma_factor           : float                                  ,
         lambda_factor          : float                                  ,
         etr                    : int                                    ,
@@ -78,10 +77,8 @@ def shac(
             use_diffreward= use_diffreward,
         )
 
-        value_model.eval()
         episode_data["proxy_rewards"] = episode_data["rewards"]
         episode_data["values"]        = value_model (episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
-        value_model.train()
 
         # train actor model ###########################################
         trainers.routines.train_policy(
@@ -104,7 +101,7 @@ def shac(
             training_epochs        = value_epochs           ,
             batch_size             = value_batch_size       ,
             cache_size             = None                   ,
-            bins                   = value_bins             ,
+            bins                   = None                   ,
             slam                   = lambda_factor          ,
             gamma                  = gamma_factor           ,
             logger                 = value_logger           ,

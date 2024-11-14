@@ -1,8 +1,8 @@
 import models
 import torch
 
-class TransformerWorld(models.Model):
-    """  Decoder Only Transformer world. """
+class TransformerEncoderOnlyWorld(models.Model):
+    """  World Model Transformer. """
 
     def __init__(
         self, 
@@ -32,46 +32,35 @@ class TransformerWorld(models.Model):
 
         self.ln = torch.nn.LayerNorm(hidden_size, device=device)
 
-        self.transformer = torch.nn.Transformer(
-                dim_feedforward      = feedforward_size ,
-                d_model              = hidden_size      ,
-                activation           = activation       ,
-                device               = device           ,
-                nhead                = heads            ,
-                dropout              = dropout          ,
-                batch_first          = True             ,
-                num_encoder_layers   = layers           ,
-                num_decoder_layers   = layers           ,
+        self.encoder = torch.nn.TransformerEncoder(
+            torch.nn.TransformerEncoderLayer(
+                dim_feedforward = feedforward_size ,
+                d_model         = hidden_size      ,
+                activation      = activation       ,
+                device          = device           ,
+                nhead           = heads            ,
+                dropout         = dropout          ,
+                batch_first     = True
+            ), 
+            num_layers           = layers,
+            enable_nested_tensor = False
         )
-        self.transformer.enable_nested_tensor = True
 
         if self.compute_reward: self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
         if self.compute_value : self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2obs = torch.nn.Linear(hidden_size, observation_size, device = device)
 
-        self.src_mask = torch.tensor([[0 if i1 <= i2 else 1 for i1 in range(steps+1) for j1 in range(agents)] for i2 in range(steps+1) for j2 in range(agents)], dtype=torch.float)
-        self.src_mask[self.src_mask == 1] = float("-inf")
-        self.src_mask = self.src_mask.to(device)
+        self.mask = torch.tensor([[0 if i1 <= i2 else 1 for i1 in range(steps+1) for j1 in range(agents)] for i2 in range(steps+1) for j2 in range(agents)], dtype=torch.float)
+        self.mask[self.mask == 1] = float("-inf")
+        self.mask = self.mask.to(device)
 
-        self.tgt_mask = torch.tensor([[0 if i1 < i2 else 1 for i1 in range(steps+1) for j1 in range(agents)] for i2 in range(steps+1) for j2 in range(agents)], dtype=torch.float)
-        self.tgt_mask[:agents, :agents] = 0
-        self.tgt_mask[self.tgt_mask == 1] = float("-inf")
-        self.tgt_mask = self.tgt_mask.to(device)
+    def forward(self, obs, act):
+        hidobs = self.obs2hid(obs[:,[0]])
+        hidact = self.act2hid(act) + self.actpos
 
+        hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
 
-    def forward(self, observations, actions):
-
-        hidobs = self.obs2hid(observations)
-        hidact = self.act2hid(actions)
-        source = torch.cat([hidobs[:,[0]], hidact], dim=1).flatten(1,2)
-        target = hidobs.flatten(1,2)
-
-        encoded = self.transformer(
-            src = source,
-            tgt = target,
-            src_mask = self.src_mask,
-            tgt_mask = self.tgt_mask,
-        ).view(source.size(0), self.steps+1, self.agents, source.size(2))
+        encoded = self.encoder(hidden.flatten(1,2), mask=self.mask).view(hidden.shape)
 
         return {
             "observations" : self.hid2obs(encoded),

@@ -10,7 +10,7 @@ class Shac:
         self.eval_steps             = 64
 
         self.value_batch_size       = 2000
-        self.value_epochs           = 10
+        self.value_epochs           = 4
 
         self.policy_layers          = 1
         self.policy_hidden_size     = 2048
@@ -24,9 +24,6 @@ class Shac:
 
         self.value_learning_rate    = 0.001
         self.policy_learning_rate   = 0.001
-
-        self.value_cache_size       = 10000
-        self.value_bins             = 10
 
         self.gamma_factor           = 0.99
         self.lambda_factor          = 0.95
@@ -43,8 +40,8 @@ class Shac:
         self.value_ett               = 1
         self.policy_ett              = 1
 
-        self.value_stop_threshold    = 0.9
-        self.world_stop_threshold    = 0.9
+        self.value_stop_threshold    = None 
+        self.world_stop_threshold    = None
         self.value_tolerance         = 0.1
         self.world_tolerance         = 0.1
 

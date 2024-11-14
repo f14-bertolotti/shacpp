@@ -11,7 +11,7 @@ def train_value(
         episode_data     : dict[str,torch.Tensor]             ,
         training_epochs  : int                                ,
         batch_size       : int                                ,
-        bins             : int                                ,
+        bins             : int|None                           ,
         logger           : logging.Logger                     ,
         cached_data      : dict[str,torch.Tensor]|None = None ,
         cache_size       : int|None = None                    ,
@@ -40,9 +40,9 @@ def train_value(
     if use_cache:
         values = (target_values).flatten(0,1).sum(1)
         indexes = utils.bin_dispatch(values, bins, cache_size // bins)
-        cached_data["mask"        ][indexes] = episode_data["dones"][:,:,0].flatten(0,1).detach().logical_not()
-        cached_data["observations"][indexes] = episode_data["observations"].flatten(0,1).detach()
-        cached_data["targets"     ][indexes] = target_values               .flatten(0,1).detach()
+        cached_data["mask"        ][indexes] = episode_data["dones"][:-1,:,0]   .flatten(0,1).detach().logical_not()
+        cached_data["observations"][indexes] = episode_data["observations"][:-1].flatten(0,1).detach()
+        cached_data["targets"     ][indexes] = target_values                    .flatten(0,1).detach()
 
     if episode % ett == 0: 
         dataloader = torch.utils.data.DataLoader(

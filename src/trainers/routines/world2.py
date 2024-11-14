@@ -9,7 +9,7 @@ def train_world2(
         model            : models.Model                       ,
         episode_data     : dict[str,torch.Tensor]             ,
         batch_size       : int                                ,
-        bins             : int                                ,
+        bins             : int|None                           ,
         training_epochs  : int                                ,
         optimizer        : torch.optim.Optimizer              ,
         logger           : logging.Logger                     ,
@@ -38,7 +38,6 @@ def train_world2(
         cached_data["mask"        ][indexes] = True
         cached_data["observations"][indexes] = episode_data["observations"     ].transpose(0,1)[alive].detach()
         cached_data["actions"     ][indexes] = episode_data["actions"          ].transpose(0,1)[alive].detach()
-        cached_data["last_obs"    ][indexes] = episode_data["last_observations"][alive].detach() 
 
     if episode % ett == 0: 
 
@@ -47,7 +46,6 @@ def train_world2(
             torch.utils.data.TensorDataset(
                 cached_data["observations"][cached_data["mask"]] if use_cache else episode_data["observations"     ].detach().transpose(0,1)[alive],
                 cached_data["actions"     ][cached_data["mask"]] if use_cache else episode_data["actions"          ].detach().transpose(0,1)[alive],
-                cached_data["last_obs"    ][cached_data["mask"]] if use_cache else episode_data["last_observations"].detach()[alive]
             ),
             collate_fn = torch.utils.data.default_collate,
             batch_size = batch_size,
@@ -57,18 +55,18 @@ def train_world2(
 
         for epoch in range(training_epochs):
             tpfn, tot = 0, 0
-            for step, (obs, act, last) in enumerate(dataloader,1):
+            for step, (obs, act) in enumerate(dataloader,1):
                 optimizer.zero_grad()
                 
                 # forward pass
-                prd_obs = model(obs[:,0].unsqueeze(1),act)["observations"]
+                prd_obs = model(obs,act)["observations"]
 
                 # observation loss
-                loss = (((prd_obs[:,:-1] - obs)**2).sum(1) + (prd_obs[:,-1] - last)**2).mean() / prd_obs.size(1)
+                loss = (((prd_obs - obs)**2)).mean()
 
                 # accuracy metric
                 tot  += prd_obs.numel()
-                tpfn += prd_obs[:,:-1].isclose(obs,atol=tolerance).sum().item() + prd_obs[:,-1].isclose(last,atol=tolerance).sum().item()
+                tpfn += prd_obs.isclose(obs,atol=tolerance).sum().item()
 
                 # backpropagation
                 loss.backward()
