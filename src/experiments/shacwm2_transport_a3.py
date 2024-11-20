@@ -10,7 +10,7 @@ import os
 def run():
 
     config = experiments.configs.shacwm2
-    config.dir              = "data/shacwm2-transport-a3"
+    config.dir              = "data/shacwm2-transport-a3-0"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
