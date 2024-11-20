@@ -10,11 +10,7 @@ import os
 def run():
 
     config = experiments.configs.shacwm2
-<<<<<<< Updated upstream
-    config.dir              = "data/shacwm2-transport-a3-0"
-=======
     config.dir              = "data/shacwm2-transport-a3-2-r"
->>>>>>> Stashed changes
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
