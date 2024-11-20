@@ -79,6 +79,7 @@ def train_value(
                 logger.info(json.dumps({
                     "episode"         : episode,
                     "epoch"           : epoch,
+                    "accuracy"        : tpfn/(tot+1e-7),
                     "step"            : step,
                     "loss"            : loss.item(),
                 }))

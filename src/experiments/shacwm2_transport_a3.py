@@ -10,7 +10,11 @@ import os
 def run():
 
     config = experiments.configs.shacwm2
+<<<<<<< Updated upstream
     config.dir              = "data/shacwm2-transport-a3-0"
+=======
+    config.dir              = "data/shacwm2-transport-a3-2-r"
+>>>>>>> Stashed changes
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
@@ -20,8 +24,10 @@ def run():
     config.episodes = 100000
     config.value_cache_size = 10000
     config.reward_cache_size = 10000
+    config.world_cache_size = 100000
     config.value_bins = 10
     config.reward_bins = 10
+    config.world_bins = 100
     config.etv = 100
     config.world_ett = 10
     config.reward_ett = 10
@@ -30,19 +36,29 @@ def run():
     config.reward_stop_threshold = None
     config.world_stop_threshold = None
     config.var = 5
+    config.value_activation = "ReLU"
+    config.value_hidden_size = 64
+    config.value_feedforward = 128
+    #config.reward_activation = "ReLU"
+    #config.reward_hidden_size = 32
+    #config.reward_feedforward = 64
+
+
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
 
-    value_model  = models.ValueAFO (
+    value_model  = models.TransformerValue(
         observation_size = config.observation_size  ,
         action_size      = config.action_size       ,
         agents           = config.agents            ,
         steps            = config.train_steps       ,
         layers           = config.value_layers      ,
         hidden_size      = config.value_hidden_size ,
+        feedforward_size = config.value_feedforward ,
+        heads            = 1,
         dropout          = config.value_dropout     ,
         activation       = config.value_activation  ,
         device           = config.device
@@ -68,17 +84,19 @@ def run():
         steps            = config.train_steps        ,
         layers           = config.reward_layers      ,
         hidden_size      = config.reward_hidden_size ,
+        #feedforward_size = config.reward_feedforward ,
+        #heads            = 1                         ,
         dropout          = config.reward_dropout     ,
         activation       = config.reward_activation  ,
         device           = config.device
     )
 
-    world_model = models.worlds.TransformerEncoderOnlyWorld(
+    world_model = models.worlds.AxisTransformerWorld(
         observation_size = config.observation_size       ,
         action_size      = config.action_size            ,
         agents           = config.agents                 ,
         steps            = config.train_steps            ,
-        layers           = config.world_layers           ,
+        layers           = 2*config.world_layers         ,
         hidden_size      = config.world_hidden_size      ,
         dropout          = config.world_dropout          ,
         device           = config.device                 ,
