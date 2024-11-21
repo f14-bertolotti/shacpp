@@ -30,7 +30,8 @@ class Game(InteractiveEnv):
         torch.set_printoptions(precision=3, sci_mode=False, linewidth=200)
         self.reward_model = reward_model
         self.value_model  = value_model
-        self.optimizer = torch.optim.Adam(self.reward_model.parameters(), lr=1e-3)
+        self.reward_optimizer = torch.optim.Adam(self.reward_model.parameters(), lr=1e-3)
+        self.value_optimizer  = torch.optim.Adam(self.value_model .parameters(), lr=1e-3)
 
         super().__init__(*args, **kwargs)
 
@@ -68,6 +69,8 @@ class Game(InteractiveEnv):
             obs, rew, done, info = self.env.step(action_list)
             obs = [torch.tensor(o) for o in obs]
             self._write_values(1, "rews: " + str(list(map(lambda x:f"{x:1.3f}", rew))))
+            self._write_values(4, "obs1: " + str(list(map(lambda x:f"{x:1.3f}", obs[0][:5]))))
+            self._write_values(3, "obs2: " + str(list(map(lambda x:f"{x:1.3f}", obs[0][5:]))))
 
             print("="*100)
             print("observations")
@@ -75,14 +78,31 @@ class Game(InteractiveEnv):
 
             if self.reward_model is not None:
                 observations = torch.stack(obs)
+                val_observations = observations.detach().clone()
+                prev.requires_grad = True
+                observations.requires_grad = True
+                val_observations.requires_grad = True
+                prev.retain_grad()
+                observations.retain_grad()
+                val_observations.retain_grad()
                 actions      = torch.tensor(action_list, requires_grad=True)
-                proxy = self.reward_model(observations.float(), actions.float(), prev.float())
-                self._write_values(0, "alts: " + str(list(map(lambda x:f"{x:1.3f}", proxy.tolist()))))
+                proxy = self.reward_model(prev.float(), actions.float(), observations.float())
+                proxy_vals = self.value_model(val_observations.float())
+                self._write_values(0, "alts: " + str(list(map(lambda x:f"{x:1.3f}", proxy.squeeze(0).tolist()))))
 
-                self.optimizer.zero_grad()
+                del observations.grad
+                del val_observations.grad
+                del prev.grad
+                self.reward_optimizer.zero_grad()
+                self.value_optimizer.zero_grad()
                 proxy.mean().neg().backward()
+                proxy_vals.mean().neg().backward()
 
                 grads = -actions.grad
+                print(actions.grad)
+                print(prev.grad)
+                print(observations.grad)
+                print(val_observations.grad)
                 angles = cartesian_to_polar(grads.float())
                 for angle,lineform in zip(angles,self.lineforms): 
                     lineform.set_rotation(angle[1]-3.14/2 )
@@ -127,24 +147,28 @@ def game(
     value_model  = None
     if reward_path is not None:
         checkpoint = torch.load(reward_path, weights_only=True) 
-        reward_model = models.RewardAFO(
+        reward_model = models.TransformerReward(
              observation_size = 11     ,
              action_size      = 2      ,
              agents           = agents ,
              steps            = 32     ,
              layers           = 1      ,
-             hidden_size      = 2048   ,
+             hidden_size      = 64     ,
+             feedforward_size = 128    ,
+             heads            = 1      ,
              dropout          = 0      ,
              activation       = "ReLU" ,
              device           = "cpu"
         )
-        value_model = models.ValueAFO(
+        value_model = models.TransformerValue(
              observation_size = 11     ,
              action_size      = 2      ,
              agents           = agents ,
              steps            = 32     ,
              layers           = 1      ,
-             hidden_size      = 2048   ,
+             hidden_size      = 64     ,
+             feedforward_size = 128    ,
+             heads            = 1      ,
              dropout          = 0      ,
              activation       = "ReLU" ,
              device           = "cpu"
