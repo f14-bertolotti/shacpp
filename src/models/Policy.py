@@ -135,9 +135,9 @@ class PolicyOFA(Policy):
         self.last_layer  = utils.layer_init(self.last_layer, 1.141)
 
     def forward(self, observations):
-        hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(observations))))
+        hidden = self.first_drop(self.first_act(self.first_norm(self.first_layer(observations))))
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):
-            hidden = ln(hidden + drop(act(layer(hidden))))
+            hidden = hidden + drop(act(layer(ln(hidden))))
         actions = self.last_act(logits:=self.last_layer(hidden))
 
         return {

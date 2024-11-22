@@ -23,7 +23,6 @@ class TransformerValue(models.Model):
 
         self.first_layer = torch.nn.Linear(observation_size, hidden_size, device=device)
         self.first_norm  = torch.nn.LayerNorm(hidden_size, device=device)
-        self.agent_pos   = torch.nn.Parameter(torch.empty(1, agents, hidden_size, device = device).normal_(0,0.02))
         self.first_drop  = torch.nn.Dropout(dropout)
 
 
@@ -44,7 +43,7 @@ class TransformerValue(models.Model):
         self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
 
     def forward(self, obs):
-        hidden = self.first_layer(obs)
+        hidden = self.first_drop(self.first_norm(self.first_layer(obs)))
         encoded = self.encoder(hidden)
         rewards = self.hid2rew(encoded).squeeze(-1)
         return rewards

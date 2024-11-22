@@ -1,8 +1,12 @@
 import models
 import torch
 
-class TransformerReward(models.Model):
-    """  World Model Transformer. """
+class TransformerPolicy(models.Policy.Policy):
+    """ 
+        MLP Policy. 
+        The MLP see all observations from all agents.
+        The MLP outputs actions for all agents.
+    """
 
     def __init__(
         self, 
@@ -16,16 +20,14 @@ class TransformerReward(models.Model):
         feedforward_size : int   = 512      ,
         dropout          : float = 0.0      ,
         activation       : str   = "ReLU"   ,
+        var              : float = 1.0      ,
         device           : str   = "cuda:0" ,
     ):
-        super().__init__(observation_size, action_size, agents, steps)
+        super().__init__(observation_size, action_size, agents, steps, var)
         activation = {"ReLU":"relu", "GELU":"gelu"}[activation]
 
-        self.first_layer = torch.nn.Linear(observation_size+action_size, hidden_size, device=device)
+        self.first_layer = torch.nn.Linear(observation_size, hidden_size, device=device)
         self.first_norm  = torch.nn.LayerNorm(hidden_size, device=device)
-        self.agent_pos   = torch.nn.Parameter(torch.empty(1, agents, hidden_size, device = device).normal_(0,0.02))
-        self.first_drop  = torch.nn.Dropout(dropout)
-
 
         self.encoder = torch.nn.TransformerEncoder(
             torch.nn.TransformerEncoderLayer(
@@ -41,12 +43,16 @@ class TransformerReward(models.Model):
             enable_nested_tensor = False
         )
 
-        self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
+        self.hid2act  = torch.nn.Linear(hidden_size, action_size, device = device)
+        self.last_act = torch.nn.Tanh()
 
-    def forward(self, obs, act, next_obs):
-        src = torch.cat([obs, act], dim=-1)
-        hidden = self.first_drop(self.first_norm(self.first_layer(src)))
+    def forward(self, observations):
+        hidden  = self.first_norm(self.first_layer(observations))
         encoded = self.encoder(hidden)
-        rewards = self.hid2rew(encoded).squeeze(-1)
-        return rewards
+        logits  = self.hid2act(encoded)
+        actions = self.last_act(logits)
 
+        return {
+            "actions" : actions.view(-1, self.agents, self.actions_size),
+            "logits"  : logits .view(-1, self.agents, self.actions_size)
+        }
