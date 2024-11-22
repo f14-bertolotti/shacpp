@@ -68,7 +68,7 @@ class AxisTransformerWorld(models.Model):
         return steps_mask
 
     def forward(self, obs, act):
-        hidobs = self.obs2hid(obs)
+        hidobs = self.obs2hid(obs[:,[0]])
         hidact = self.act2hid(act)
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.posemb).flatten(1,2)
 

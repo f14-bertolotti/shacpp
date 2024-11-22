@@ -10,7 +10,7 @@ import os
 def run():
 
     config = experiments.configs.shacwm2
-    config.dir              = "data/shacwm2-transport-a3-2-r"
+    config.dir              = "data/shacwm2-transport-a3-2-r3"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
@@ -31,15 +31,13 @@ def run():
     config.value_stop_threshold = None
     config.reward_stop_threshold = None
     config.world_stop_threshold = None
-    config.var = 5
+    config.var = 1
     config.value_activation = "ReLU"
     config.value_hidden_size = 64
     config.value_feedforward = 128
-    #config.reward_activation = "ReLU"
-    #config.reward_hidden_size = 32
-    #config.reward_feedforward = 64
-
-
+    config.reward_activation = "ReLU"
+    config.reward_hidden_size = 64
+    config.reward_feedforward = 128
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
@@ -73,15 +71,15 @@ def run():
         device           = config.device
     )
 
-    reward_model = models.RewardAFO(
+    reward_model = models.TransformerReward(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
         steps            = config.train_steps        ,
         layers           = config.reward_layers      ,
         hidden_size      = config.reward_hidden_size ,
-        #feedforward_size = config.reward_feedforward ,
-        #heads            = 1                         ,
+        feedforward_size = config.reward_feedforward ,
+        heads            = 1                         ,
         dropout          = config.reward_dropout     ,
         activation       = config.reward_activation  ,
         device           = config.device

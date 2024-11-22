@@ -34,6 +34,10 @@ def train_reward(
         cached_data["rewards"     ][indexes] = episode_data["rewards"]          .flatten(0,1).detach()
 
     if episode % ett == 0: 
+        max_target = cached_data["rewards"][cached_data["mask"]].max().detach()
+        min_target = cached_data["rewards"][cached_data["mask"]].min().detach()
+
+
         dataloader = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(
                 cached_data["prevobs"][cached_data["mask"]] if use_cache else full_observations[:-1] .detach().flatten(0,1),
@@ -61,6 +65,8 @@ def train_reward(
                 logger.info(json.dumps({
                     "episode"         : episode,
                     "epoch"           : epoch,
+                    "max"             : max_target.item(),
+                    "min"             : min_target.item(),
                     "step"            : step,
                     "loss"            : loss.item(),
                     "accuracy"        : tpfn/(tot+1e-7),
