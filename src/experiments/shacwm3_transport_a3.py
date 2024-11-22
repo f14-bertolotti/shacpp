@@ -28,7 +28,7 @@ def run():
     config.value_hidden_size = 64
     config.value_feedforward = 128
     config.value_activation = "ReLU"
-    config.world_layers = 2
+    config.world_layers = 1
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
@@ -62,7 +62,7 @@ def run():
         device           = config.device
     )
 
-    world_model = models.worlds.AxisTransformerWorld(
+    world_model = models.worlds.TransformerEncoderOnlyWorld(
         observation_size = config.observation_size       ,
         action_size      = config.action_size            ,
         agents           = config.agents                 ,
