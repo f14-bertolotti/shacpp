@@ -49,4 +49,3 @@ class TransformerReward(models.Model):
         encoded = self.encoder(hidden)
         rewards = self.hid2rew(encoded).squeeze(-1)
         return rewards
-
