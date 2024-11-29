@@ -20,13 +20,14 @@ def evaluate(
         observations = None, 
         world        = world,
         unroll_steps = steps,
-        policy_model = policy_model,
+        policy_model = policy_model.act,
     )
    
     rewards = eval_episode["rewards"]
     proxy = None
+    indices = torch.randint(0, rewards.size(0)*rewards.size(1), (1000,), device=rewards.device)
     if reward_model is not None: 
-        proxy = reward_model(eval_episode["observations"][:-1].flatten(0,1), eval_episode["actions"].flatten(0,1)).view(eval_episode["rewards"].shape)
+        proxy = reward_model(eval_episode["observations"][:-1].flatten(0,1)[indices], eval_episode["actions"].flatten(0,1)[indices], eval_episode["observations"][1:].flatten(0,1)[indices])
     if  world_model is not None:
         proxy = world_model(eval_episode["observations"].transpose(0,1), eval_episode["actions"][:world_model.steps].transpose(0,1))["rewards"].transpose(0,1)
         rewards = rewards[:world_model.steps]
@@ -40,7 +41,7 @@ def evaluate(
         "done"               : eval_episode["dones"][-1,:,0].sum().int().item(),
         "reward"             : rewards.sum().item() / envs,
     } | ({} if proxy is None else {
-        "reward_acc"         : proxy.isclose(rewards, atol=.1).float().mean().item(),
+        "reward_acc"         : proxy.isclose(rewards.flatten(0,1)[indices], atol=.1).float().mean().item(),
     })))
 
     return {

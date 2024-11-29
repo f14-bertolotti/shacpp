@@ -112,9 +112,6 @@ class Game(InteractiveEnv):
                 values = self.value_model(observations.float()).squeeze(0)
                 self._write_values(2, "vals: " + str(list(map(lambda x:f"{x:1.3f}", values.tolist()))))
 
-
-
-
             self.env.render(
                 mode="rgb_array" if self.save_render else "human",
                 visualize_when_rgb=True,
@@ -142,7 +139,7 @@ def game(
 
     reward_model = None
     value_model  = None
-    if reward_path is not None: 
+    if reward_path is not None:
         reward_checkpoint = torch.load(reward_path, weights_only=True) 
         reward_model = models.TransformerReward(
              observation_size = 11     ,

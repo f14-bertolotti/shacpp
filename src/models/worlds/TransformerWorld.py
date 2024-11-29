@@ -53,6 +53,11 @@ class TransformerWorld(models.Model):
         self.src_mask[self.src_mask == 1] = float("-inf")
         self.src_mask = self.src_mask.to(device)
 
+        self.tgt_mask = torch.tensor([[0 if i1 < i2 else 1 for i1 in range(steps+1) for j1 in range(agents)] for i2 in range(steps+1) for j2 in range(agents)], dtype=torch.float)
+        self.tgt_mask[:agents, :agents] = 0
+        self.tgt_mask[self.tgt_mask == 1] = float("-inf")
+        self.tgt_mask = self.tgt_mask.to(device)
+
 
     def forward(self, observations, actions):
 
@@ -65,7 +70,7 @@ class TransformerWorld(models.Model):
             src = source,
             tgt = target,
             src_mask = self.src_mask,
-            tgt_mask = self.src_mask,
+            tgt_mask = self.tgt_mask,
         ).view(source.size(0), self.steps+1, self.agents, source.size(2))
 
         return {

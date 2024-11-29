@@ -19,28 +19,34 @@ class Policy(models.Model):
         self.action_var = var * torch.ones((action_size,)).to(device)
 
     def sample(self, observations):
-        result        = self(observations)
-        action_mean   = result["actions"]
-        action_std    = torch.diag(self.action_var).unsqueeze(0).unsqueeze(0).repeat(1,action_mean.size(1),1,1)
-        probs         = torch.distributions.MultivariateNormal(action_mean, action_std)
-        actions       = probs.rsample().clamp(-1,+1)
+        action_mean = self(observations)
+        action_std  = torch.diag(self.action_var).unsqueeze(0).unsqueeze(0).repeat(1,action_mean.size(1),1,1)
+        probs       = torch.distributions.MultivariateNormal(action_mean, action_std)
+        actions     = probs.rsample()
 
         return {
-            "actions"  : actions.view(action_mean.shape),
-            "logits"   : result["logits"],
+            "actions"  : actions.clamp(-1,+1).view(action_mean.shape),
+            "logits"   : action_mean,
             "logprobs" : probs.log_prob(actions),
             "entropy"  : probs.entropy().sum(-1)
         }
 
+    def act(self, observations):
+        logits = self(observations)
+        actions = logits.clamp(-1,+1)
+        return {
+            "logits"  : logits,
+            "actions" : actions
+        }
+
     def eval_action(self, observations, actions):
-        result        = self(observations)
-        action_mean   = result["actions"]
-        action_std    = torch.diag(self.action_var).unsqueeze(0).unsqueeze(0).repeat(1,action_mean.size(1),1,1)
-        probs         = torch.distributions.MultivariateNormal(action_mean, action_std)
+        action_mean = self(observations)
+        action_std  = torch.diag(self.action_var).unsqueeze(0).unsqueeze(0).repeat(1,action_mean.size(1),1,1)
+        probs       = torch.distributions.MultivariateNormal(action_mean, action_std)
         
         return {
-            "actions"  : actions,
-            "logits"   : result["logits"],
+            "actions"  : actions_mean.clamp(-1,+1),
+            "logits"   : action_mean,
             "logprobs" : probs.log_prob(actions),
             "entropy"  : probs.entropy().sum(-1)
         }
@@ -91,10 +97,7 @@ class PolicyAFO(Policy):
             hidden = ln(hidden + drop(act(layer(hidden))))
         actions = self.last_act(logits:=self.last_layer(hidden))
 
-        return {
-            "actions" : actions.view(-1, self.agents, self.actions_size),
-            "logits"  : logits .view(-1, self.agents, self.actions_size)
-        }
+        return  actions.view(-1, self.agents, self.actions_size),
 
 class PolicyOFA(Policy):
     """ 
@@ -135,14 +138,11 @@ class PolicyOFA(Policy):
         self.last_layer  = utils.layer_init(self.last_layer, 1.141)
 
     def forward(self, observations):
-        hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(observations))))
+        hidden = self.first_drop(self.first_act(self.first_norm(self.first_layer(observations))))
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):
-            hidden = ln(hidden + drop(act(layer(hidden))))
+            hidden = hidden + drop(act(layer(ln(hidden))))
         actions = self.last_act(logits:=self.last_layer(hidden))
 
-        return {
-            "actions" : actions.view(-1, self.agents, self.actions_size),
-            "logits"  : logits .view(-1, self.agents, self.actions_size)
-        }
+        return  actions.view(-1, self.agents, self.actions_size),
 
 

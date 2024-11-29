@@ -21,7 +21,7 @@ def train_policy(
     dead_runs = dones[0,:,0]
     live_runs = dead_runs.logical_not()
     live_steps = dones[:,live_runs,0].logical_not().sum(0) - 1
-    
+
     # compute loss
     optimizer.zero_grad()
     loss = -(

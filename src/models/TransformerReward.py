@@ -21,7 +21,7 @@ class TransformerReward(models.Model):
         super().__init__(observation_size, action_size, agents, steps)
         activation = {"ReLU":"relu", "GELU":"gelu"}[activation]
 
-        self.first_layer = torch.nn.Linear((observation_size+action_size), hidden_size, device=device)
+        self.first_layer = torch.nn.Linear(observation_size+action_size, hidden_size, device=device)
         self.first_norm  = torch.nn.LayerNorm(hidden_size, device=device)
         self.agent_pos   = torch.nn.Parameter(torch.empty(1, agents, hidden_size, device = device).normal_(0,0.02))
         self.first_drop  = torch.nn.Dropout(dropout)
@@ -43,9 +43,10 @@ class TransformerReward(models.Model):
 
         self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
 
-    def forward(self, obs, act):
+    def forward(self, obs, act, next_obs):
         src = torch.cat([obs, act], dim=-1)
-        hidden = self.first_norm(self.first_drop(self.first_layer(src) + self.agent_pos))
+        hidden = self.first_drop(self.first_norm(self.first_layer(src)))
         encoded = self.encoder(hidden)
+        rewards = self.hid2rew(encoded).squeeze(-1)
+        return rewards
 
-        return self.hid2rew(encoded).squeeze(-1)

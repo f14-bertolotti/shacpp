@@ -26,17 +26,24 @@ def train_reward(
     if use_cache:
         rewards = (episode_data["rewards"]).flatten(0,1).sum(1)
         indexes = utils.bin_dispatch(rewards, bins, cache_size // bins)
+
         cached_data["mask"        ][indexes] = episode_data["dones"][:-1,:,0]   .flatten(0,1).detach().logical_not()
-        cached_data["observations"][indexes] = episode_data["observations"][:-1].flatten(0,1).detach()
+        cached_data["nextobs"     ][indexes] = episode_data["observations"][1:] .flatten(0,1).detach()
+        cached_data["prevobs"     ][indexes] = episode_data["observations"][:-1].flatten(0,1).detach()
         cached_data["actions"     ][indexes] = episode_data["actions"]          .flatten(0,1).detach()
         cached_data["rewards"     ][indexes] = episode_data["rewards"]          .flatten(0,1).detach()
 
     if episode % ett == 0: 
+        max_target = cached_data["rewards"][cached_data["mask"]].max().detach()
+        min_target = cached_data["rewards"][cached_data["mask"]].min().detach()
+
+
         dataloader = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(
-                cached_data["observations"][cached_data["mask"]] if use_cache else episode_data["observations"].detach().flatten(0,1),
-                cached_data["actions"     ][cached_data["mask"]] if use_cache else episode_data["actions"     ].detach().flatten(0,1),
-                cached_data["rewards"     ][cached_data["mask"]] if use_cache else episode_data["rewards"     ].detach().flatten(0,1),
+                cached_data["prevobs"][cached_data["mask"]] if use_cache else full_observations[:-1] .detach().flatten(0,1),
+                cached_data["nextobs"][cached_data["mask"]] if use_cache else full_observations[+1:] .detach().flatten(0,1),
+                cached_data["actions"][cached_data["mask"]] if use_cache else episode_data["actions"].detach().flatten(0,1),
+                cached_data["rewards"][cached_data["mask"]] if use_cache else episode_data["rewards"].detach().flatten(0,1),
             ),
             collate_fn = torch.utils.data.default_collate,
             batch_size = batch_size,
@@ -46,9 +53,9 @@ def train_reward(
 
         for epoch in range(training_epochs):
             tpfn,tot = 0,0
-            for step, (obs, act, tgt) in enumerate(dataloader,1):
+            for step, (prevobs, nextobs, act, tgt) in enumerate(dataloader,1):
                 optimizer.zero_grad()
-                prd = model(obs,act)
+                prd = model(prevobs,act,nextobs)
                 loss = ((prd - tgt)**2).mean()
                 loss.backward()
                 if clip_coefficient is not None: torch.nn.utils.clip_grad_norm_(model.parameters(), clip_coefficient)
@@ -58,6 +65,8 @@ def train_reward(
                 logger.info(json.dumps({
                     "episode"         : episode,
                     "epoch"           : epoch,
+                    "max"             : max_target.item(),
+                    "min"             : min_target.item(),
                     "step"            : step,
                     "loss"            : loss.item(),
                     "accuracy"        : tpfn/(tot+1e-7),

@@ -47,11 +47,11 @@ class RewardAFO(Reward):
 
         super().__init__(observation_size, action_size, agents, steps, layers, hidden_size, dropout, activation, device)
 
-        self.first_layer = torch.nn.Linear((observation_size+action_size)*agents, hidden_size, device=device)
+        self.first_layer = torch.nn.Linear((observation_size*2+action_size)*agents, hidden_size, device=device)
         self.last_layer  = torch.nn.Linear(hidden_size, agents, bias=False, device=device)
 
-    def forward(self, obs, act):
-        src = torch.cat([obs, act], dim=-1).flatten(-2,-1)
+    def forward(self, prev_obs, act, next_obs):
+        src = torch.cat([prev_obs, act, next_obs], dim=-1).flatten(-2,-1)
 
         hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(src))))
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):
@@ -81,11 +81,11 @@ class RewardOFA(Reward):
 
         super().__init__(observation_size, action_size, agents, steps, layers, hidden_size, dropout, activation, device)
         
-        self.first_layer   = torch.nn.Linear((observation_size+action_size), hidden_size, device=device)
+        self.first_layer   = torch.nn.Linear((observation_size*2+action_size), hidden_size, device=device)
         self.last_layer    = torch.nn.Linear(hidden_size, 1, bias=False, device=device)
 
-    def forward(self, obs, act):
-        src = torch.cat([obs, act], dim=-1)
+    def forward(self, prev_obs, act, next_obs):
+        src = torch.cat([prev_obs, act, next_obs], dim=-1)
 
         hidden = self.first_drop(self.first_norm(self.first_act(self.first_layer(src))))
         for layer, act, drop, ln in zip(self.hidden_layers, self.hidden_acts, self.hidden_drops, self.hidden_norms):

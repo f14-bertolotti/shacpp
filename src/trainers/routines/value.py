@@ -45,6 +45,9 @@ def train_value(
         cached_data["targets"     ][indexes] = target_values                    .flatten(0,1).detach()
 
     if episode % ett == 0: 
+        max_target = cached_data["targets"][cached_data["mask"]].max().detach()
+        min_target = cached_data["targets"][cached_data["mask"]].min().detach()
+
         dataloader = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(
                 cached_data["observations"][cached_data["mask"]] if use_cache else episode_data["observations"].detach().flatten(0,1),
@@ -79,6 +82,9 @@ def train_value(
                 logger.info(json.dumps({
                     "episode"         : episode,
                     "epoch"           : epoch,
+                    "accuracy"        : tpfn/(tot+1e-7),
+                    "max"             : max_target.item(),
+                    "min"             : min_target.item(),
                     "step"            : step,
                     "loss"            : loss.item(),
                 }))

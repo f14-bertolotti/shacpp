@@ -27,7 +27,7 @@ class TransformerEncoderOnlyWorld(models.Model):
 
         self.obs2hid = torch.nn.Linear(observation_size, hidden_size, device = device)
         self.act2hid = torch.nn.Linear(action_size     , hidden_size, device = device)
-        self.actpos = torch.nn.Parameter(torch.empty(1, steps, 1, hidden_size, device = device).normal_(0,0.02))
+        self.actpos = torch.nn.Parameter(torch.empty(1, steps+1, 1, hidden_size, device = device).normal_(0,0.02))
         self.agnpos = torch.nn.Parameter(torch.empty(1, 1, agents, hidden_size, device = device).normal_(0,0.02))
 
         self.ln = torch.nn.LayerNorm(hidden_size, device=device)
@@ -56,9 +56,9 @@ class TransformerEncoderOnlyWorld(models.Model):
 
     def forward(self, obs, act):
         hidobs = self.obs2hid(obs[:,[0]])
-        hidact = self.act2hid(act) + self.actpos
+        hidact = self.act2hid(act)
 
-        hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
+        hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.actpos + self.agnpos)
 
         encoded = self.encoder(hidden.flatten(1,2), mask=self.mask).view(hidden.shape)
 
