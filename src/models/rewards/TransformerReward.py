@@ -1,8 +1,13 @@
 import models
 import torch
 
-class TransformerValue(models.Model):
-    """  World Model Transformer. """
+class TransformerReward(models.Model):
+    """  
+        Reward Model that is permutation invariant wrt agents.
+        It uses a transformer architecture to encode the observations.
+        A linear layer to map the encoded observations to the rewards.
+        It ignores the resulting observations from applying the actions to the previous observations.
+    """
 
     def __init__(
         self, 
@@ -21,7 +26,7 @@ class TransformerValue(models.Model):
         super().__init__(observation_size, action_size, agents, steps)
         activation = {"ReLU":"relu", "GELU":"gelu"}[activation]
 
-        self.first_layer = torch.nn.Linear(observation_size, hidden_size, device=device)
+        self.first_layer = torch.nn.Linear(observation_size+action_size, hidden_size, device=device)
         self.first_norm  = torch.nn.LayerNorm(hidden_size, device=device)
         self.first_drop  = torch.nn.Dropout(dropout)
 
@@ -41,8 +46,10 @@ class TransformerValue(models.Model):
 
         self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
 
-    def forward(self, obs):
-        hidden = self.first_drop(self.first_norm(self.first_layer(obs)))
+    def forward(self, prev_obs, act, next_obs):
+        src = torch.cat([prev_obs, act], dim=-1)
+        hidden = self.first_drop(self.first_norm(self.first_layer(src)))
         encoded = self.encoder(hidden)
         rewards = self.hid2rew(encoded).squeeze(-1)
         return rewards
+

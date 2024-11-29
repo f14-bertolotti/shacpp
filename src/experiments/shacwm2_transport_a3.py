@@ -51,6 +51,7 @@ def run():
     config.policy_heads       = 1
     config.policy_dropout     = 0.1
     config.etr = 16 # 512 steps
+    config.compile = False
 
     os.makedirs(config.dir, exist_ok=False)
     os.system(f"cp -r src {config.dir}")
@@ -58,7 +59,7 @@ def run():
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
 
-    value_model  = models.TransformerValue(
+    value_model  = models.values.TransformerValue(
         observation_size = config.observation_size  ,
         action_size      = config.action_size       ,
         agents           = config.agents            ,
@@ -72,7 +73,7 @@ def run():
         device           = config.device
     )
 
-    policy_model = models.TransformerPolicy(
+    policy_model = models.policies.TransformerPolicy(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
@@ -87,7 +88,7 @@ def run():
         device           = config.device
     )
 
-    reward_model = models.TransformerReward(
+    reward_model = models.rewards.TransformerReward(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,

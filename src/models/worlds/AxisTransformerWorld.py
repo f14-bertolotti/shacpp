@@ -2,7 +2,12 @@ import models
 import torch
 
 class AxisTransformerWorld(models.Model):
-    """ World Model AxisTransformer. """
+    """ 
+        Transformer World Model with alternate attention patterns:
+            1) autoregressive attention patterns on actions and agents cannot attend to each other.
+            2) each action at step s can attend to all actions of all other agents at step s.
+        A linear layer is used to map the encoded observations to the rewards and values.
+    """
     def __init__(
         self, 
         observation_size : int,
@@ -51,6 +56,7 @@ class AxisTransformerWorld(models.Model):
 
     @staticmethod
     def generate_agent_mask(agents, steps, device="cpu"):
+        """ Generate autoregressive mask that prevents agents from attending to each other. """
         agent_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device)
         for i in range(steps):
             for j in range(agents):
@@ -60,6 +66,7 @@ class AxisTransformerWorld(models.Model):
 
     @staticmethod
     def generate_steps_mask(agents, steps, device="cpu"):
+        """ generate mask that prevents actions to attend to future and previous actions """
         steps_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device)
         for i in range(steps):
             for j in range(agents):
@@ -68,11 +75,7 @@ class AxisTransformerWorld(models.Model):
         return steps_mask
 
     def forward(self, obs, act):
-<<<<<<< HEAD
         hidobs = self.obs2hid(obs)[:,[0]]
-=======
-        hidobs = self.obs2hid(obs[:,[0]])
->>>>>>> oao-reward
         hidact = self.act2hid(act)
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.posemb).flatten(1,2)
 

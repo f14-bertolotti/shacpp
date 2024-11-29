@@ -1,11 +1,11 @@
-import models
+from models.policies import Policy
 import torch
 
-class TransformerPolicy(models.Policy.Policy):
+class TransformerPolicy(Policy):
     """ 
-        MLP Policy. 
-        The MLP see all observations from all agents.
-        The MLP outputs actions for all agents.
+        Policy that is permutation invariant wrt. the agents. 
+        It uses a transformer architecture to encode the observations.
+        A linear layer to map the encoded observations to the actions.
     """
 
     def __init__(
