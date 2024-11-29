@@ -47,7 +47,7 @@ class MLPPolicyAFO(Policy):
             hidden = ln(hidden + drop(act(layer(hidden))))
         actions = self.last_act(logits:=self.last_layer(hidden))
 
-        return  actions.view(-1, self.agents, self.actions_size),
+        return  actions.view(-1, self.agents, self.actions_size)
 
 class MLPPolicyOFA(Policy):
     """ 
@@ -93,6 +93,6 @@ class MLPPolicyOFA(Policy):
             hidden = hidden + drop(act(layer(ln(hidden))))
         actions = self.last_act(logits:=self.last_layer(hidden))
 
-        return  actions.view(-1, self.agents, self.actions_size),
+        return actions.view(-1, self.agents, self.actions_size)
 
 

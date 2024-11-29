@@ -44,7 +44,7 @@ class Policy(models.Model):
         
         return {
             "logits"   : action_mean,
-            "actions"  : actions_mean.clamp(-1,+1),
+            "actions"  : action_mean.clamp(-1,+1),
             "logprobs" : probs.log_prob(actions),
             "entropy"  : probs.entropy().sum(-1)
         }

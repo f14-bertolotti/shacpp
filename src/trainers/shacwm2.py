@@ -9,10 +9,6 @@ import tqdm
 import vmas
 import os
 
-def hook(grads):
-    grads[:,:,:,4:].fill_(0)
-    return grads
-
 def shacwm2(
         dir                    : str                                    ,
         episodes               : int                                    ,
@@ -80,7 +76,7 @@ def shacwm2(
         "observations" : torch.zeros(world_cache_size, train_steps+1, agents, observation_size, device=device),
         "actions"      : torch.zeros(world_cache_size, train_steps, agents, action_size, device=device),
         "mask"         : torch.zeros(world_cache_size, dtype=torch.bool, device=device),
-    }
+    } if world_cache_size is not None else None
 
     reward_cache = {
         "prevobs" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
@@ -88,13 +84,13 @@ def shacwm2(
         "actions" : torch.zeros(reward_cache_size, agents,      action_size, device=device),
         "rewards" : torch.zeros(reward_cache_size, agents, device=device),
         "mask"    : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
-    }
+    } if reward_cache_size is not None else None
 
     value_cache = {
         "observations" : torch.zeros(value_cache_size, agents, observation_size, device=device),
         "targets"      : torch.zeros(value_cache_size, agents, device=device),
         "mask"         : torch.zeros(value_cache_size, dtype=torch.bool, device=device),
-    }
+    } if value_cache_size is not None else None
 
     if compile:
         policy_model = torch.compile(policy_model)
@@ -130,7 +126,6 @@ def shacwm2(
         obs = world_model(episode_data["observations"].transpose(0,1), episode_data["actions"].transpose(0,1))["observations"].transpose(0,1)
         episode_data["proxy_rewards"] = reward_model(obs[:-1].flatten(0,1), episode_data["actions"].flatten(0,1), obs[1:].flatten(0,1)).view(episode_data["rewards"].shape)
         episode_data["values"]        = value_model (obs[1:].flatten(0,1)).view(episode_data["rewards"].shape)
-        #obs.register_hook(hook)
 
         # train actor model ##########################################
         trainers.routines.train_policy(
@@ -246,8 +241,7 @@ def shacwm2(
 
 
             # early_stopping #########################################
-            if (eval_reward >= (max_reward * early_stopping["max_reward_fraction"])).all(): break
-
+            if utils.is_early_stopping(eval_data["rewards"], eval_data["max_reward"], **early_stopping): break
             del eval_data
 
         # update progress bar ########################################

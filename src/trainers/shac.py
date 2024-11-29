@@ -148,8 +148,7 @@ def shac(
                 }, os.path.join(dir,"best.pkl"))
 
             # early_stopping #########################################
-            if (eval_reward >= (max_reward * early_stopping["max_reward_fraction"])).all(): break
-
+            if utils.is_early_stopping(eval_data["rewards"], eval_data["max_reward"], **early_stopping): break
             del eval_data
 
         # update progress bar ########################################

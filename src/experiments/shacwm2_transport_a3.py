@@ -4,7 +4,6 @@ import trainers
 import models
 import torch
 import utils
-import utils
 import os
 
 def run():
@@ -51,7 +50,6 @@ def run():
     config.policy_heads       = 1
     config.policy_dropout     = 0.1
     config.etr = 16 # 512 steps
-    config.compile = False
 
     os.makedirs(config.dir, exist_ok=False)
     os.system(f"cp -r src {config.dir}")
@@ -133,6 +131,7 @@ def run():
         grad_enabled = False            ,
         seed         = config.seed
     )
+
 
     world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=config. world_learning_rate) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=config.policy_learning_rate)

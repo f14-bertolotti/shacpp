@@ -76,9 +76,9 @@ class Shacwm:
         self.reward_tolerance        = 0.1
         self.world_tolerance         = 0.1
 
-
         self.early_stopping = {
-            "max_reward_fraction" : 0.9,
+            "max_reward_fraction" : 0.95,
+            "max_envs_fraction"   : 0.95
         }
 
 

@@ -24,7 +24,7 @@ def run():
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
 
-    value_model  = models.ValueAFO (
+    value_model  = models.values.MLPValueAFO (
         observation_size = config.observation_size  ,
         action_size      = config.action_size       ,
         agents           = config.agents            ,
@@ -36,7 +36,7 @@ def run():
         device           = config.device
     )
 
-    policy_model = models.PolicyAFO(
+    policy_model = models.policies.MLPPolicyAFO(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
@@ -48,7 +48,7 @@ def run():
         device           = config.device
     )
 
-    reward_model = models.RewardAFO(
+    reward_model = models.rewards.MLPRewardAFO(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,

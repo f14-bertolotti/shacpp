@@ -75,17 +75,18 @@ def shacrm(
         value_model .load_state_dict(checkpoint["value_state_dict" ])
     
     reward_cache = {
-        "observations" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
-        "actions"      : torch.zeros(reward_cache_size, agents,      action_size, device=device),
-        "rewards"      : torch.zeros(reward_cache_size, agents, device=device),
-        "mask"         : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
-    }
+        "prevobs" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
+        "nextobs" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
+        "actions" : torch.zeros(reward_cache_size, agents,      action_size, device=device),
+        "rewards" : torch.zeros(reward_cache_size, agents, device=device),
+        "mask"    : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
+    } if reward_cache_size is not None else None
 
     value_cache = {
         "observations" : torch.zeros(value_cache_size, agents, observation_size, device=device),
         "targets"      : torch.zeros(value_cache_size, agents, device=device),
         "mask"         : torch.zeros(value_cache_size, dtype=torch.bool, device=device),
-    }
+    } if value_cache_size is not None else None
  
    
     prev_observations : torch.Tensor = torch.zeros(train_envs, observation_size, device=device)
@@ -103,8 +104,8 @@ def shacrm(
             unroll_steps  = train_steps,
             policy_model  = policy_model.sample,
         )
-        episode_data["proxy_rewards"] = reward_model(episode_data["observations"].flatten(0,1), episode_data["actions"].flatten(0,1)).view(episode_data["rewards"].shape)
-        episode_data["values"]        = value_model (episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
+        episode_data["proxy_rewards"] = reward_model(episode_data["observations"][:-1].flatten(0,1), episode_data["actions"].flatten(0,1), episode_data["observations"][1:].flatten(0,1)).view(episode_data["rewards"].shape)
+        episode_data["values"]        = value_model (episode_data["observations"][:-1].flatten(0,1)).view(episode_data["rewards"].shape)
     
         # train actor model ###########################################
         trainers.routines.train_policy(
@@ -202,11 +203,11 @@ def shacrm(
             del eval_data
 
         # update progress bar ########################################
-        done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
+        done_train_envs = episode_data["dones"][-1,:,0].sum().int().item()
         bar.set_description(f"reward:{eval_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
         # set up next iteration ######################################
-        prev_observations = episode_data["last_observations"].detach()
-        prev_dones        = episode_data["last_dones"       ].detach()
+        prev_observations = episode_data["observations"][-1].detach()
+        prev_dones        = episode_data["dones"       ][-1].detach()
 
         # clean up ###################################################
         del episode_data

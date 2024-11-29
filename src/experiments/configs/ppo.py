@@ -34,7 +34,8 @@ class Ppo():
         self.device                 = "cuda:0"
 
         self.early_stopping = {
-            "max_reward_fraction" : 0.9,
+            "max_reward_fraction" : 0.95,
+            "max_envs_fraction"   : 0.95
         }
 
 ppo = Ppo()
