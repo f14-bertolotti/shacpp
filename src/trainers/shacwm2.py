@@ -9,6 +9,10 @@ import tqdm
 import vmas
 import os
 
+def hook(grads):
+    grads[:,:,:,4:].fill_(0)
+    return grads
+
 def shacwm2(
         dir                    : str                                    ,
         episodes               : int                                    ,
@@ -125,8 +129,9 @@ def shacwm2(
         # compute rewards and values #################################
         obs = world_model(episode_data["observations"].transpose(0,1), episode_data["actions"].transpose(0,1))["observations"].transpose(0,1)
         episode_data["proxy_rewards"] = reward_model(obs[:-1].flatten(0,1), episode_data["actions"].flatten(0,1), obs[1:].flatten(0,1)).view(episode_data["rewards"].shape)
-        episode_data["values"]        = value_model (obs[:-1].flatten(0,1)).view(episode_data["rewards"].shape)
-    
+        episode_data["values"]        = value_model (obs[1:].flatten(0,1)).view(episode_data["rewards"].shape)
+        #obs.register_hook(hook)
+
         # train actor model ##########################################
         trainers.routines.train_policy(
             episode      = episode                     ,
@@ -212,8 +217,8 @@ def shacwm2(
         # evaluation #################################################
         if episode % etv == 0:
             eval_data = evaluate(
-                episode      = episode      ,
                 policy_model = policy_model ,
+                episode      = episode      ,
                 reward_model = reward_model ,
                 world        = eval_world   ,
                 steps        = eval_steps   ,

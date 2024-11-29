@@ -36,16 +36,16 @@ def train_world2(
         indexes = indexes[alive]
 
         cached_data["mask"        ][indexes] = True
-        cached_data["observations"][indexes] = episode_data["observations"     ].transpose(0,1)[alive].detach()
-        cached_data["actions"     ][indexes] = episode_data["actions"          ].transpose(0,1)[alive].detach()
+        cached_data["observations"][indexes] = episode_data["observations"].transpose(0,1)[alive].detach()
+        cached_data["actions"     ][indexes] = episode_data["actions"     ].transpose(0,1)[alive].detach()
 
     if episode % ett == 0: 
 
         # buid dataloader
         dataloader = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(
-                cached_data["observations"][cached_data["mask"]] if use_cache else episode_data["observations"     ].detach().transpose(0,1)[alive],
-                cached_data["actions"     ][cached_data["mask"]] if use_cache else episode_data["actions"          ].detach().transpose(0,1)[alive],
+                cached_data["observations"][cached_data["mask"]] if use_cache else episode_data["observations"].detach().transpose(0,1)[alive],
+                cached_data["actions"     ][cached_data["mask"]] if use_cache else episode_data["actions"     ].detach().transpose(0,1)[alive],
             ),
             collate_fn = torch.utils.data.default_collate,
             batch_size = batch_size,

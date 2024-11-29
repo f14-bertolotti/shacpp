@@ -28,6 +28,7 @@ class TransformerPolicy(models.Policy.Policy):
 
         self.first_layer = torch.nn.Linear(observation_size, hidden_size, device=device)
         self.first_norm  = torch.nn.LayerNorm(hidden_size, device=device)
+        self.first_drop  = torch.nn.Dropout(dropout)
 
         self.encoder = torch.nn.TransformerEncoder(
             torch.nn.TransformerEncoderLayer(
@@ -44,15 +45,10 @@ class TransformerPolicy(models.Policy.Policy):
         )
 
         self.hid2act  = torch.nn.Linear(hidden_size, action_size, device = device)
-        self.last_act = torch.nn.Tanh()
 
     def forward(self, observations):
-        hidden  = self.first_norm(self.first_layer(observations))
+        hidden  = self.first_drop(self.first_norm(self.first_layer(observations)))
         encoded = self.encoder(hidden)
         logits  = self.hid2act(encoded)
-        actions = self.last_act(logits)
 
-        return {
-            "actions" : actions.view(-1, self.agents, self.actions_size),
-            "logits"  : logits .view(-1, self.agents, self.actions_size)
-        }
+        return logits.view(-1, self.agents, self.actions_size)

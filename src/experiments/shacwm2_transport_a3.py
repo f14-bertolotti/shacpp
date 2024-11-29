@@ -10,7 +10,7 @@ import os
 def run():
 
     config = experiments.configs.shacwm2
-    config.dir              = "data/shacwm2-transport-a3-2-r3"
+    config.dir              = "data/shacwm2-transport-a3-9"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
@@ -32,14 +32,28 @@ def run():
     config.reward_stop_threshold = None
     config.world_stop_threshold = None
     config.var = 1
-    config.value_activation = "ReLU"
-    config.value_hidden_size = 64
-    config.value_feedforward = 128
-    config.reward_activation = "ReLU"
+
+    config.world_activation   = "GELU"
+    config.world_hidden_size  = 64
+    config.world_feedforward  = 128
+    config.world_heads        = 1
+    config.value_activation   = "GELU"
+    config.value_hidden_size  = 64
+    config.value_feedforward  = 128
+    config.value_heads        = 1
+    config.reward_activation  = "GELU"
     config.reward_hidden_size = 64
     config.reward_feedforward = 128
+    config.reward_heads       = 1
+    config.policy_activation  = "GELU"
+    config.policy_hidden_size = 64
+    config.policy_feedforward = 128
+    config.policy_heads       = 1
+    config.policy_dropout     = 0.1
+    config.etr = 16 # 512 steps
 
     os.makedirs(config.dir, exist_ok=False)
+    os.system(f"cp -r src {config.dir}")
     utils.save_config(config.dir, config.__dict__)
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
@@ -52,20 +66,22 @@ def run():
         layers           = config.value_layers      ,
         hidden_size      = config.value_hidden_size ,
         feedforward_size = config.value_feedforward ,
-        heads            = 1,
+        heads            = config.value_heads       ,
         dropout          = config.value_dropout     ,
         activation       = config.value_activation  ,
         device           = config.device
     )
 
-    policy_model = models.PolicyAFO(
+    policy_model = models.TransformerPolicy(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
         steps            = config.train_steps        ,
         layers           = config.policy_layers      ,
         hidden_size      = config.policy_hidden_size ,
+        feedforward_size = config.policy_feedforward ,
         dropout          = config.policy_dropout     ,
+        heads            = config.policy_heads       ,
         activation       = config.policy_activation  ,
         var              = config.var                ,
         device           = config.device
@@ -79,7 +95,7 @@ def run():
         layers           = config.reward_layers      ,
         hidden_size      = config.reward_hidden_size ,
         feedforward_size = config.reward_feedforward ,
-        heads            = 1                         ,
+        heads            = config.reward_heads       ,
         dropout          = config.reward_dropout     ,
         activation       = config.reward_activation  ,
         device           = config.device
@@ -93,6 +109,7 @@ def run():
         layers           = 2*config.world_layers         ,
         hidden_size      = config.world_hidden_size      ,
         dropout          = config.world_dropout          ,
+        heads            = config.world_heads            ,
         device           = config.device                 ,
         compute_reward   = False                         ,
         compute_value    = False                         ,
