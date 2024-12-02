@@ -184,7 +184,7 @@ def shacrm(
                 envs         = eval_envs    ,
                 logger       = eval_logger
             ) 
-            eval_reward = eval_data["rewards"]
+            eval_reward = eval_data["rewards"].sum().item()/eval_envs
             max_reward  = eval_data["max_reward"]
 
             # save best model ##########################################
@@ -202,8 +202,7 @@ def shacrm(
                 }, os.path.join(dir,"best.pkl"))
 
             # early_stopping #########################################
-            if (eval_reward >= (max_reward * early_stopping["max_reward_fraction"])).all(): break
-
+            if utils.is_early_stopping(eval_data["rewards"], eval_data["max_reward"], **early_stopping): break
             del eval_data
 
         # update progress bar ########################################
