@@ -10,51 +10,86 @@ import os
 def run():
 
     config = experiments.configs.shacrm
-    config.dir              = "data/shacrm-transport-a3"
+    config.dir              = "data/shacrm-transport-a3-1"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
 
     config.eval_steps = 512
-    config.policy_dropout = 0.3
+
+    config.value_activation   = "GELU"
+    config.value_hidden_size  = 64
+    config.value_feedforward  = 128
+    config.value_heads        = 1
+    config.reward_activation  = "GELU"
+    config.reward_hidden_size = 64
+    config.reward_feedforward = 128
+    config.reward_heads       = 1
+    config.policy_activation  = "GELU"
     config.policy_hidden_size = 64
+    config.policy_feedforward = 128
+    config.policy_heads       = 1
+    config.policy_dropout     = 0.1
+    config.reward_ett = 10
+    config.value_ett = 10
+    config.reward_epochs = 30
+    config.value_epochs  = 30
+    config.value_cache_size = 10000
+    config.reward_cache_size = 10000
+    config.reward_clip_coefficient = None
+    config.policy_clip_coefficient = 1
+    config. value_clip_coefficient = None
+    config.value_stop_threshold = .99
+    config.reward_stop_threshold = .99
+    config.value_learning_rate = 0.001
+    config.reward_learning_rate = 0.001
+    config.etv = 100
+
+    config.reward_batch_size = 1000
+    config.value_batch_size  = 1000
 
     os.makedirs(config.dir, exist_ok=False)
     utils.save_config(config.dir, config.__dict__)
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
 
-    value_model  = models.values.MLPValueAFO (
+    value_model  = models.values.TransformerValue(
         observation_size = config.observation_size  ,
         action_size      = config.action_size       ,
         agents           = config.agents            ,
         steps            = config.train_steps       ,
         layers           = config.value_layers      ,
         hidden_size      = config.value_hidden_size ,
+        feedforward_size = config.value_feedforward ,
+        heads            = config.value_heads       ,
         dropout          = config.value_dropout     ,
         activation       = config.value_activation  ,
         device           = config.device
     )
 
-    policy_model = models.policies.MLPPolicyAFO(
+    policy_model = models.policies.TransformerPolicy(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
         steps            = config.train_steps        ,
         layers           = config.policy_layers      ,
         hidden_size      = config.policy_hidden_size ,
+        feedforward_size = config.policy_feedforward ,
+        heads            = config.policy_heads       ,
         dropout          = config.policy_dropout     ,
         activation       = config.policy_activation  ,
         device           = config.device
     )
 
-    reward_model = models.rewards.MLPRewardAFO(
+    reward_model = models.rewards.TransformerReward(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
         steps            = config.train_steps        ,
         layers           = config.reward_layers      ,
         hidden_size      = config.reward_hidden_size ,
+        feedforward_size = config.reward_feedforward ,
+        heads            = config.reward_heads       ,
         dropout          = config.reward_dropout     ,
         activation       = config.reward_activation  ,
         device           = config.device

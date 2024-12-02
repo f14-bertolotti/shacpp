@@ -35,13 +35,13 @@ class Shacwm:
         self.reward_learning_rate   = 0.001
         self.value_learning_rate    = 0.001
 
-        self.world_cache_size       = 100000
-        self.reward_cache_size      = 100000
-        self.value_cache_size       = 100000
+        self.world_cache_size       = 10000
+        self.reward_cache_size      = 10000
+        self.value_cache_size       = 10000
 
-        self.world_bins             = 100
-        self.reward_bins            = 100
-        self.value_bins             = 100
+        self.world_bins             = 10
+        self.reward_bins            = 10
+        self.value_bins             = 10
 
         self.world_batch_size       = 2000
         self.value_batch_size       = 2000

@@ -26,26 +26,51 @@ def cartesian_to_polar(cartesian_coords):
     return polar_coords
 
 class Game(InteractiveEnv):
-    def __init__(self, *args, reward_model = None, value_model = None, **kwargs):
+    def __init__(self, *args, reward_model = None, value_model = None, policy_model = None, **kwargs):
         torch.set_printoptions(precision=3, sci_mode=False, linewidth=200)
         self.reward_model = reward_model
-        self.value_model  = value_model
-        if self.reward_model: self.reward_optimizer = torch.optim.Adam(self.reward_model.parameters(), lr=1e-3)
-        if self.value_model : self.value_optimizer  = torch.optim.Adam(self.value_model .parameters(), lr=1e-3)
+        self.value_model  =  value_model
+        self.policy_model = policy_model
+        
 
         super().__init__(*args, **kwargs)
 
     def _cycle(self):
         obs = [torch.tensor(o) for o in self.env.reset()]
 
-        self.lineforms = [rendering.Transform() for agent in self.agents]
-        self.lines = [rendering.Line(
+        # policy lines ############################################################
+        self.lineforms_policy = [rendering.Transform() for agent in self.agents]
+        self.lines_policy = [rendering.Line(
             (0,0),
             (0,.1),
             width=2,
         ) for agent in self.agents]
-        for line,form in zip(self.lines, self.lineforms): line.add_attr(form)
-        for line in self.lines: self.env.unwrapped.viewer.add_geom(line)
+        for line in self.lines_policy: line.set_color(0,0,1)
+        for line,form in zip(self.lines_policy, self.lineforms_policy): line.add_attr(form)
+        for line in self.lines_policy: self.env.unwrapped.viewer.add_geom(line)
+
+        # reward_lines ############################################################
+        self.lineforms_reward = [rendering.Transform() for agent in self.agents]
+        self.lines_reward = [rendering.Line(
+            (0,0),
+            (0,.1),
+            width=2,
+        ) for agent in self.agents]
+        for line in self.lines_reward: line.set_color(1,0,0)
+        for line,form in zip(self.lines_reward, self.lineforms_reward): line.add_attr(form)
+        for line in self.lines_reward: self.env.unwrapped.viewer.add_geom(line)
+
+        # value_lines ############################################################
+        self.lineforms_value = [rendering.Transform() for agent in self.agents]
+        self.lines_value = [rendering.Line(
+            (0,0),
+            (0,.1),
+            width=2,
+        ) for agent in self.agents]
+        for line in self.lines_value: line.set_color(0,1,0)
+        for line,form in zip(self.lines_value, self.lineforms_value): line.add_attr(form)
+        for line in self.lines_value: self.env.unwrapped.viewer.add_geom(line)
+
 
         while True:
 
@@ -61,56 +86,38 @@ class Game(InteractiveEnv):
                 : self.agents[self.current_agent_index].dynamics.needed_action_size
             ]
 
-            for agent, lineform in zip(self.agents,self.lineforms):
-                lineform.set_translation(*agent.state.pos[0])
+            for agent, lineform_policy, lineform_reward, lineform_value in zip(self.agents, self.lineforms_policy, self.lineforms_reward, self.lineforms_value):
+                lineform_policy.set_translation(*agent.state.pos[0])
+                lineform_reward.set_translation(*agent.state.pos[0])
+                lineform_value .set_translation(*agent.state.pos[0])
 
-            prev = torch.stack(obs)
             obs, rew, done, info = self.env.step(action_list)
-            obs = [torch.tensor(o) for o in obs]
+            act = torch.tensor(action_list).float()
+            obs = torch.stack([torch.tensor(o) for o in obs]).float()
             self._write_values(1, "rews: " + str(list(map(lambda x:f"{x:1.3f}", rew))))
-            self._write_values(4, "obs1: " + str(list(map(lambda x:f"{x:1.3f}", obs[0][:5]))))
-            self._write_values(3, "obs2: " + str(list(map(lambda x:f"{x:1.3f}", obs[0][5:]))))
-
-            print("="*100)
-            print("observations")
-            print(torch.stack(obs))
+            self._write_values(4, "obs1: " + str(list(map(lambda x:f"{x:1.3f}", obs[0,:5].tolist()))))
+            self._write_values(3, "obs2: " + str(list(map(lambda x:f"{x:1.3f}", obs[0,5:].tolist()))))
 
             if self.reward_model is not None:
-                observations = torch.stack(obs)
-                val_observations = observations.detach().clone()
-                prev.requires_grad = True
-                observations.requires_grad = True
-                val_observations.requires_grad = True
-                prev.retain_grad()
-                observations.retain_grad()
-                val_observations.retain_grad()
-                actions      = torch.tensor(action_list, requires_grad=True)
-                proxy = self.reward_model(prev.float(), actions.float(), observations.float())
-                proxy_vals = self.value_model(val_observations.float())
-                self._write_values(0, "alts: " + str(list(map(lambda x:f"{x:1.3f}", proxy.squeeze(0).tolist()))))
-
-                del observations.grad
-                del val_observations.grad
-                del prev.grad
-                self.reward_optimizer.zero_grad()
-                self.value_optimizer.zero_grad()
-                proxy.mean().neg().backward()
-                proxy_vals.mean().neg().backward()
-
-                grads = -actions.grad
-                print(actions.grad)
-                print(prev.grad)
-                print(observations.grad)
-                print(val_observations.grad)
-                angles = cartesian_to_polar(grads.float())
-                for angle,lineform in zip(angles,self.lineforms): 
-                    lineform.set_rotation(angle[1]-3.14/2 )
-                print()
+                obs = obs.clone().detach().requires_grad_(True)
+                proxy_rews = self.reward_model(obs, act, None)
+                proxy_rews.sum().neg().backward()
+                angles = cartesian_to_polar(obs.grad[:,:2])
+                for angle,lineform in zip(angles,self.lineforms_reward): lineform.set_rotation(angle[1]-3.14/2 )
+                self._write_values(0, "alts: " + str(list(map(lambda x:f"{x:1.3f}", proxy_rews.squeeze(0).tolist()))))
 
             if self.value_model is not None:
-                observations = torch.stack(obs).unsqueeze(0)
-                values = self.value_model(observations.float()).squeeze(0)
-                self._write_values(2, "vals: " + str(list(map(lambda x:f"{x:1.3f}", values.tolist()))))
+                obs = obs.clone().detach().requires_grad_(True)
+                proxy_vals = self.value_model(obs)
+                obs.sum().neg().backward()
+                angles = cartesian_to_polar(obs.grad[:,:2])
+                for angle,lineform in zip(angles,self.lineforms_value): lineform.set_rotation(angle[1]-3.14/2 )
+                self._write_values(2, "vals: " + str(list(map(lambda x:f"{x:1.3f}", proxy_vals.squeeze(0).tolist()))))
+
+            if self.policy_model is not None:
+                actions = self.policy_model.act(obs)["actions"].squeeze(0)
+                angles  = cartesian_to_polar(actions)
+                for angle,lineform in zip(angles,self.lineforms_policy): lineform.set_rotation(angle[1]-3.14/2 )
 
             self.env.render(
                 mode="rgb_array" if self.save_render else "human",
@@ -127,6 +134,7 @@ class Game(InteractiveEnv):
 @click.option("--agents"      , "agents"      , type=int          , default=3           , help="num. agents"                 )
 @click.option("--reward-path" , "reward_path" , type=click.Path() , default=None        , help="reward model statedict path" )
 @click.option("--value-path"  , "value_path"  , type=click.Path() , default=None        , help="value  model statedict path" )
+@click.option("--policy-path" , "policy_path" , type=click.Path() , default=None        , help="policy model statedict path" )
 @click.option("--keyarg"      , "keyargs"     , type=(str,int)    , default=None        , help="additional arguments", multiple=True)
 def game(
     name        ,
@@ -134,14 +142,16 @@ def game(
     agents      ,
     reward_path ,
     value_path  ,
+    policy_path ,
     keyargs     ,
 ):
 
     reward_model = None
     value_model  = None
+    policy_model = None
     if reward_path is not None:
         reward_checkpoint = torch.load(reward_path, weights_only=True) 
-        reward_model = models.TransformerReward(
+        reward_model = models.rewards.TransformerReward(
              observation_size = 11     ,
              action_size      = 2      ,
              agents           = agents ,
@@ -151,14 +161,14 @@ def game(
              feedforward_size = 128    ,
              heads            = 1      ,
              dropout          = 0      ,
-             activation       = "ReLU" ,
+             activation       = "GELU" ,
              device           = "cpu"
         )
         reward_model.load_state_dict({k.replace("_orig_mod.",""):v for k,v in reward_checkpoint["reward_state_dict"].items()})
 
     if value_path is not None: 
         value_checkpoint = torch.load(value_path, weights_only=True) 
-        value_model = models.TransformerValue(
+        value_model = models.values.TransformerValue(
              observation_size = 11     ,
              action_size      = 2      ,
              agents           = agents ,
@@ -168,11 +178,28 @@ def game(
              feedforward_size = 128    ,
              heads            = 1      ,
              dropout          = 0      ,
-             activation       = "ReLU" ,
+             activation       = "GELU" ,
              device           = "cpu"
 
         )
         value_model .load_state_dict({k.replace("_orig_mod.",""):v for k,v in value_checkpoint[ "value_state_dict"].items()})
+
+    if policy_path is not None:
+        policy_checkpoint = torch.load(policy_path, weights_only=True)
+        policy_model = models.policies.TransformerPolicy(
+            observation_size = 11     ,
+            action_size      = 2      ,
+            agents           = agents ,
+            steps            = 32     ,
+            layers           = 1      ,
+            hidden_size      = 64     ,
+            feedforward_size = 128    ,
+            heads            = 1      ,
+            dropout          = 0      ,
+            activation       = "GELU" ,
+            device           = "cpu"
+        )
+        policy_model.load_state_dict({k.replace("_orig_mod.",""):v for k,v in policy_checkpoint["policy_state_dict"].items()})
 
     Game(
         make_env(
@@ -187,6 +214,7 @@ def game(
         render_name = name          ,
         reward_model = reward_model ,
         value_model  =  value_model ,
+        policy_model = policy_model ,
     )
 
 if __name__ == "__main__":
