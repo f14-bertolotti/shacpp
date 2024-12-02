@@ -4,15 +4,17 @@ import trainers
 import models
 import torch
 import utils
+import utils
 import os
 
 def run():
 
-    config = experiments.configs.shacwm
-    config.dir              = "data/shacwm-transport-a3-9"
+    config = experiments.configs.shacwm2
+    config.dir              = "data/shacwm2-transport-a3-10-42"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
+    config.seed = 42
 
     config.eval_steps = 512
 
@@ -27,9 +29,9 @@ def run():
     config.world_ett = 10
     config.reward_ett = 10
     config.value_ett = 10
-    config.value_stop_threshold = None
+    config.value_stop_threshold  = None
     config.reward_stop_threshold = None
-    config.world_stop_threshold = None
+    config.world_stop_threshold  = None
     config.var = 1
 
     config.world_activation   = "GELU"
@@ -49,7 +51,11 @@ def run():
     config.policy_feedforward = 128
     config.policy_heads       = 1
     config.policy_dropout     = 0.1
-    config.etr = 16 # 512 steps
+    config.etr = 10
+
+    config.reward_batch_size = 4000
+    config.value_batch_size  = 4000
+    config.world_batch_size  = 4000
 
     os.makedirs(config.dir, exist_ok=False)
     os.system(f"cp -r src {config.dir}")
@@ -57,7 +63,7 @@ def run():
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
 
-    value_model  = models.values.TransformerValue(
+    value_model  = models.TransformerValue(
         observation_size = config.observation_size  ,
         action_size      = config.action_size       ,
         agents           = config.agents            ,
@@ -71,7 +77,7 @@ def run():
         device           = config.device
     )
 
-    policy_model = models.policies.TransformerPolicy(
+    policy_model = models.TransformerPolicy(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
@@ -86,7 +92,7 @@ def run():
         device           = config.device
     )
 
-    reward_model = models.rewards.TransformerReward(
+    reward_model = models.TransformerReward(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
@@ -105,7 +111,7 @@ def run():
         action_size      = config.action_size            ,
         agents           = config.agents                 ,
         steps            = config.train_steps            ,
-        layers           = 2*config.world_layers         ,
+        layers           = 2*config.world_layers           ,
         hidden_size      = config.world_hidden_size      ,
         dropout          = config.world_dropout          ,
         heads            = config.world_heads            ,
@@ -132,13 +138,12 @@ def run():
         seed         = config.seed
     )
 
-
     world_model_optimizer  = torch.optim.Adam( world_model.parameters(), lr=config. world_learning_rate) 
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=config.policy_learning_rate)
     reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=config.reward_learning_rate)
     value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=config. value_learning_rate)
 
-    trainers.shacwm(
+    trainers.shacwm2(
         dir                    = config.dir                      ,
         episodes               = config.episodes                 ,
         observation_size       = config.observation_size         ,
