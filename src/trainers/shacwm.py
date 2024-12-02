@@ -220,7 +220,7 @@ def shacwm(
                 envs         = eval_envs    ,
                 logger       = eval_logger
             ) 
-            eval_reward = eval_data["rewards"]
+            eval_reward = eval_data["rewards"].sum().item()/eval_envs
             max_reward  = eval_data["max_reward"]
 
             # save best model ##########################################

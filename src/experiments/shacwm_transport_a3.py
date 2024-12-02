@@ -9,8 +9,8 @@ import os
 
 def run():
 
-    config = experiments.configs.shacwm2
-    config.dir              = "data/shacwm2-transport-a3-10-42"
+    config = experiments.configs.shacwm
+    config.dir              = "data/shacwm-transport-a3-10-42"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
@@ -63,7 +63,7 @@ def run():
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
 
-    value_model  = models.TransformerValue(
+    value_model  = models.values.TransformerValue(
         observation_size = config.observation_size  ,
         action_size      = config.action_size       ,
         agents           = config.agents            ,
@@ -77,7 +77,7 @@ def run():
         device           = config.device
     )
 
-    policy_model = models.TransformerPolicy(
+    policy_model = models.policies.TransformerPolicy(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
@@ -92,7 +92,7 @@ def run():
         device           = config.device
     )
 
-    reward_model = models.TransformerReward(
+    reward_model = models.rewards.TransformerReward(
         observation_size = config.observation_size   ,
         action_size      = config.action_size        ,
         agents           = config.agents             ,
@@ -143,7 +143,7 @@ def run():
     reward_model_optimizer = torch.optim.Adam(reward_model.parameters(), lr=config.reward_learning_rate)
     value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=config. value_learning_rate)
 
-    trainers.shacwm2(
+    trainers.shacwm(
         dir                    = config.dir                      ,
         episodes               = config.episodes                 ,
         observation_size       = config.observation_size         ,
