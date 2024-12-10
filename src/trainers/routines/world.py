@@ -59,14 +59,14 @@ def train_world(
                 optimizer.zero_grad()
                 
                 # forward pass
-                prd_obs = model(obs,act)["observations"]
+                prd = model(obs,act)["observations"]
 
                 # observation loss
-                loss = (((prd_obs - obs)**2)).mean()
+                loss = torch.nn.functional.mse_loss(prd, obs, reduction="mean")
 
                 # accuracy metric
-                tot  += prd_obs.numel()
-                tpfn += prd_obs.isclose(obs,atol=tolerance).sum().item()
+                tot  += prd.numel()
+                tpfn += prd.isclose(obs,atol=tolerance).sum().item()
 
                 # backpropagation
                 loss.backward()
@@ -78,6 +78,7 @@ def train_world(
                     "episode"         : episode,
                     "epoch"           : epoch,
                     "step"            : step,
+                    "shape"           : prd.shape,
                     "accuracy"        : tpfn / (tot + 1e-7),
                     "observation_loss": loss.item(),
                 }))

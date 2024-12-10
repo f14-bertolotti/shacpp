@@ -55,16 +55,24 @@ def train_reward(
             tpfn,tot = 0,0
             for step, (prevobs, nextobs, act, tgt) in enumerate(dataloader,1):
                 optimizer.zero_grad()
+
                 prd = model(prevobs,act,nextobs)
-                loss = ((prd - tgt)**2).mean()
+
+                loss = torch.nn.functional.mse_loss(prd, tgt, reduction="mean")
+
                 loss.backward()
+                
                 if clip_coefficient is not None: torch.nn.utils.clip_grad_norm_(model.parameters(), clip_coefficient)
+                
                 optimizer.step()
 
-                tpfn,tot = tpfn + torch.isclose(prd, tgt, atol=tolerance).float().sum().item(), tot + prd.numel() 
+                tot  += prd.numel()
+                tpfn += torch.isclose(prd, tgt, atol=tolerance).float().sum().item()
+
                 logger.info(json.dumps({
                     "episode"         : episode,
                     "epoch"           : epoch,
+                    "shape"           : prd.shape,
                     "max"             : max_target.item(),
                     "min"             : min_target.item(),
                     "step"            : step,

@@ -30,23 +30,23 @@ class Shacwm:
         self.world_dropout          = 0.0
         self.world_activation       = "ReLU"
 
-        self.world_learning_rate    = 0.001
-        self.policy_learning_rate   = 0.001
-        self.reward_learning_rate   = 0.001
-        self.value_learning_rate    = 0.001
+        self.world_learning_rate    = 0.002
+        self.policy_learning_rate   = 0.002
+        self.reward_learning_rate   = 0.002
+        self.value_learning_rate    = 0.002
 
-        self.world_cache_size       = 10000
-        self.reward_cache_size      = 10000
-        self.value_cache_size       = 10000
+        self.world_cache_size       = 100000
+        self.reward_cache_size      = 100000
+        self.value_cache_size       = 100000
 
-        self.world_bins             = 10
-        self.reward_bins            = 10
-        self.value_bins             = 10
+        self.world_bins             = 100
+        self.reward_bins            = 100
+        self.value_bins             = 100
 
         self.world_batch_size       = 2000
         self.value_batch_size       = 2000
         self.reward_batch_size      = 2000
-
+        
         self.world_epochs           = 10
         self.reward_epochs          = 10
         self.value_epochs           = 10
@@ -57,14 +57,14 @@ class Shacwm:
         self.etr                    = 5
         self.etv                    = 100
 
-        self.compile                = True
+        self.compile                = False
         self.restore_path           = None
         self.device                 = "cuda:0"
 
-        self.value_clip_coefficient  = 1
-        self.reward_clip_coefficient = 1
-        self.world_clip_coefficient  = 1
-        self.policy_clip_coefficient = 1
+        self.value_clip_coefficient  = None
+        self.reward_clip_coefficient = None
+        self.world_clip_coefficient  = None
+        self.policy_clip_coefficient = None
         self.world_ett               = 20
         self.reward_ett              = 20
         self.value_ett               = 20
@@ -76,9 +76,10 @@ class Shacwm:
         self.reward_tolerance        = 0.1
         self.world_tolerance         = 0.1
 
+
         self.early_stopping = {
-            "max_reward_fraction" : 0.95,
-            "max_envs_fraction"   : 0.95
+            "max_reward_fraction" : 0.9,
+            "max_envs_fraction"   : 0.9
         }
 
 

@@ -30,10 +30,10 @@ def train_value(
     use_cache = cached_data is not None and cache_size is not None
 
     target_values = utils.compute_values(
-        values  = episode_data["values"] ,
+        values  = episode_data["values"],
         rewards = episode_data["rewards"],
-        dones   = episode_data["dones"].float()  ,
-        slam    = slam                   ,
+        dones   = episode_data["dones"].float(),
+        slam    = slam,
         gamma   = gamma
     )
 
@@ -41,7 +41,7 @@ def train_value(
         values = (target_values).flatten(0,1).sum(1)
         indexes = utils.bin_dispatch(values, bins, cache_size // bins)
         cached_data["mask"        ][indexes] = episode_data["dones"][:-1,:,0]   .flatten(0,1).detach().logical_not()
-        cached_data["observations"][indexes] = episode_data["observations"][:-1].flatten(0,1).detach()
+        cached_data["observations"][indexes] = episode_data["observations"][1:] .flatten(0,1).detach()
         cached_data["targets"     ][indexes] = target_values                    .flatten(0,1).detach()
 
     if episode % ett == 0: 
@@ -68,10 +68,11 @@ def train_value(
                 prd = model(obs)
 
                 # compute loss
-                loss = ((prd - tgt)**2).mean()
+                loss = torch.nn.functional.mse_loss(prd,tgt,reduction="mean")
 
                 # compute accuracy
-                tpfn,tot = tpfn + torch.isclose(prd, tgt, atol=tolerance).float().sum().item(), tot + tgt.numel()
+                tot  += tgt.numel()
+                tpfn += torch.isclose(prd, tgt, atol=tolerance).float().sum().item()
         
                 # backward pass
                 loss.backward()
@@ -83,6 +84,7 @@ def train_value(
                     "episode"         : episode,
                     "epoch"           : epoch,
                     "accuracy"        : tpfn/(tot+1e-7),
+                    "shape"           : prd.shape,
                     "max"             : max_target.item(),
                     "min"             : min_target.item(),
                     "step"            : step,

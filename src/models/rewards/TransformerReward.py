@@ -26,7 +26,8 @@ class TransformerReward(models.Model):
         super().__init__(observation_size, action_size, agents, steps)
         activation = {"ReLU":"relu", "GELU":"gelu"}[activation]
 
-        self.first_layer = torch.nn.Linear(observation_size+action_size, hidden_size, device=device)
+        self.obs2hid     = torch.nn.Linear(observation_size, hidden_size, device=device)
+        self.act2hid     = torch.nn.Linear(action_size     , hidden_size, device=device)
         self.first_norm  = torch.nn.LayerNorm(hidden_size, device=device)
         self.first_drop  = torch.nn.Dropout(dropout)
 
@@ -46,9 +47,24 @@ class TransformerReward(models.Model):
 
         self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
 
+    def get_src_mask(self, agents, device="cpu", dtype=torch.float32):
+        mask = torch.full((agents*2, agents*2), float('-inf'))
+        for i in range(0,agents):
+            for j in range(agents):
+                mask[i,j] = 0
+        for i in range(agents,agents*2):
+            for j in range(agents,agents*2):
+                mask[i,j] = 0
+        for i in range(0,agents):
+            mask[i,i+agents] = 0
+        for i in range(agents,agents*2):
+            mask[i,i-agents] = 0
+
+
     def forward(self, prev_obs, act, next_obs):
-        src = torch.cat([prev_obs, act], dim=-1)
-        hidden = self.first_drop(self.first_norm(self.first_layer(src)))
+        hidobs = self.obs2hid(prev_obs)
+        hidact = self.act2hid(act)
+        hidden = self.first_drop(self.first_norm(hidobs+hidact))
         encoded = self.encoder(hidden)
         rewards = self.hid2rew(encoded).squeeze(-1)
         return rewards

@@ -10,25 +10,25 @@ import os
 def run():
 
     config = experiments.configs.shacwm
-    config.dir              = "data/shacwm-transport-a3-10-42"
+    config.dir              = "data/shacwm-transport-a3-13-44"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
-    config.seed = 42
+    config.seed = 44
 
     config.eval_steps = 512
 
     config.episodes = 100000
-    config.value_cache_size = 10000
+    config.value_cache_size  = 10000
     config.reward_cache_size = 10000
-    config.world_cache_size = 100000
-    config.value_bins = 10
+    config.world_cache_size  = 100000
+    config.value_bins  = 10
     config.reward_bins = 10
-    config.world_bins = 100
+    config.world_bins  = 100
     config.etv = 100
-    config.world_ett = 10
+    config.world_ett  = 10
     config.reward_ett = 10
-    config.value_ett = 10
+    config.value_ett  = 10
     config.value_stop_threshold  = None
     config.reward_stop_threshold = None
     config.world_stop_threshold  = None
@@ -51,7 +51,7 @@ def run():
     config.policy_feedforward = 128
     config.policy_heads       = 1
     config.policy_dropout     = 0.1
-    config.etr = 10
+    config.etr = 5 
 
     config.reward_batch_size = 4000
     config.value_batch_size  = 4000
@@ -111,7 +111,7 @@ def run():
         action_size      = config.action_size            ,
         agents           = config.agents                 ,
         steps            = config.train_steps            ,
-        layers           = 2*config.world_layers           ,
+        layers           = config.world_layers           ,
         hidden_size      = config.world_hidden_size      ,
         dropout          = config.world_dropout          ,
         heads            = config.world_heads            ,

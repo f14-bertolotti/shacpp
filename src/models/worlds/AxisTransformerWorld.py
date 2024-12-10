@@ -53,6 +53,8 @@ class AxisTransformerWorld(models.Model):
 
         self.steps_mask = AxisTransformerWorld.generate_steps_mask(agents, steps+1, device)
         self.agent_mask = AxisTransformerWorld.generate_agent_mask(agents, steps+1, device)
+        self.merge_mask = (self.steps_mask == 0).logical_or(self.agent_mask == 0)
+        self.merge_mask = torch.where(self.merge_mask, torch.tensor(0.0), torch.tensor(float('-inf')))
 
     @staticmethod
     def generate_agent_mask(agents, steps, device="cpu"):
@@ -61,7 +63,7 @@ class AxisTransformerWorld(models.Model):
         for i in range(steps):
             for j in range(agents):
                 for k in range(agents):
-                    agent_mask[j+i*agents][k+i*agents] = 1
+                    agent_mask[j+i*agents][k+i*agents] = 0
         return agent_mask
 
     @staticmethod
@@ -71,7 +73,7 @@ class AxisTransformerWorld(models.Model):
         for i in range(steps):
             for j in range(agents):
                 for k in range(steps):
-                    if k <= k*agents <= i*agents: steps_mask[j + i*agents][k*agents + j] = 1
+                    if k <= k*agents <= i*agents: steps_mask[j + i*agents][k*agents + j] = 0
         return steps_mask
 
     def forward(self, obs, act):
@@ -80,7 +82,7 @@ class AxisTransformerWorld(models.Model):
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.posemb).flatten(1,2)
 
         for i,layer in enumerate(self.layers):
-            hidden = layer(hidden, src_mask=self.steps_mask if i%2==0 else self.agent_mask)
+            hidden = layer(hidden, src_mask=self.merge_mask)
 
         hidden = hidden.view(hidden.size(0), self.steps+1, self.agents, hidden.size(2))
 
