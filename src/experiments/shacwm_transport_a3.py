@@ -56,12 +56,14 @@ def run():
     config.reward_batch_size = 4000
     config.value_batch_size  = 4000
     config.world_batch_size  = 4000
+    config.is_deterministic  = True
 
     os.makedirs(config.dir, exist_ok=False)
     os.system(f"cp -r src {config.dir}")
     utils.save_config(config.dir, config.__dict__)
     torch.set_float32_matmul_precision("high")
     utils.seed_everything(config.seed)
+    torch.use_deterministic_algorithms(config.is_deterministic)
 
     value_model  = models.values.TransformerValue(
         observation_size = config.observation_size  ,
