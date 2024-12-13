@@ -35,7 +35,7 @@ class AxisTransformerWorld(models.Model):
 
         self.ln = torch.nn.LayerNorm(hidden_size, device=device)
 
-        self.layers = torch.nn.ModuleList([
+        self.encoder = torch.nn.TransformerEncoder(
             torch.nn.TransformerEncoderLayer(
                 dim_feedforward = feedforward_size ,
                 d_model         = hidden_size      ,
@@ -44,8 +44,12 @@ class AxisTransformerWorld(models.Model):
                 nhead           = heads            ,
                 dropout         = dropout          ,
                 batch_first     = True
-            ) for _ in range(layers)
-        ])
+            ), 
+            num_layers           = layers,
+            enable_nested_tensor = False
+        )
+
+
 
         if self.compute_reward: self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
         if self.compute_value : self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
@@ -81,8 +85,7 @@ class AxisTransformerWorld(models.Model):
         hidact = self.act2hid(act)
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.posemb).flatten(1,2)
 
-        for i,layer in enumerate(self.layers):
-            hidden = layer(hidden, src_mask=self.merge_mask)
+        hidden = self.encoder(hidden, mask=self.merge_mask)
 
         hidden = hidden.view(hidden.size(0), self.steps+1, self.agents, hidden.size(2))
 
