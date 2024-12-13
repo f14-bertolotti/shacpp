@@ -212,13 +212,16 @@ def shacwm(
         # evaluation #################################################
         if episode % etv == 0:
             eval_data = evaluate(
-                policy_model = policy_model ,
-                episode      = episode      ,
-                reward_model = reward_model ,
-                world        = eval_world   ,
-                steps        = eval_steps   ,
-                envs         = eval_envs    ,
-                logger       = eval_logger
+                policy_model     = policy_model     ,
+                episode          = episode          ,
+                reward_model     = reward_model     ,
+                world_model      = world_model      ,
+                world            = eval_world       ,
+                steps            = eval_steps       ,
+                envs             = eval_envs        ,
+                reward_tolerance = reward_tolerance ,
+                world_tolerance  = world_tolerance  ,
+                logger           = eval_logger
             ) 
             eval_reward = eval_data["rewards"].sum().item()/eval_envs
             max_reward  = eval_data["max_reward"]
