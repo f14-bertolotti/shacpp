@@ -29,6 +29,9 @@ def train_policy(
         ((gammas * episode_data["values"])[live_steps,live_runs]
     ).sum()) / (steps * envs)
 
+    # add outside action range loss
+    loss += .1 * ((episode_data["logits"][episode_data["logits"].abs()>1]**2)-1).mean()
+
     # backward pass
     loss.backward()
     if clip_coefficient is not None: torch.nn.utils.clip_grad_norm_(policy_model.parameters(), clip_coefficient)

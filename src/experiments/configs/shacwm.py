@@ -57,14 +57,14 @@ class Shacwm:
         self.etr                    = 5
         self.etv                    = 100
 
-        self.compile                = False
+        self.compile                = True
         self.restore_path           = None
         self.device                 = "cuda:0"
 
         self.value_clip_coefficient  = None
         self.reward_clip_coefficient = None
         self.world_clip_coefficient  = None
-        self.policy_clip_coefficient = None
+        self.policy_clip_coefficient = 1
         self.world_ett               = 20
         self.reward_ett              = 20
         self.value_ett               = 20

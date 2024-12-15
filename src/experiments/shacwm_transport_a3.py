@@ -10,30 +10,39 @@ import os
 def run():
 
     config = experiments.configs.shacwm
-    config.dir              = "data/shacwm-transport-a3-13-44"
+    config.dir              = "data/shacwm-transport-a3-26-44"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
     config.seed = 44
 
     config.eval_steps = 512
+    config.train_steps = 32
+
+    config.reward_tolerance = 0.01
+    config.world_tolerance  = 0.01
 
     config.episodes = 100000
-    config.value_cache_size  = 10000
-    config.reward_cache_size = 10000
-    config.world_cache_size  = 100000
-    config.value_bins  = 10
-    config.reward_bins = 10
-    config.world_bins  = 100
+    config.value_cache_size  = 20000
+    config.reward_cache_size = 20000
+    config.world_cache_size  = 20000
+    config.value_bins  = 9
+    config.reward_bins = 9
+    config.world_bins  = 500
     config.etv = 100
     config.world_ett  = 10
     config.reward_ett = 10
     config.value_ett  = 10
+    config.world_epochs  = 10
+    config.reward_epochs = 10
+    config.value_epochs  = 10
     config.value_stop_threshold  = None
     config.reward_stop_threshold = None
     config.world_stop_threshold  = None
     config.var = 1
-
+    
+    config.world_learning_rate = 0.0005
+    config.world_layers       = 2
     config.world_activation   = "GELU"
     config.world_hidden_size  = 64
     config.world_feedforward  = 128
@@ -49,13 +58,13 @@ def run():
     config.policy_activation  = "GELU"
     config.policy_hidden_size = 64
     config.policy_feedforward = 128
-    config.policy_heads       = 1
+    config.policy_heads       = 2
     config.policy_dropout     = 0.1
-    config.etr = 5 
+    config.etr = 10 
 
-    config.reward_batch_size = 4000
-    config.value_batch_size  = 4000
-    config.world_batch_size  = 4000
+    config.reward_batch_size = 2000
+    config.value_batch_size  = 2000
+    config.world_batch_size  = 2000
     config.is_deterministic  = True
 
     os.makedirs(config.dir, exist_ok=False)
@@ -108,7 +117,7 @@ def run():
         device           = config.device
     )
 
-    world_model = models.worlds.AxisTransformerWorld(
+    world_model = models.worlds.TransformerEncoderOnlyWorld(
         observation_size = config.observation_size       ,
         action_size      = config.action_size            ,
         agents           = config.agents                 ,

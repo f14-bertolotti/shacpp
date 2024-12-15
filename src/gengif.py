@@ -1,4 +1,4 @@
-from moviepy.editor import ImageSequenceClip
+from moviepy import ImageSequenceClip
 import environments
 import models 
 import click
@@ -40,7 +40,7 @@ def run(
         seed         = seed    ,
     )
     
-    policy = models.TransformerPolicy(
+    policy = models.policies.TransformerPolicy(
         observation_size = observation_size ,
         action_size      = action_size      ,
         agents           = agents           ,
@@ -50,7 +50,7 @@ def run(
         feedforward_size = 128              ,
         heads            = 1                ,
         dropout          = 0.0              ,
-        activation       = "ReLU"           ,
+        activation       = "GELU"           ,
         device           = device
     )
 

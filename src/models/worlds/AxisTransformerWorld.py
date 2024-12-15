@@ -63,7 +63,7 @@ class AxisTransformerWorld(models.Model):
     @staticmethod
     def generate_agent_mask(agents, steps, device="cpu"):
         """ Generate autoregressive mask that prevents agents from attending to each other. """
-        agent_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device)
+        agent_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device, requires_grad=False)
         for i in range(steps):
             for j in range(agents):
                 for k in range(agents):
@@ -73,7 +73,7 @@ class AxisTransformerWorld(models.Model):
     @staticmethod
     def generate_steps_mask(agents, steps, device="cpu"):
         """ generate mask that prevents actions to attend to future and previous actions """
-        steps_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device)
+        steps_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device, requires_grad=False)
         for i in range(steps):
             for j in range(agents):
                 for k in range(steps):
