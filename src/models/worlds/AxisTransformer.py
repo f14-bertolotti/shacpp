@@ -1,7 +1,7 @@
 import models
 import torch
 
-class AxisTransformerWorld(models.Model):
+class AxisTransformer(models.Model):
     """ 
         Transformer World Model with alternate attention patterns:
             1) autoregressive attention patterns on actions and agents cannot attend to each other.
@@ -55,8 +55,8 @@ class AxisTransformerWorld(models.Model):
         if self.compute_value : self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2obs = torch.nn.Linear(hidden_size, observation_size, device = device)
 
-        self.steps_mask = AxisTransformerWorld.generate_steps_mask(agents, steps+1, device)
-        self.agent_mask = AxisTransformerWorld.generate_agent_mask(agents, steps+1, device)
+        self.steps_mask = AxisTransformer.generate_steps_mask(agents, steps+1, device)
+        self.agent_mask = AxisTransformer.generate_agent_mask(agents, steps+1, device)
         self.merge_mask = (self.steps_mask == 0).logical_or(self.agent_mask == 0)
         self.merge_mask = torch.where(self.merge_mask, torch.tensor(0.0), torch.tensor(float('-inf')))
 
@@ -86,7 +86,6 @@ class AxisTransformerWorld(models.Model):
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.posemb).flatten(1,2)
 
         hidden = self.encoder(hidden, mask=self.merge_mask)
-
         hidden = hidden.view(hidden.size(0), self.steps+1, self.agents, hidden.size(2))
 
         return {

@@ -22,7 +22,7 @@ class Transport(transport.Scenario):
                 # update package color
                 red_color     = torch.tensor(Color.RED  .value, device=self.world.device, dtype=torch.float32)
                 green_color   = torch.tensor(Color.GREEN.value, device=self.world.device, dtype=torch.float32)
-                package.color = torch.where(package.on_goal.unsqueeze(-1).repeat(1,3), red_color, green_color)
+                package.color = torch.where(package.on_goal.unsqueeze(-1).repeat(1,3), green_color, red_color)
 
                 # update reward
                 package_shaping = package.dist_to_goal * self.shaping_factor

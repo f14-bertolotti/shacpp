@@ -23,18 +23,18 @@ def ppo_policy_value(
     ):
 
     # comute values ###########################################################
-    values = value_model(episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
+    values = value_model(episode_data["observations"][:-1].flatten(0,1)).view(episode_data["rewards"].shape)
 
     # compute advantages ######################################################
     advantages = utils.compute_advantages(
-        value_model = value_model                       ,
-        rewards     = episode_data["rewards"]           ,
-        next_obs    = episode_data["last_observations"] ,
-        values      = values                            ,
-        dones       = episode_data["dones"]             ,
-        next_done   = episode_data["last_dones"]        ,
-        gamma       = gamma                             ,
-        gaelambda   = gaelm                             ,
+        value_model = value_model                      ,
+        rewards     = episode_data["rewards"]          ,
+        next_obs    = episode_data["observations"][-1] ,
+        values      = values                           ,
+        dones       = episode_data["dones"][:-1]       ,
+        next_done   = episode_data["dones"][-1]        ,
+        gamma       = gamma                            ,
+        gaelambda   = gaelm                            ,
     )
 
     # compute returns #########################################################
@@ -46,12 +46,12 @@ def ppo_policy_value(
     # create dataloader #######################################################
     dataloader = torch.utils.data.DataLoader(
         torch.utils.data.TensorDataset(
-            episode_data["observations"].detach().flatten(0,1),
-            episode_data["logprobs"    ].detach().flatten(0,1),
-            episode_data["actions"     ].detach().flatten(0,1),
-            values                      .detach().flatten(0,1),
-            advantages                  .detach().flatten(0,1),
-            returns                     .detach().flatten(0,1),
+            episode_data["observations"][1:].detach().flatten(0,1),
+            episode_data["logprobs"    ]    .detach().flatten(0,1),
+            episode_data["actions"     ]    .detach().flatten(0,1),
+            values                          .detach().flatten(0,1),
+            advantages                      .detach().flatten(0,1),
+            returns                         .detach().flatten(0,1),
         ),
         collate_fn = torch.utils.data.default_collate ,
         batch_size = batch_size                       ,

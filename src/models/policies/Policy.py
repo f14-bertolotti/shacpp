@@ -6,15 +6,16 @@ class Policy(models.Model):
 
     def __init__(
         self,
-        observation_size : int              ,
-        action_size      : int              ,
-        agents           : int              ,
-        steps            : int              ,
-        var              : float = 1.0      ,
+        observation_size : int                  ,
+        action_size      : int                  ,
+        agents           : int                  ,
+        steps            : int                  ,
+        var              : float = 1.0          ,
+        action_space     : list[float] = [-1,+1],
         device           : str   = "cuda:0"
     ):
         super().__init__(observation_size, action_size, agents, steps)
-
+        self.action_space = action_space
         self.action_var = var * torch.ones((action_size,)).to(device)
 
     def sample(self, observations):
@@ -24,7 +25,7 @@ class Policy(models.Model):
         actions     = probs.rsample()
 
         return {
-            "actions"  : actions.clamp(-1,+1).view(action_mean.shape),
+            "actions"  : actions.clamp(*self.action_space).view(action_mean.shape),
             "logits"   : action_mean,
             "logprobs" : probs.log_prob(actions),
             "entropy"  : probs.entropy().sum(-1)
@@ -33,7 +34,7 @@ class Policy(models.Model):
     def act(self, observations):
         logits = self(observations)
         return {
-            "actions" : logits.clamp(-1,+1),
+            "actions" : logits.clamp(*self.action_space),
             "logits"  : logits
         }
 
@@ -44,7 +45,7 @@ class Policy(models.Model):
         
         return {
             "logits"   : action_mean,
-            "actions"  : action_mean.clamp(-1,+1),
+            "actions"  : action_mean.clamp(*self.action_space),
             "logprobs" : probs.log_prob(actions),
             "entropy"  : probs.entropy().sum(-1)
         }

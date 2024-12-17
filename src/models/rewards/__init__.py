@@ -1,3 +1,3 @@
-from models.rewards.MLPReward         import MLPRewardOFA
-from models.rewards.MLPReward         import MLPRewardAFO
-from models.rewards.TransformerReward import TransformerReward
+from models.rewards.MLP         import MLPOFA
+from models.rewards.MLP         import MLPAFO
+from models.rewards.Transformer import Transformer

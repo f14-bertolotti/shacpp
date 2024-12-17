@@ -1,7 +1,7 @@
 import models
 import torch
 
-class TransformerEncoderOnlyWorld(models.Model):
+class Transformer(models.Model):
     """  World Model Transformer. """
 
     def __init__(

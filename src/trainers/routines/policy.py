@@ -10,7 +10,8 @@ def train_policy(
         optimizer        : torch.optim.Optimizer  ,
         gammas           : torch.Tensor           ,
         logger           : logging.Logger         ,
-        clip_coefficient : float|None = .5             ,
+        clip_coefficient : float|None = .5        ,
+        out_coefficient  : float = .1             ,
     ):
     """ Train the policy model """
 
@@ -29,8 +30,10 @@ def train_policy(
         ((gammas * episode_data["values"])[live_steps,live_runs]
     ).sum()) / (steps * envs)
 
-    # add outside action range loss
-    loss += .1 * ((episode_data["logits"][episode_data["logits"].abs()>1]**2)-1).mean()
+    # add action space loss
+    if out_coefficient > 0:
+        loss += ((episode_data["logits"][episode_data["logits"] < policy_model.action_space[0]] - policy_model.action_space[0])**2).mean() * out_coefficient
+        loss += ((episode_data["logits"][episode_data["logits"] > policy_model.action_space[1]] - policy_model.action_space[1])**2).mean() * out_coefficient
 
     # backward pass
     loss.backward()

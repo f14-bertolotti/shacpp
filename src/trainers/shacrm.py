@@ -48,9 +48,10 @@ def shacrm(
         value_tolerance        : float                                  ,
         reward_stop_threshold  : float                                  ,
         value_stop_threshold   : float                                  ,
-        policy_clip_coefficient: float                                  ,
-        reward_clip_coefficient: float                                  ,
-        value_clip_coefficient : float                                  ,
+        policy_clip_coefficient: float|None                             ,
+        reward_clip_coefficient: float|None                             ,
+        value_clip_coefficient : float|None                             ,
+        out_coefficient        : float                                  ,
         reward_ett             : int                                    ,
         value_ett              : int                                    ,
     ):
@@ -105,11 +106,11 @@ def shacrm(
             policy_model  = policy_model.sample,
         )
         episode_data["proxy_rewards"] = reward_model(
-                episode_data["observations"][:-1].flatten(0,1), 
-                episode_data["actions"].flatten(0,1), 
-                episode_data["observations"][1:].flatten(0,1)
+            episode_data["observations"][:-1].flatten(0,1), 
+            episode_data["actions"].flatten(0,1), 
+            episode_data["observations"][1:].flatten(0,1)
         ).view(episode_data["rewards"].shape)
-        episode_data["values"]        = value_model (episode_data["observations"][1:].flatten(0,1)).view(episode_data["rewards"].shape)
+        episode_data["values"] = value_model (episode_data["observations"][1:].flatten(0,1)).view(episode_data["rewards"].shape)
     
         # train actor model ###########################################
         trainers.routines.train_policy(
@@ -120,6 +121,7 @@ def shacrm(
             gammas           = gammas                  ,
             logger           = policy_logger           ,
             clip_coefficient = policy_clip_coefficient ,
+            out_coefficient  = out_coefficient
         )
          
         # train reward model ##########################################
@@ -193,7 +195,7 @@ def shacrm(
                 torch.save({
                     "policy_state_dict"           : policy_model.state_dict()           ,
                     "reward_state_dict"           : reward_model.state_dict()           ,
-                    "value_state_dict"            : value_model .state_dict()           ,
+                    "value_state_dict"            : value_model.state_dict()            ,
                     "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
                     "reward_optimizer_state_dict" : reward_model_optimizer.state_dict() ,
                     "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
@@ -201,13 +203,15 @@ def shacrm(
                     "episode"                     : episode                             ,
                 }, os.path.join(dir,"best.pkl"))
 
+
             # early_stopping #########################################
             if utils.is_early_stopping(eval_data["rewards"], eval_data["max_reward"], **early_stopping): break
             del eval_data
 
         # update progress bar ########################################
         done_train_envs = episode_data["dones"][-1,:,0].sum().int().item()
-        bar.set_description(f"reward:{eval_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
+        train_reward    = episode_data["rewards"].sum().item()/train_envs
+        bar.set_description(f"evalrew:{eval_reward:5.3f}, trainrew:{train_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
         # set up next iteration ######################################
         prev_observations = episode_data["observations"][-1].detach()
         prev_dones        = episode_data["dones"       ][-1].detach()
@@ -218,12 +222,12 @@ def shacrm(
     torch.save({
         "policy_state_dict"           : policy_model.state_dict()           ,
         "reward_state_dict"           : reward_model.state_dict()           ,
-        "value_state_dict"            : value_model .state_dict()           ,
+        "value_state_dict"            : value_model.state_dict()            ,
         "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
         "reward_optimizer_state_dict" : reward_model_optimizer.state_dict() ,
         "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
         "episode"                     : episodes                            ,
-        "best_reward"                 : best_reward
+        "best_reward"                 : best_reward                         ,
     }, os.path.join(dir,"last.pkl"))
 
 

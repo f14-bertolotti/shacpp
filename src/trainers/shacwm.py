@@ -49,10 +49,11 @@ def shacwm(
         restore_path           : str|None                               ,
         device                 : str                                    ,
         early_stopping         : dict                                   ,
-        value_clip_coefficient : float                                  ,
-        reward_clip_coefficient: float                                  ,
-        world_clip_coefficient : float                                  ,
-        policy_clip_coefficient: float                                  ,
+        value_clip_coefficient : float|None                             ,
+        reward_clip_coefficient: float|None                             ,
+        world_clip_coefficient : float|None                             ,
+        policy_clip_coefficient: float|None                             ,
+        out_coefficient        : float                                  ,
         world_tolerance        : float                                  ,
         reward_tolerance       : float                                  ,
         value_tolerance        : float                                  ,
@@ -129,13 +130,14 @@ def shacwm(
 
         # train actor model ##########################################
         trainers.routines.train_policy(
-            episode      = episode                     ,
-            policy_model = policy_model                ,
-            episode_data = episode_data                ,
-            optimizer    = policy_model_optimizer      ,
-            gammas       = gammas                      ,
-            logger       = policy_logger               ,
+            episode          = episode                 ,
+            policy_model     = policy_model            ,
+            episode_data     = episode_data            ,
+            optimizer        = policy_model_optimizer  ,
+            gammas           = gammas                  ,
+            logger           = policy_logger           ,
             clip_coefficient = policy_clip_coefficient ,
+            out_coefficient  = out_coefficient
         )
          
         # train world model ##########################################
@@ -249,7 +251,8 @@ def shacwm(
 
         # update progress bar ########################################
         done_train_envs = episode_data["dones"][-1,:,0].sum().int().item()
-        bar.set_description(f"reward:{eval_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
+        train_reward    = episode_data["rewards"].sum().item()/train_envs
+        bar.set_description(f"evalrew:{eval_reward:5.3f}, trainrew:{train_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
         # set up next iteration ######################################
         prev_observations = episode_data["observations"][-1].detach()
         prev_dones        = episode_data["dones"       ][-1].detach()

@@ -2,7 +2,7 @@ from models.policies.Policy import Policy
 import torch
 import utils
 
-class MLPPolicyAFO(Policy):
+class MLPAFO(Policy):
     """ 
         MLP Policy. 
         The MLP see all observations from all agents.
@@ -15,6 +15,7 @@ class MLPPolicyAFO(Policy):
         action_size      : int              ,
         agents           : int              ,
         steps            : int              ,
+        action_space     : list[float]      ,
         hidden_size      : int   = 128      ,
         layers           : int   = 1        ,
         dropout          : float = 0.0      ,
@@ -23,7 +24,16 @@ class MLPPolicyAFO(Policy):
         device           : str   = "cuda:0"
     ):
 
-        super().__init__(observation_size, action_size, agents, steps, var, device)
+        super().__init__(
+            observation_size = observation_size ,
+            action_size      = action_size      ,
+            agents           = agents           ,
+            steps            = steps            ,
+            var              = var              ,
+            action_space     = action_space     ,
+            device           = device
+        )
+
         self.first_act     = getattr(torch.nn, activation)()
         self.first_drop    = torch.nn.Dropout(dropout)
         self.first_norm    = torch.nn.LayerNorm(hidden_size, device=device)
@@ -49,7 +59,7 @@ class MLPPolicyAFO(Policy):
 
         return  actions.view(-1, self.agents, self.actions_size)
 
-class MLPPolicyOFA(Policy):
+class MLPOFA(Policy):
     """ 
         MLP Policy.
         One MLP shared between all agents.

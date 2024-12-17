@@ -1,12 +1,13 @@
-from models.policies import Policy
+import models
 import torch
 
-class TransformerPolicy(Policy):
-    """ 
-        Policy that is permutation invariant wrt. the agents. 
+class Transformer(models.Model):
+    """  
+        Value Model that is permutation invariant wrt agents.
         It uses a transformer architecture to encode the observations.
-        A linear layer to map the encoded observations to the actions.
+        A linear layer to map the encoded observations to the values.
     """
+
 
     def __init__(
         self, 
@@ -20,10 +21,9 @@ class TransformerPolicy(Policy):
         feedforward_size : int   = 512      ,
         dropout          : float = 0.0      ,
         activation       : str   = "ReLU"   ,
-        var              : float = 1.0      ,
         device           : str   = "cuda:0" ,
     ):
-        super().__init__(observation_size, action_size, agents, steps, var)
+        super().__init__(observation_size, action_size, agents, steps)
         activation = {"ReLU":"relu", "GELU":"gelu"}[activation]
 
         self.first_layer = torch.nn.Linear(observation_size, hidden_size, device=device)
@@ -44,11 +44,10 @@ class TransformerPolicy(Policy):
             enable_nested_tensor = False
         )
 
-        self.hid2act  = torch.nn.Linear(hidden_size, action_size, device = device)
+        self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
 
-    def forward(self, observations):
-        hidden  = self.first_drop(self.first_norm(self.first_layer(observations)))
+    def forward(self, obs):
+        hidden = self.first_drop(self.first_norm(self.first_layer(obs)))
         encoded = self.encoder(hidden)
-        logits  = self.hid2act(encoded)
-
-        return logits.view(-1, self.agents, self.actions_size)
+        rewards = self.hid2rew(encoded).squeeze(-1)
+        return rewards

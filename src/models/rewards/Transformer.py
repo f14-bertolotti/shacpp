@@ -1,7 +1,7 @@
 import models
 import torch
 
-class TransformerReward(models.Model):
+class Transformer(models.Model):
     """  
         Reward Model that is permutation invariant wrt agents.
         It uses a transformer architecture to encode the observations.
@@ -45,20 +45,6 @@ class TransformerReward(models.Model):
         )
 
         self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
-
-    def get_src_mask(self, agents, device="cpu", dtype=torch.float32):
-        mask = torch.full((agents*2, agents*2), float('-inf'))
-        for i in range(0,agents):
-            for j in range(agents):
-                mask[i,j] = 0
-        for i in range(agents,agents*2):
-            for j in range(agents,agents*2):
-                mask[i,j] = 0
-        for i in range(0,agents):
-            mask[i,i+agents] = 0
-        for i in range(agents,agents*2):
-            mask[i,i-agents] = 0
-
 
     def forward(self, prev_obs, act, next_obs):
         src = torch.cat([prev_obs, act], -1) 

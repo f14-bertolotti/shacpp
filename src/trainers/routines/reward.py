@@ -34,9 +34,6 @@ def train_reward(
         cached_data["rewards"     ][indexes] = episode_data["rewards"]          .flatten(0,1).detach()
 
     if episode % ett == 0: 
-        max_target = cached_data["rewards"][cached_data["mask"]].max().detach()
-        min_target = cached_data["rewards"][cached_data["mask"]].min().detach()
-
 
         dataloader = torch.utils.data.DataLoader(
             torch.utils.data.TensorDataset(
@@ -73,8 +70,6 @@ def train_reward(
                     "episode"         : episode,
                     "epoch"           : epoch,
                     "shape"           : prd.shape,
-                    "max"             : max_target.item(),
-                    "min"             : min_target.item(),
                     "step"            : step,
                     "loss"            : loss.item(),
                     "accuracy"        : tpfn/(tot+1e-7),
