@@ -90,7 +90,7 @@ class AxisTransformer(models.Model):
 
         return {
             "observations" : self.hid2obs(hidden),
-            "rewards"      : self.hid2rew(hidden)[:,1:].squeeze(-1) if self.compute_reward else None,
-            "values"       : self.hid2val(hidden)[:,1:].squeeze(-1) if self.compute_value  else None
+            "rewards"      : self.hid2rew(hidden).squeeze(-1) if self.compute_reward else None,
+            "values"       : self.hid2val(hidden).squeeze(-1) if self.compute_value  else None
         } 
 

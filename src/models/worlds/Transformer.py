@@ -64,6 +64,6 @@ class Transformer(models.Model):
 
         return {
             "observations" : self.hid2obs(encoded),
-            "rewards"      : self.hid2rew(encoded)[:,1:].squeeze(-1) if self.compute_reward else None,
-            "values"       : self.hid2val(encoded)[:,1:].squeeze(-1) if self.compute_value  else None,
+            "rewards"      : self.hid2rew(encoded).squeeze(-1) if self.compute_reward else None,
+            "values"       : self.hid2val(encoded).squeeze(-1) if self.compute_value  else None,
         }

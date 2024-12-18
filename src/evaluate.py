@@ -63,7 +63,7 @@ def evaluate(
         "ground_reward_accuracy" : ground_proxy_rewards.isclose(rewards.flatten(0,1)[indices], atol=reward_tolerance).float().mean().item(),
     }) | ({} if proxy_observations  is None else {
         "observation_accuracy"   : proxy_observations.isclose(eval_episode["observations"][:world_model.steps+1], atol=world_tolerance).float().mean().item(),
-    }) | ({} if proxy_observations  is None else {
+    }) | ({} if proxy_rewards       is None else {
         "proxy_reward_accuracy"  : proxy_rewards.isclose(eval_episode["rewards"][:world_model.steps], atol=reward_tolerance).float().mean().item(),
     })))
 
