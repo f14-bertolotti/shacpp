@@ -33,5 +33,53 @@ def get_environment(name:str, envs:int, agents:int, device:str, grad_enabled:boo
                 seed               = seed         ,
             )
 
+        case "sampling" :
+            return vmas.simulator.environment.Environment(
+                environments.scenarios.Sampling() ,
+                n_agents           = agents       ,
+                num_envs           = envs         ,
+                device             = device       ,
+                grad_enabled       = grad_enabled ,
+                continuous_actions = True         ,
+                dict_spaces        = False        ,
+                seed               = seed         ,
+            )
+
+        case "reverse_transport" :
+            return vmas.simulator.environment.Environment(
+                environments.scenarios.ReverseTransport(),
+                package_mass       = 10.0         ,
+                n_agents           = agents       ,
+                num_envs           = envs         ,
+                device             = device       ,
+                grad_enabled       = grad_enabled ,
+                continuous_actions = True         ,
+                dict_spaces        = False        ,
+                seed               = seed         ,
+            )
+
+        case "flocking" :
+            return vmas.simulator.environment.Environment(
+                environments.scenarios.Flocking(),
+                n_agents           = agents       ,
+                num_envs           = envs         ,
+                device             = device       ,
+                grad_enabled       = grad_enabled ,
+                continuous_actions = True         ,
+                dict_spaces        = False        ,
+                seed               = seed         ,
+            )
+
+        case "discovery" :
+            return vmas.simulator.environment.Environment(
+                environments.scenarios.Discovery(),
+                n_agents           = agents       ,
+                num_envs           = envs         ,
+                device             = device       ,
+                grad_enabled       = grad_enabled ,
+                continuous_actions = True         ,
+                dict_spaces        = False        ,
+                seed               = seed         ,
+            )
         case _:
             raise ValueError(f"Unknown environment {name}.")

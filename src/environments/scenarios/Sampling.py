@@ -5,8 +5,6 @@ import torch
 class Sampling(sampling.Scenario):
 
     def max_rewards(self):
-        # todo
-        max_rewards = self.shaping_factor * len(self.world.agents)
-        return max_rewards
+        return 100000 # TODO - this is a placeholder value
 
 
