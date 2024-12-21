@@ -1,4 +1,4 @@
-class Shacwm:
+class Shacum:
     def __init__(self):
 
         # environment configurations
@@ -17,7 +17,7 @@ class Shacwm:
         self.policy_var             = 1
 
         # world model configuration
-        self.world_layers           = 1
+        self.world_layers           = 3
         self.world_heads            = 1
         self.world_hidden_size      = 64
         self.world_feedforward      = 128

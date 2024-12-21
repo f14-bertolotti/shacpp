@@ -42,8 +42,8 @@ class Shacrm:
         self.policy_clip_coefficient = 1
 
         # cache sizes for value/reward/world models
-        self.reward_cache_size      = 10000
-        self.value_cache_size       = 10000
+        self.reward_cache_size      = 30000
+        self.value_cache_size       = 30000
 
         # batch sizes for value/reward/world models
         self.value_batch_size       = 1000

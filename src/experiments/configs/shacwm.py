@@ -33,7 +33,7 @@ class Shacwm:
         self.reward_activation      = "ReLU"
 
         # world model configuration
-        self.world_layers           = 1
+        self.world_layers           = 3
         self.world_heads            = 1
         self.world_hidden_size      = 64
         self.world_feedforward      = 128
@@ -54,8 +54,8 @@ class Shacwm:
 
         # cache sizes for value/reward/world models
         self.world_cache_size       = 30000
-        self.reward_cache_size      = 10000
-        self.value_cache_size       = 10000
+        self.reward_cache_size      = 30000
+        self.value_cache_size       = 30000
 
         # batch sizes for value/reward/world models
         self.world_batch_size       = 1000

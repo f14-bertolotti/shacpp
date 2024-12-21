@@ -32,7 +32,7 @@ class Shac:
         self.policy_clip_coefficient = 1
 
         # cache sizes for value/world models
-        self.value_cache_size       = 10000
+        self.value_cache_size       = 30000
 
         # batch sizes for value/world models
         self.value_batch_size       = 1000

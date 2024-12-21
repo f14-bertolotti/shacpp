@@ -9,23 +9,18 @@ import os
 
 def run():
 
-    config = experiments.configs.shacwm # base configuration
+    config = experiments.configs.shacum # base configuration
     config.seed             = 42
     config.environment      = "transport"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
     config.action_space     = [-1,+1]
-    config.dir              = f"data/shacwm-{config.environment}-a{config.agents}-s{config.seed}"
+    config.dir              = f"data/shacum-{config.environment}-a{config.agents}-s{config.seed}"
 
     # redefine configuration for transport environment
     config.eval_steps = 512
     config.etr        = 10
-
-    # To Be Removed
-    config.compile    = False
-    config.etv = 10
-    config.is_deterministic = False
 
     # setup
     os.makedirs(config.dir, exist_ok=False)
