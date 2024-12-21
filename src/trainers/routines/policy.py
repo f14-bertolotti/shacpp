@@ -27,8 +27,8 @@ def train_policy(
     optimizer.zero_grad()
     loss = -(
         (episode_data["proxy_rewards"] * gammas * dones.logical_not()).sum() + 
-        ((gammas * episode_data["values"])[live_steps,live_runs]
-    ).sum()) / (steps * envs)
+        ((gammas * episode_data["values"])[live_steps,live_runs]).sum()
+    ) / (steps * envs)
 
     # add action space loss
     if out_coefficient > 0:
