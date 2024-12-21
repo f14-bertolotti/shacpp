@@ -6,6 +6,8 @@ import models
 import click
 import torch
 
+import environments
+
 def compute_angle(v1, v2):
     v1 = v1.flatten()
     v2 = v2.flatten()
@@ -201,16 +203,17 @@ def game(
         )
         policy_model.load_state_dict({k.replace("_orig_mod.",""):v for k,v in policy_checkpoint["policy_state_dict"].items()})
 
+    env = environments.utils.get_environment(
+        name = name, 
+        envs = 1, 
+        agents = agents, 
+        device = "cpu", 
+        grad_enabled = False, 
+        seed = seed,
+    )
+
     Game(
-        make_env(
-            scenario = name        ,
-            num_envs = 1           ,
-            n_agents = agents      ,
-            device   = "cpu"       ,
-            seed     = seed        ,
-            wrapper  = Wrapper.GYM ,
-            **dict(keyargs)
-        ),
+        Wrapper.GYM.get_env(env),
         render_name = name          ,
         reward_model = reward_model ,
         value_model  =  value_model ,
