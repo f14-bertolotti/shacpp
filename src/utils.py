@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import random
 import numpy
@@ -206,4 +207,19 @@ class FeedForward(torch.nn.Module):
         return self.lnrm(x + self.lin2(self.actv(self.lin1(self.drop(x)))))
 
 
+def hash_module(module:torch.nn.Module) -> str:
+    encoded_string = (str(module) + "".join([str(params) for params in module.parameters()])).encode('utf-8')
+    hash_object = hashlib.sha256(encoded_string)
+    return hash_object.hexdigest()
+
+def hash_tensor(tensor:torch.Tensor) -> str:
+    encoded_string = str(tensor).encode('utf-8')
+    hash_object = hashlib.sha256(encoded_string)
+    return hash_object.hexdigest()
+
+def is_early_stopping(eval_reward:torch.Tensor, max_reward:torch.Tensor, max_reward_fraction:float, max_envs_fraction:float) -> bool:
+    """ Check if the early stopping condition is met """
+    admissable_reward = max_reward * max_reward_fraction
+    admissable_environments = (eval_reward.sum(0).sum(1) >= admissable_reward).sum().item()
+    return admissable_environments >= max_envs_fraction * eval_reward.size(1)
 

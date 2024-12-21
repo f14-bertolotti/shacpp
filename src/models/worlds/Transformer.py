@@ -1,7 +1,7 @@
 import models
 import torch
 
-class TransformerWorld(models.Model):
+class Transformer(models.Model):
     """  World Model Transformer. """
 
     def __init__(
@@ -27,7 +27,7 @@ class TransformerWorld(models.Model):
 
         self.obs2hid = torch.nn.Linear(observation_size, hidden_size, device = device)
         self.act2hid = torch.nn.Linear(action_size     , hidden_size, device = device)
-        self.actpos = torch.nn.Parameter(torch.empty(1, steps, 1, hidden_size, device = device).normal_(0,0.02))
+        self.actpos = torch.nn.Parameter(torch.empty(1, steps+1, 1, hidden_size, device = device).normal_(0,0.02))
         self.agnpos = torch.nn.Parameter(torch.empty(1, 1, agents, hidden_size, device = device).normal_(0,0.02))
 
         self.ln = torch.nn.LayerNorm(hidden_size, device=device)
@@ -55,16 +55,15 @@ class TransformerWorld(models.Model):
         self.mask = self.mask.to(device)
 
     def forward(self, obs, act):
+        hidobs = self.obs2hid(obs[:,[0]])
+        hidact = self.act2hid(act)
 
-        hidobs = self.obs2hid(obs)
-        hidact = self.act2hid(act) + self.actpos
-
-        hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.agnpos)
+        hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.actpos + self.agnpos)
 
         encoded = self.encoder(hidden.flatten(1,2), mask=self.mask).view(hidden.shape)
 
         return {
             "observations" : self.hid2obs(encoded),
-            "rewards"      : self.hid2rew(encoded)[:,1:].squeeze(-1) if self.compute_reward else None,
-            "values"       : self.hid2val(encoded)[:,1:].squeeze(-1) if self.compute_value  else None,
+            "rewards"      : self.hid2rew(encoded).squeeze(-1) if self.compute_reward else None,
+            "values"       : self.hid2val(encoded).squeeze(-1) if self.compute_value  else None,
         }

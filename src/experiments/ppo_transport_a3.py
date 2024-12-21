@@ -9,18 +9,20 @@ import os
 
 def run():
 
-    config = experiments.configs.shacrm # base configuration
+    config = experiments.configs.ppo # base configuration
     config.seed             = 42
     config.environment      = "transport"
     config.observation_size = 11
     config.action_size      = 2
     config.agents           = 3
     config.action_space     = [-1.0,+1.0]
-    config.dir              = f"data/shac-{config.environment}-a{config.agents}-s{config.seed}"
+    config.dir              = f"data/ppo-{config.environment}-a{config.agents}-s{config.seed}"
 
     # redefine configuration for transport environment
     config.eval_steps = 512
     config.etr        = 10
+    config.compile = False
+    config.etv = 10
 
     # setup
     os.makedirs(config.dir, exist_ok=False)
@@ -37,7 +39,7 @@ def run():
         agents       = config.agents      ,
         device       = config.device      ,
         seed         = config.seed        ,
-        grad_enabled = True               ,
+        grad_enabled = False              ,
     )
 
     eval_world = environments.get_environment(
@@ -84,42 +86,33 @@ def run():
     policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=config.policy_learning_rate)
     value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=config. value_learning_rate)
 
-    policy_model_optimizer = torch.optim.Adam(policy_model.parameters(), lr=config.policy_learning_rate)
-    value_model_optimizer  = torch.optim.Adam( value_model.parameters(), lr=config. value_learning_rate)
+    trainers.ppo(
+        dir                    = config.dir              ,
+        episodes               = config.episodes         ,
+        observation_size       = config.observation_size ,
+        action_size            = config.action_size      ,
+        agents                 = config.agents           ,
+        train_envs             = config.train_envs       ,
+        train_steps            = config.train_steps      ,
+        eval_envs              = config.eval_envs        ,
+        eval_steps             = config.eval_steps       ,
+        policy_model           = policy_model            ,
+        value_model            = value_model             ,
+        policy_model_optimizer = policy_model_optimizer  ,
+        value_model_optimizer  = value_model_optimizer   ,
+        train_world            = train_world             ,
+        eval_world             = eval_world              ,
+        batch_size             = config.batch_size       ,
+        epochs                 = config.epochs           ,
+        gamma_factor           = config.gamma_factor     ,
+        etr                    = config.etr              ,
+        etv                    = config.etv              ,
+        compile                = config.compile          ,
+        restore_path           = config.restore_path     ,
+        early_stopping         = config.early_stopping   ,
+    )
 
-    trainers.shac(
-        dir                    = config.dir                     ,
-        episodes               = config.episodes                ,
-        observation_size       = config.observation_size        ,
-        action_size            = config.action_size             ,
-        agents                 = config.agents                  ,
-        train_envs             = config.train_envs              ,
-        train_steps            = config.train_steps             ,
-        eval_steps             = config.eval_steps              ,
-        eval_envs              = config.eval_envs               ,
-        policy_model           = policy_model                   ,
-        value_model            = value_model                    ,
-        policy_model_optimizer = policy_model_optimizer         ,
-        value_model_optimizer  = value_model_optimizer          ,
-        train_world            = train_world                    ,
-        eval_world             = eval_world                     ,
-        value_batch_size       = config.value_batch_size        ,
-        value_epochs           = config.value_epochs            ,
-        value_tolerance        = config.value_tolerance         ,
-        value_stop_threshold   = config.value_stop_threshold    ,
-        policy_clip_coefficient= config.policy_clip_coefficient ,
-        value_clip_coefficient = config.value_clip_coefficient  ,
-        out_coefficient        = config.out_coefficient         ,
-        value_ett              = config.value_ett               ,
-        gamma_factor           = config.gamma_factor            ,
-        lambda_factor          = config.lambda_factor           ,
-        etr                    = config.etr                     ,
-        etv                    = config.etv                     ,
-        compile                = config.compile                 ,
-        restore_path           = config.restore_path            ,
-        device                 = config.device                  ,
-        early_stopping         = config.early_stopping          ,
-    ) 
+ 
 
 if __name__ == "__main__":
     run()

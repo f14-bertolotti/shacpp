@@ -1,7 +1,7 @@
 import models
 import torch
 
-class Value(models.Model):
+class MLP(models.Model):
     """ base MLP Value """
     def __init__(
         self, 
@@ -27,7 +27,7 @@ class Value(models.Model):
         self.hidden_norms  = torch.nn.ModuleList([torch.nn.LayerNorm(hidden_size, device=device) for _ in range(layers)])
 
 
-class ValueAFO(Value):
+class MLPAFO(MLP):
     """ 
         Value MLP.
         The MLP sees all observations from all agents.
@@ -59,7 +59,7 @@ class ValueAFO(Value):
 
         return self.last_layer(hidden)
 
-class ValueOFA(Value):
+class MLPOFA(MLP):
     """ 
         MLP Value.
         One MLP for each agents.

@@ -6,3 +6,4 @@ venv
 *.pkl
 *.gif
 *.log
+*.tmp

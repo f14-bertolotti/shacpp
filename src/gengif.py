@@ -1,4 +1,4 @@
-from moviepy.editor import ImageSequenceClip
+from moviepy import ImageSequenceClip
 import environments
 import models 
 import click
@@ -40,15 +40,17 @@ def run(
         seed         = seed    ,
     )
     
-    policy = models.PolicyAFO(
+    policy = models.policies.TransformerPolicy(
         observation_size = observation_size ,
         action_size      = action_size      ,
         agents           = agents           ,
         steps            = steps            ,
         layers           = 1                ,
         hidden_size      = 64               ,
+        feedforward_size = 128              ,
+        heads            = 1                ,
         dropout          = 0.0              ,
-        activation       = "Tanh"           ,
+        activation       = "GELU"           ,
         device           = device
     )
 
@@ -64,7 +66,7 @@ def run(
     with torch.no_grad():
         policy.eval()
         for step in range(0, steps):
-            actions = policy(observation)["actions"]
+            actions = policy.act(observation)["actions"]
             frames.append(world.render(mode="rgb_array"))
             observation, reward, done, info = world.step(actions.transpose(0,1))
             observation = torch.stack(observation).transpose(0,1)

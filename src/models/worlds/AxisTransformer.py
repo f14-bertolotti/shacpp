@@ -1,8 +1,13 @@
 import models
 import torch
 
-class AxisTransformerWorld(models.Model):
-    """ World Model AxisTransformer. """
+class AxisTransformer(models.Model):
+    """ 
+        Transformer World Model with alternate attention patterns:
+            1) autoregressive attention patterns on actions and agents cannot attend to each other.
+            2) each action at step s can attend to all actions of all other agents at step s.
+        A linear layer is used to map the encoded observations to the rewards and values.
+    """
     def __init__(
         self, 
         observation_size : int,
@@ -30,7 +35,7 @@ class AxisTransformerWorld(models.Model):
 
         self.ln = torch.nn.LayerNorm(hidden_size, device=device)
 
-        self.layers = torch.nn.ModuleList([
+        self.encoder = torch.nn.TransformerEncoder(
             torch.nn.TransformerEncoderLayer(
                 dim_feedforward = feedforward_size ,
                 d_model         = hidden_size      ,
@@ -39,47 +44,53 @@ class AxisTransformerWorld(models.Model):
                 nhead           = heads            ,
                 dropout         = dropout          ,
                 batch_first     = True
-            ) for _ in range(layers)
-        ])
+            ), 
+            num_layers           = layers,
+            enable_nested_tensor = False
+        )
+
+
 
         if self.compute_reward: self.hid2rew = torch.nn.Linear(hidden_size, 1, device = device)
         if self.compute_value : self.hid2val = torch.nn.Linear(hidden_size, 1, device = device)
         self.hid2obs = torch.nn.Linear(hidden_size, observation_size, device = device)
 
-        self.steps_mask = AxisTransformerWorld.generate_steps_mask(agents, steps+1, device)
-        self.agent_mask = AxisTransformerWorld.generate_agent_mask(agents, steps+1, device)
+        self.steps_mask = AxisTransformer.generate_steps_mask(agents, steps+1, device)
+        self.agent_mask = AxisTransformer.generate_agent_mask(agents, steps+1, device)
+        self.merge_mask = (self.steps_mask == 0).logical_or(self.agent_mask == 0)
+        self.merge_mask = torch.where(self.merge_mask, torch.tensor(0.0), torch.tensor(float('-inf')))
 
     @staticmethod
     def generate_agent_mask(agents, steps, device="cpu"):
-        agent_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device)
+        """ Generate autoregressive mask that prevents agents from attending to each other. """
+        agent_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device, requires_grad=False)
         for i in range(steps):
             for j in range(agents):
                 for k in range(agents):
-                    agent_mask[j+i*agents][k+i*agents] = 1
+                    agent_mask[j+i*agents][k+i*agents] = 0
         return agent_mask
 
     @staticmethod
     def generate_steps_mask(agents, steps, device="cpu"):
-        steps_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device)
+        """ generate mask that prevents actions to attend to future and previous actions """
+        steps_mask = torch.full((agents*steps, agents*steps), float("-inf"), dtype=torch.float, device=device, requires_grad=False)
         for i in range(steps):
             for j in range(agents):
                 for k in range(steps):
-                    if k <= k*agents <= i*agents: steps_mask[j + i*agents][k*agents + j] = 1
+                    if k <= k*agents <= i*agents: steps_mask[j + i*agents][k*agents + j] = 0
         return steps_mask
 
     def forward(self, obs, act):
-        hidobs = self.obs2hid(obs)
+        hidobs = self.obs2hid(obs)[:,[0]]
         hidact = self.act2hid(act)
         hidden = self.ln(torch.cat([hidobs, hidact], dim=1) + self.posemb).flatten(1,2)
 
-        for i,layer in enumerate(self.layers):
-            hidden = layer(hidden, src_mask=self.steps_mask if i%2==0 else self.agent_mask)
-
+        hidden = self.encoder(hidden, mask=self.merge_mask)
         hidden = hidden.view(hidden.size(0), self.steps+1, self.agents, hidden.size(2))
 
         return {
             "observations" : self.hid2obs(hidden),
-            "rewards"      : self.hid2rew(hidden)[:,1:].squeeze(-1) if self.compute_reward else None,
-            "values"       : self.hid2val(hidden)[:,1:].squeeze(-1) if self.compute_value  else None
+            "rewards"      : self.hid2rew(hidden).squeeze(-1) if self.compute_reward else None,
+            "values"       : self.hid2val(hidden).squeeze(-1) if self.compute_value  else None
         } 
 

@@ -1,5 +1,6 @@
-class Shac:
+class Shacum:
     def __init__(self):
+
         # environment configurations
         self.train_envs             = 512
         self.train_steps            = 32
@@ -15,43 +16,43 @@ class Shac:
         self.policy_activation      = "ReLU"
         self.policy_var             = 1
 
-        # value model configuration
-        self.value_layers           = 1
-        self.value_hidden_size      = 64
-        self.value_feedforward      = 128
-        self.value_heads            = 1
-        self.value_dropout          = 0.0
-        self.value_activation       = "ReLU"
+        # world model configuration
+        self.world_layers           = 3
+        self.world_heads            = 1
+        self.world_hidden_size      = 64
+        self.world_feedforward      = 128
+        self.world_dropout          = 0.0
+        self.world_activation       = "ReLU"
 
-        # learning rate for policy/value/world models
+        # learning rate for policy/world models
+        self.world_learning_rate    = 0.001
         self.policy_learning_rate   = 0.001
-        self.value_learning_rate    = 0.001
 
-        # clip coefficients for policy/value/world models
-        self.value_clip_coefficient  = None
+        # clip coefficients for policy/world models
+        self.world_clip_coefficient  = None
         self.policy_clip_coefficient = 1
 
-        # cache sizes for value/world models
-        self.value_cache_size       = 30000
+        # cache sizes for world models
+        self.world_cache_size       = 30000
 
-        # batch sizes for value/world models
-        self.value_batch_size       = 1000
+        # batch sizes for world models
+        self.world_batch_size       = 1000
         
-        # number of epochs to train value/world models
-        self.value_epochs           = 10
+        # number of epochs to train world models
+        self.world_epochs           = 10
 
-        # number of episode to wait before training value/world models
-        self.value_ett              = 10
+        # number of episode to wait before training world models
+        self.world_ett              = 10
 
-        # number of bins for value/world caches
-        self.value_bins             = 9
+        # number of bins for value/reward/world caches
+        self.world_bins             = 25
 
-        # accuracy thresholds at which value/world training stops
+        # accuracy thresholds at which world training stops
         # for the current episode
-        self.value_stop_threshold    = None
+        self.world_stop_threshold    = None
 
-        # thresholds for computing accuracy of value/world models
-        self.value_tolerance         = 0.01
+        # thresholds for computing accuracy of world models
+        self.world_tolerance         = 0.01
 
         # stregth of the loss term for actions outside the action space
         self.out_coefficient = 0.1
@@ -85,4 +86,5 @@ class Shac:
         self.dir              = ""
         self.environment      = ""
 
-shac = Shac()
+
+shacum = Shacum()

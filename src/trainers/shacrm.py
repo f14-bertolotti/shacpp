@@ -48,9 +48,10 @@ def shacrm(
         value_tolerance        : float                                  ,
         reward_stop_threshold  : float                                  ,
         value_stop_threshold   : float                                  ,
-        policy_clip_coefficient: float                                  ,
-        reward_clip_coefficient: float                                  ,
-        value_clip_coefficient : float                                  ,
+        policy_clip_coefficient: float|None                             ,
+        reward_clip_coefficient: float|None                             ,
+        value_clip_coefficient : float|None                             ,
+        out_coefficient        : float                                  ,
         reward_ett             : int                                    ,
         value_ett              : int                                    ,
     ):
@@ -75,17 +76,18 @@ def shacrm(
         value_model .load_state_dict(checkpoint["value_state_dict" ])
     
     reward_cache = {
-        "observations" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
-        "actions"      : torch.zeros(reward_cache_size, agents,      action_size, device=device),
-        "rewards"      : torch.zeros(reward_cache_size, agents, device=device),
-        "mask"         : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
-    }
+        "prevobs" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
+        "nextobs" : torch.zeros(reward_cache_size, agents, observation_size, device=device),
+        "actions" : torch.zeros(reward_cache_size, agents,      action_size, device=device),
+        "rewards" : torch.zeros(reward_cache_size, agents, device=device),
+        "mask"    : torch.zeros(reward_cache_size, dtype=torch.bool, device=device),
+    } if reward_cache_size is not None else None
 
     value_cache = {
         "observations" : torch.zeros(value_cache_size, agents, observation_size, device=device),
         "targets"      : torch.zeros(value_cache_size, agents, device=device),
         "mask"         : torch.zeros(value_cache_size, dtype=torch.bool, device=device),
-    }
+    } if value_cache_size is not None else None
  
    
     prev_observations : torch.Tensor = torch.zeros(train_envs, observation_size, device=device)
@@ -103,12 +105,12 @@ def shacrm(
             unroll_steps  = train_steps,
             policy_model  = policy_model.sample,
         )
-        reward_model.eval()
-        value_model .eval()
-        episode_data["proxy_rewards"] = reward_model(episode_data["observations"].flatten(0,1), episode_data["actions"].flatten(0,1)).view(episode_data["rewards"].shape)
-        episode_data["values"]        = value_model (episode_data["observations"].flatten(0,1)).view(episode_data["rewards"].shape)
-        reward_model.train()
-        value_model .train()
+        episode_data["proxy_rewards"] = reward_model(
+            episode_data["observations"][:-1].flatten(0,1), 
+            episode_data["actions"].flatten(0,1), 
+            episode_data["observations"][1:].flatten(0,1)
+        ).view(episode_data["rewards"].shape)
+        episode_data["values"] = value_model (episode_data["observations"][1:].flatten(0,1)).view(episode_data["rewards"].shape)
     
         # train actor model ###########################################
         trainers.routines.train_policy(
@@ -119,6 +121,7 @@ def shacrm(
             gammas           = gammas                  ,
             logger           = policy_logger           ,
             clip_coefficient = policy_clip_coefficient ,
+            out_coefficient  = out_coefficient
         )
          
         # train reward model ##########################################
@@ -183,7 +186,7 @@ def shacrm(
                 envs         = eval_envs    ,
                 logger       = eval_logger
             ) 
-            eval_reward = eval_data["rewards"]
+            eval_reward = eval_data["rewards"].sum().item()/eval_envs
             max_reward  = eval_data["max_reward"]
 
             # save best model ##########################################
@@ -192,7 +195,7 @@ def shacrm(
                 torch.save({
                     "policy_state_dict"           : policy_model.state_dict()           ,
                     "reward_state_dict"           : reward_model.state_dict()           ,
-                    "value_state_dict"            : value_model .state_dict()           ,
+                    "value_state_dict"            : value_model.state_dict()            ,
                     "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
                     "reward_optimizer_state_dict" : reward_model_optimizer.state_dict() ,
                     "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
@@ -200,17 +203,18 @@ def shacrm(
                     "episode"                     : episode                             ,
                 }, os.path.join(dir,"best.pkl"))
 
-            # early_stopping #########################################
-            if (eval_reward >= (max_reward * early_stopping["max_reward_fraction"])).all(): break
 
+            # early_stopping #########################################
+            if utils.is_early_stopping(eval_data["rewards"], eval_data["max_reward"], **early_stopping): break
             del eval_data
 
         # update progress bar ########################################
-        done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
-        bar.set_description(f"reward:{eval_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
+        done_train_envs = episode_data["dones"][-1,:,0].sum().int().item()
+        train_reward    = episode_data["rewards"].sum().item()/train_envs
+        bar.set_description(f"evalrew:{eval_reward:5.3f}, trainrew:{train_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
         # set up next iteration ######################################
-        prev_observations = episode_data["last_observations"].detach()
-        prev_dones        = episode_data["last_dones"       ].detach()
+        prev_observations = episode_data["observations"][-1].detach()
+        prev_dones        = episode_data["dones"       ][-1].detach()
 
         # clean up ###################################################
         del episode_data
@@ -218,12 +222,12 @@ def shacrm(
     torch.save({
         "policy_state_dict"           : policy_model.state_dict()           ,
         "reward_state_dict"           : reward_model.state_dict()           ,
-        "value_state_dict"            : value_model .state_dict()           ,
+        "value_state_dict"            : value_model.state_dict()            ,
         "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
         "reward_optimizer_state_dict" : reward_model_optimizer.state_dict() ,
         "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
         "episode"                     : episodes                            ,
-        "best_reward"                 : best_reward
+        "best_reward"                 : best_reward                         ,
     }, os.path.join(dir,"last.pkl"))
 
 

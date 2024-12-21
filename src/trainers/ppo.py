@@ -98,7 +98,7 @@ def ppo(
                 envs         = eval_envs    ,
                 logger       = eval_logger
             ) 
-            eval_reward = eval_data["rewards"]
+            eval_reward = eval_data["rewards"].sum().item()/eval_envs
             max_reward  = eval_data["max_reward"]
 
             # save best model ##########################################
@@ -106,35 +106,36 @@ def ppo(
                 best_reward = eval_reward
                 torch.save({
                     "policy_state_dict"           : policy_model.state_dict()           ,
-                    "value_state_dict"            : value_model .state_dict()           ,
+                    "value_state_dict"            : value_model.state_dict()            ,
                     "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
                     "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
                     "best_reward"                 : best_reward                         ,
                     "episode"                     : episode                             ,
                 }, os.path.join(dir,"best.pkl"))
 
-            # early_stopping #########################################
-            if (eval_reward >= (max_reward * early_stopping["max_reward_fraction"])).all(): break
 
+            # early_stopping #########################################
+            if utils.is_early_stopping(eval_data["rewards"], eval_data["max_reward"], **early_stopping): break
             del eval_data
 
         # update progress bar ########################################
-        done_train_envs = episode_data["last_dones"][:,0].sum().int().item()
-        bar.set_description(f"reward:{eval_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
+        done_train_envs = episode_data["dones"][-1,:,0].sum().int().item()
+        train_reward    = episode_data["rewards"].sum().item()/train_envs
+        bar.set_description(f"evalrew:{eval_reward:5.3f}, trainrew:{train_reward:5.3f}, max:{max_reward.mean():5.3f}, dones:{done_train_envs:3d}, episode:{episode:5d}")
         # set up next iteration ######################################
-        prev_observations = episode_data["last_observations"].detach()
-        prev_dones        = episode_data["last_dones"       ].detach()
+        prev_observations = episode_data["observations"][-1].detach()
+        prev_dones        = episode_data["dones"       ][-1].detach()
 
         # clean up ###################################################
         del episode_data
 
     torch.save({
         "policy_state_dict"           : policy_model.state_dict()           ,
-        "value_state_dict"            : value_model .state_dict()           ,
+        "value_state_dict"            : value_model.state_dict()            ,
         "policy_optimizer_state_dict" : policy_model_optimizer.state_dict() ,
         "value_optimizer_state_dict"  : value_model_optimizer.state_dict()  ,
         "episode"                     : episodes                            ,
-        "best_reward"                 : best_reward
+        "best_reward"                 : best_reward                         ,
     }, os.path.join(dir,"last.pkl"))
 
 
