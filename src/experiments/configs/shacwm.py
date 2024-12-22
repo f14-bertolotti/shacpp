@@ -89,7 +89,7 @@ class Shacwm:
         self.world_tolerance         = 0.01
 
         # stregth of the loss term for actions outside the action space
-        self.out_coefficient = 0.1
+        self.out_coefficient = 1
 
         # early stopping configurations
         self.early_stopping = {

@@ -10,6 +10,7 @@ import vmas
 @click.option("--seed"             , "seed"             , type=int          , default=42           , help="random seed"                                )
 @click.option("--observation-size" , "observation_size" , type=int          , default=2            , help="observation size"                           )
 @click.option("--action-size"      , "action_size"      , type=int          , default=11           , help="action size"                                )
+@click.option("--action-space"     , "action_space"     , type=(float,float), default=(-1,1)       , help="action space"                               )
 @click.option("--env-name"         , "env_name"         , type=str          , default="dispersion" , help="environment name"                           )
 @click.option("--agents"           , "agents"           , type=int          , default=5            , help="number of agents"                           )
 @click.option("--steps"            , "steps"            , type=int          , default=64           , help="number of steps for the evaluation rollout" )
@@ -22,6 +23,7 @@ def run(
         agents,
         observation_size,
         action_size,
+        action_space,
         steps,
         device,
         output_path,
@@ -40,11 +42,12 @@ def run(
         seed         = seed    ,
     )
     
-    policy = models.policies.TransformerPolicy(
+    policy = models.policies.Transformer(
         observation_size = observation_size ,
         action_size      = action_size      ,
         agents           = agents           ,
         steps            = steps            ,
+        action_space     = action_space     ,
         layers           = 1                ,
         hidden_size      = 64               ,
         feedforward_size = 128              ,
