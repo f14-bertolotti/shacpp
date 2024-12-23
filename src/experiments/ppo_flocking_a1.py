@@ -14,7 +14,7 @@ def run():
     config.environment      = "flocking"
     config.observation_size = 18
     config.action_size      = 2
-    config.agents           = 3
+    config.agents           = 1
     config.action_space     = [-1.0,+1.0]
     config.dir              = f"data/ppo-{config.environment}-a{config.agents}-s{config.seed}"
 
