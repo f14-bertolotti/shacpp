@@ -5,7 +5,7 @@ import torch
 class Flocking(flocking.Scenario):
 
     def max_rewards(self):
-        return 0
+        return 1
 
     def zero_grad(self):
         self.world.zero_grad()
