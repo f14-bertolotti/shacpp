@@ -12,7 +12,7 @@ def run():
     config = experiments.configs.ppo # base configuration
     config.seed             = 42
     config.environment      = "flocking"
-    config.observation_size = 11
+    config.observation_size = 18
     config.action_size      = 2
     config.agents           = 3
     config.action_space     = [-1.0,+1.0]
