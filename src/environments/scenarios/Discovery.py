@@ -25,7 +25,6 @@ class Discovery(discovery.Scenario):
 
     def reward(self, agent: Agent):
         is_first = agent == self.world.agents[0]
-        is_last = agent == self.world.agents[-1]
 
         if is_first:
             self.reward_per_agent = torch.zeros(self.world.batch_dim, len(self.world.agents), self.n_targets, device=self.world._device)
@@ -38,12 +37,6 @@ class Discovery(discovery.Scenario):
             self.reward_per_agent[tmp] = (self.reward_per_agent[tmp] + self.agents_per_target[tmp]) * self.covered_targets[tmp].unsqueeze(1)
             self.reward_per_agent = self.reward_per_agent.sum(-1)
             
-            #self.reward_per_agent = self.agents_per_target[self.covered_targets.unsqueeze(-2).repeat(1, self.agents_per_target.size(1),1)]
-            #print(self.reward_per_agent.shape)
-
-            #print(self.reward_per_agent.shape)
-            #.view(self.world.batch_dim, len(self.world.agents),-1).sum(-1)
-
         else:
             self.all_time_covered_targets += self.covered_targets
             for i, target in enumerate(self._targets):

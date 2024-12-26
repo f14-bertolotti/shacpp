@@ -57,6 +57,9 @@ class Dispersion(dispersion.Scenario):
                 landmark.just_eaten[env_index] = False
                 landmark.is_rendering[env_index] = True
 
+    def diffreward(self, prevs, acts, nexts):
+        raise NotImplementedError("Dispersion has a sparse, non-differentiable reward")
+
     def max_rewards(self):
         return torch.ones(self.world.batch_dim, device=self.device) * self.agents
 

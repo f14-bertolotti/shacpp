@@ -30,10 +30,11 @@ def cartesian_to_polar(cartesian_coords):
 class Game(InteractiveEnv):
     def __init__(self, *args, reward_model = None, value_model = None, policy_model = None, **kwargs):
         torch.set_printoptions(precision=3, sci_mode=False, linewidth=200)
+        self.env = args[0]
         self.reward_model = reward_model
         self.value_model  =  value_model
         self.policy_model = policy_model
-        
+        self.tot_reward   = 0
 
         super().__init__(*args, **kwargs)
 
@@ -74,6 +75,7 @@ class Game(InteractiveEnv):
         for line in self.lines_value: self.env.unwrapped.viewer.add_geom(line)
 
 
+        print(self.env.env.scenario.max_rewards().sum())
         while True:
 
             if self.reset:
@@ -94,11 +96,15 @@ class Game(InteractiveEnv):
                 lineform_value .set_translation(*agent.state.pos[0])
 
             obs, rew, done, info = self.env.step(action_list)
+
+            self.tot_reward += sum(rew)
             act = torch.tensor(action_list).float()
             obs = torch.stack([torch.tensor(o) for o in obs]).float()
+
             self._write_values(1, "rews: " + str(list(map(lambda x:f"{x:1.3f}", rew))))
             self._write_values(4, "obs1: " + str(list(map(lambda x:f"{x:1.3f}", obs[0,:5].tolist()))))
             self._write_values(3, "obs2: " + str(list(map(lambda x:f"{x:1.3f}", obs[0,5:].tolist()))))
+            self._write_values(5, f"tot: {self.tot_reward}")
 
             if self.reward_model is not None:
                 obs = obs.clone().detach().requires_grad_(True)
@@ -207,7 +213,7 @@ def game(
         name = name, 
         envs = 1, 
         agents = agents, 
-        device = "cpu", 
+        device = "cuda:0", 
         grad_enabled = False, 
         seed = seed,
     )

@@ -7,6 +7,7 @@ def unroll(
         dones          = None  ,
         unroll_steps   = 64    ,
         reset_dones    = False ,
+        max_reward     = False ,
         use_diffreward = False ,
     ):
 
@@ -20,7 +21,7 @@ def unroll(
         observations = torch.stack(world.reset()).transpose(0,1)
         dones        = torch.zeros(observations.size(0), observations.size(1), device=observations.device).bool()
 
-    max_reward   = world.scenario.max_rewards()
+    max_reward   = world.scenario.max_rewards() if max_reward else torch.zeros(world.batch_dim, device=world.device)
 
     observations = observations.detach()
 

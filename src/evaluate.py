@@ -23,6 +23,7 @@ def evaluate(
         world        = world,
         unroll_steps = steps,
         policy_model = policy_model.act,
+        max_reward   = True,
     )
    
     ground_proxy_rewards = None
@@ -59,6 +60,7 @@ def evaluate(
         "episode"              : episode,
         "done"                 : eval_episode["dones"][-1,:,0].sum().int().item(),
         "reward"               : rewards.sum().item() / envs,
+        "max_reward"           : eval_episode["max_reward"].sum().item() / envs,
     } | ({} if ground_proxy_rewards is None else {
         "ground_reward_accuracy" : ground_proxy_rewards.isclose(rewards.flatten(0,1)[indices], atol=reward_tolerance).float().mean().item(),
     }) | ({} if proxy_observations  is None else {

@@ -66,16 +66,20 @@ def run(
     
     frames, observation = [], torch.stack(world.reset()).transpose(0,1)
     
+    
     with torch.no_grad():
         policy.eval()
+        total_reward = 0
         for step in range(0, steps):
             actions = policy.act(observation)["actions"]
             frames.append(world.render(mode="rgb_array"))
             observation, reward, done, info = world.step(actions.transpose(0,1))
             observation = torch.stack(observation).transpose(0,1)
             print(f"{torch.stack(reward).sum().item():3.2f} ", end=" ")
-
+            total_reward += torch.stack(reward).sum().item()
+        
         print()
+        print("total reward", total_reward, world.scenario.max_rewards().sum().item())
     
     
     clip = ImageSequenceClip(frames, fps=30)
