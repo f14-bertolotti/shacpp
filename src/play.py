@@ -124,6 +124,7 @@ class Game(InteractiveEnv):
 
             if self.policy_model is not None:
                 actions = self.policy_model.act(obs)["actions"].squeeze(0)
+                self._write_values(0, "acts: " + str(list(map(lambda x:f"{x:1.3f}", actions.squeeze(0).tolist()))))
                 angles  = cartesian_to_polar(actions)
                 for angle,lineform in zip(angles,self.lineforms_policy): lineform.set_rotation(angle[1]-3.14/2 )
 
@@ -137,21 +138,23 @@ class Game(InteractiveEnv):
 
 
 @click.command()
-@click.option("--name"        , "name"        , type=str          , default="transport" , help="scenario name"               )
-@click.option("--seed"        , "seed"        , type=int          , default=0           , help="random seed"                 )
-@click.option("--agents"      , "agents"      , type=int          , default=3           , help="num. agents"                 )
-@click.option("--reward-path" , "reward_path" , type=click.Path() , default=None        , help="reward model statedict path" )
-@click.option("--value-path"  , "value_path"  , type=click.Path() , default=None        , help="value  model statedict path" )
-@click.option("--policy-path" , "policy_path" , type=click.Path() , default=None        , help="policy model statedict path" )
-@click.option("--keyarg"      , "keyargs"     , type=(str,int)    , default=None        , help="additional arguments", multiple=True)
+@click.option("--name"             , "name"             , type=str          , default="transport" , help="scenario name"               )
+@click.option("--seed"             , "seed"             , type=int          , default=0           , help="random seed"                 )
+@click.option("--agents"           , "agents"           , type=int          , default=3           , help="num. agents"                 )
+@click.option("--reward-path"      , "reward_path"      , type=click.Path() , default=None        , help="reward model statedict path" )
+@click.option("--value-path"       , "value_path"       , type=click.Path() , default=None        , help="value  model statedict path" )
+@click.option("--policy-path"      , "policy_path"      , type=click.Path() , default=None        , help="policy model statedict path" )
+@click.option("--keyarg"           , "keyargs"          , type=(str,int)    , default=None        , help="additional arguments", multiple=True)
+@click.option("--observation-size" , "observation_size" , type=int          , default=11          , help="observation size")
 def game(
-    name        ,
-    seed        ,
-    agents      ,
-    reward_path ,
-    value_path  ,
-    policy_path ,
-    keyargs     ,
+    name             ,
+    seed             ,
+    agents           ,
+    reward_path      ,
+    value_path       ,
+    policy_path      ,
+    observation_size ,
+    keyargs          ,
 ):
 
     reward_model = None
@@ -159,8 +162,8 @@ def game(
     policy_model = None
     if reward_path is not None:
         reward_checkpoint = torch.load(reward_path, weights_only=True) 
-        reward_model = models.rewards.TransformerReward(
-             observation_size = 11     ,
+        reward_model = models.rewards.Transformer(
+             observation_size = observation_size ,
              action_size      = 2      ,
              agents           = agents ,
              steps            = 32     ,
@@ -169,15 +172,15 @@ def game(
              feedforward_size = 128    ,
              heads            = 1      ,
              dropout          = 0      ,
-             activation       = "GELU" ,
+             activation       = "ReLU" ,
              device           = "cpu"
         )
         reward_model.load_state_dict({k.replace("_orig_mod.",""):v for k,v in reward_checkpoint["reward_state_dict"].items()})
 
     if value_path is not None: 
         value_checkpoint = torch.load(value_path, weights_only=True) 
-        value_model = models.values.TransformerValue(
-             observation_size = 11     ,
+        value_model = models.values.Transformer(
+             observation_size = observation_size ,
              action_size      = 2      ,
              agents           = agents ,
              steps            = 32     ,
@@ -186,7 +189,7 @@ def game(
              feedforward_size = 128    ,
              heads            = 1      ,
              dropout          = 0      ,
-             activation       = "GELU" ,
+             activation       = "ReLU" ,
              device           = "cpu"
 
         )
@@ -194,17 +197,18 @@ def game(
 
     if policy_path is not None:
         policy_checkpoint = torch.load(policy_path, weights_only=True)
-        policy_model = models.policies.TransformerPolicy(
-            observation_size = 11     ,
+        policy_model = models.policies.Transformer(
+            observation_size = observation_size ,
             action_size      = 2      ,
             agents           = agents ,
             steps            = 32     ,
+            action_space     = [-1,1] ,
             layers           = 1      ,
             hidden_size      = 64     ,
             feedforward_size = 128    ,
             heads            = 1      ,
             dropout          = 0      ,
-            activation       = "GELU" ,
+            activation       = "ReLU" ,
             device           = "cpu"
         )
         policy_model.load_state_dict({k.replace("_orig_mod.",""):v for k,v in policy_checkpoint["policy_state_dict"].items()})

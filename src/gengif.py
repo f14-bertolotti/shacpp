@@ -32,6 +32,8 @@ def run(
         compile,
     ):
     utils.seed_everything(seed)
+    torch.set_float32_matmul_precision("high")
+    torch.set_printoptions(precision=3, sci_mode=False)
     
     world = environments.get_environment(
         name         = env_name,
@@ -53,7 +55,7 @@ def run(
         feedforward_size = 128              ,
         heads            = 1                ,
         dropout          = 0.0              ,
-        activation       = "GELU"           ,
+        activation       = "ReLU"           ,
         device           = device
     )
 
@@ -72,6 +74,7 @@ def run(
         total_reward = 0
         for step in range(0, steps):
             actions = policy.act(observation)["actions"]
+            print(actions)
             frames.append(world.render(mode="rgb_array"))
             observation, reward, done, info = world.step(actions.transpose(0,1))
             observation = torch.stack(observation).transpose(0,1)

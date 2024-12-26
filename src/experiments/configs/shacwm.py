@@ -15,6 +15,7 @@ class Shacwm:
         self.policy_dropout         = 0.1
         self.policy_activation      = "ReLU"
         self.policy_var             = 1
+        self.policy_nn              = "transformer"
 
         # value model configuration
         self.value_layers           = 1
@@ -23,6 +24,7 @@ class Shacwm:
         self.value_heads            = 1
         self.value_dropout          = 0.0
         self.value_activation       = "ReLU"
+        self.value_nn               = "transformer"
 
         # reward model configuration
         self.reward_layers          = 1
@@ -31,6 +33,7 @@ class Shacwm:
         self.reward_heads           = 1
         self.reward_dropout         = 0.0
         self.reward_activation      = "ReLU"
+        self.reward_nn              = "transformer"
 
         # world model configuration
         self.world_layers           = 3
@@ -39,6 +42,7 @@ class Shacwm:
         self.world_feedforward      = 128
         self.world_dropout          = 0.0
         self.world_activation       = "ReLU"
+        self.world_nn               = "transformer"
 
         # learning rate for policy/value/reward/world models
         self.world_learning_rate    = 0.001
@@ -118,7 +122,7 @@ class Shacwm:
         self.action_space     = [0.0,0.0]
         self.agents           = 0
         self.dir              = ""
-        self.environment      = ""
+        self.env_name         = ""
 
 
 shacwm = Shacwm()
