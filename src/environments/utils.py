@@ -72,7 +72,9 @@ def get_environment(name:str, envs:int, agents:int, device:str, grad_enabled:boo
 
         case "discovery" :
             return vmas.simulator.environment.Environment(
-                environments.scenarios.Discovery(),
+                environments.scenarios.Discovery(
+                    agents_per_target = min(agents, 2),
+                ),
                 n_agents           = agents       ,
                 num_envs           = envs         ,
                 device             = device       ,

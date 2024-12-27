@@ -10,8 +10,12 @@ class Discovery(discovery.Scenario):
         We hardset this to 10.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, agents_per_target, **kwargs):
         super().__init__(*args, **kwargs)
+        self.tmp = agents_per_target
+
+    def make_world(self, *args, **kwargs):
+        return super().make_world(*args, agents_per_target=self.tmp, targets_respawn=False, **kwargs)
 
     def max_rewards(self):
         return torch.ones(self.world.batch_dim, device=self.world._device) * (self.n_targets)
@@ -24,22 +28,5 @@ class Discovery(discovery.Scenario):
         raise NotImplementedError
 
     def reward(self, agent: Agent):
-        is_first = agent == self.world.agents[0]
+        return super().reward(agent)
 
-        if is_first:
-            self.reward_per_agent = torch.zeros(self.world.batch_dim, len(self.world.agents), self.n_targets, device=self.world._device)
-            self.agents_pos  = torch.stack([a.state.pos for a in self.world.agents], dim=1)
-            self.targets_pos = torch.stack([t.state.pos for t in self._targets], dim=1)
-            self.agents_targets_dists = torch.cdist(self.agents_pos, self.targets_pos)
-            self.agents_per_target = (self.agents_targets_dists < self._covering_range)
-            self.covered_targets = self.agents_per_target.sum(1) >= self._agents_per_target
-            tmp = self.covered_targets.sum(-1) > 0 
-            self.reward_per_agent[tmp] = (self.reward_per_agent[tmp] + self.agents_per_target[tmp]) * self.covered_targets[tmp].unsqueeze(1)
-            self.reward_per_agent = self.reward_per_agent.sum(-1)
-            
-        else:
-            self.all_time_covered_targets += self.covered_targets
-            for i, target in enumerate(self._targets):
-                target.state.pos[self.covered_targets[:, i]] = self.get_outside_pos(None)[self.covered_targets[:, i]]
-
-        return self.reward_per_agent[:,self.world.agents.index(agent)]
