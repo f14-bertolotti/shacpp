@@ -7,6 +7,7 @@
 \usepackage{graphicx}
 \usepackage{subfigure}
 \usepackage{booktabs} % for professional tables
+\usepackage{paralist}
 
 % hyperref makes hyperlinks in the resulting PDF.
 % If your build breaks (sometimes temporarily if a hyperlink spans a page)
@@ -54,6 +55,10 @@
 \usepackage[textsize=tiny]{todonotes}
 
 
+% new command for \textbf{RQ\textsubscript{i}}
+\newcommand{\RQ}[1]{\textbf{RQ\textsubscript{#1}}}
+\newcommand{\fname}{\textsc{SHAC++}}
+
 \begin{document}
 
 \twocolumn[
@@ -80,10 +85,16 @@
 
 \input sects/abstract.tex
 \input sects/introduction.tex
+\input sects/background.tex
+\input sects/shacpp.tex
+\input sects/experiments.tex
+\input sects/discussion.tex
+\input sects/conclusion.tex
+\input sects/related.tex
 \input sects/acknowledgements.tex
 \input sects/statement.tex
 
-\bibliography{locals.bib}
+\bibliography{local.bib}
 \bibliographystyle{icml2025}
 \input appendices/appendix.tex
 

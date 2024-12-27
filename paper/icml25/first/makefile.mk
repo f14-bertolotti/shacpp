@@ -1,11 +1,8 @@
 
-main.aux: main.tex
+main.pdf: main.tex sects/* local.bib
 	pdflatex --shell-escape main.tex
-
-main.bbl: main.aux
 	bibtex main
-
-main.pdf: main.aux main.bbl
+	pdflatex --shell-escape main.tex
 	pdflatex --shell-escape main.tex
 
 clean:

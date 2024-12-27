@@ -1,1 +1,23 @@
 \section{Introduction}
+
+Learnign control policies has important applications in robotics \cite{Singh22}, autonomous driving \cite{Elallid22}, swarm intelligence \cite{Tang21} and many other fields. Recently, a reinforcement learning algorithm has gained popularity, SHAC\cite{Xu22}. SHAC is a simple and yet effective algorithm that exploits differentiable simulators to learn control policies effectively. 
+
+Despite its effectiveness, the main limitations of SHAC are two fold. Firstly, it requires a differentiable simulator and differentiable reward function to work properly. Both of which may be not feasible to obtain in practice, especially with inherently sparse rewards. Secondly, even when a differentiable simulator is available, SHAC has been shown to be sensitive to complex dynamics such as object collisions~\cite{Georgiev24}.
+
+In this work, we aim to address both these limitation by approximating the gradients of the differentiable simulator. In particular, we will replace both the simulator and the reward function with a neural network trained in tandem with the policy network and value network. Overall, this will provide an algorithm that is more robust to complex dynamics, sparse rewards, and can work in a wider range of environments. On the other hand, however, this will also introduce additional complexity and computational cost tied to training additional networks.
+
+We test our framework---dubbed \fname{}---against PPO\cite{Schulman17} and SHAC\cite{Xu22}, the former a state-of-the-art reinforcement learning algorithm for non-differentiable environments, and the latter, a state-of-the-art reinforcement learning algorithm for differentiable environments. We compare these algorithm on a set of environments with different numbers of agents. This allows us to evaluate the performance of these algorithm as the search space grows with the number of agents.
+
+With this work, we aim to answer the following research questions:
+\begin{compactitem}
+    \item \RQ{1} Can we train a neural network to approximate the gradients of a differentiable simulator?
+    \item \RQ{2} How does our algorithm compare to PPO and SHAC in differentiable and non-differentiable environments?
+    \item \RQ{3} How does the performance of these algorithms change as the search space increases?
+\end{compactitem}
+
+We summarize our contributions as follows:
+\begin{compactitem}
+    \item We propose a new reinforcement learning framework that lift the requirement for a differentiable simulator in SHAC.
+    \item We evaluate our algorithm against PPO and SHAC on a set of environments with increasing numbers of agents.
+    \item We show that our algorithm achieve SHAC-like performance in differentiable environments and outperform PPO in non-differentiable environments.
+\end{compactitem}
