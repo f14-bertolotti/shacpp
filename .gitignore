@@ -7,3 +7,11 @@ venv
 *.gif
 *.log
 *.tmp
+*.aux
+*.out
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.synctex.gz
+paper/icml25/first/main.pdf
