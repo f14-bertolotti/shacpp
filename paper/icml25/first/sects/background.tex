@@ -14,4 +14,4 @@ $$ \frac{1}{N}\sum_i^N\left|\left| V(s^i) - \hat{V}(s^i) \right|\right|^2 $$
 $$ \hat{V}(s_t) = (1-\lambda) \left(\sum_{k=1}^{h-t-1}\lambda^{k-1}G_t^k\right) + \lambda^{h-t-1}G_t^{h-t}$$
 $$ G_t^k = \left(\sum_{l=0}^{k-1}\gamma^l r_{t+l}\right) + \gamma^k V(s_{t+k})$$
 
-$G^t_k$ represents the discounted sum of rewards up to step $k$, plus the bootstrapped value of the state at step $t+k$. The estimates $\hat{V}$ is computed by discounting more longer (higher $k$) discouunted sums, $G^k_t$.
+$G^t_k$ represents the discounted sum of rewards up to step $k$, plus the bootstrapped value of the state at step $t+k$. The estimates $\hat{V}$ is computed by discounting longer (higher $k$) discounted sums, $G^k_t$.
