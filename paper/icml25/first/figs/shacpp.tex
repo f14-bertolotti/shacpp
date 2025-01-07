@@ -1,0 +1,89 @@
+\documentclass[crop,dvipsnames,tikz]{standalone}
+
+\usetikzlibrary{calc}
+
+\begin{document}
+\begin{tikzpicture}
+
+    \def\nodes{3}
+    \def\nnodes{4}
+    
+    % Loop to place numbers
+    \foreach \i in {0,...,\nodes} {
+        \pgfmathsetmacro{\sx}{\i*2}
+        \pgfmathsetmacro{\ax}{\i*2+1}
+        
+        % Draw number
+        \node[circle, fill=Orange,draw=Orange] (s\i) at (\sx, 0) {\color{white}$s_\i$};
+        \node[circle, fill=Dandelion,draw=Dandelion, inner sep=2.2pt] (sa\i) at (\sx, 2.2) {\color{white}$s'_\i$};
+        \node[circle, fill=RoyalBlue,draw=RoyalBlue] (a\i) at (\ax, -1.4) {\color{white}$a_\i$};
+        \node[circle, fill=DarkOrchid,draw=DarkOrchid, inner sep=2.2pt] (r\i) at (\ax, +3.7) {\color{white}$r'_\i$};
+        \node[circle, fill=DarkOrchid,draw=white,inner sep=1.5pt] (R\i) at ($(r\i) - (0,.8)$) {};
+        \draw[-latex,color=DarkOrchid,line width=1] (R\i) -- (r\i);
+        \node at ($(R\i) - (.3,0)$) {\color{DarkOrchid}$R_\theta$};
+
+    }
+    \pgfmathsetmacro{\sx}{\nnodes*2}
+    \node[circle, draw=Orange, fill=Orange] (s\nnodes) at (\sx, 0) {\color{white}$s_\nnodes$};
+    \node[circle, draw=Dandelion, fill=Dandelion, inner sep=2.2pt] (sa\nnodes) at (\sx, 2.2) {\color{white}$s'_\nnodes$};
+
+
+    % reward function
+    \foreach \i in {0, ..., \nodes} {
+        \pgfmathtruncatemacro{\j}{\i+1}
+        \draw[-,line width=1,color=DarkOrchid] (a\i) -- (R\i);
+        \draw[-,line width=1,color=DarkOrchid] (sa\i) -- ($(sa\i) + (.6,0)$) to[out=0,in=270]   ($(R\i) - (0,.2)$) -- (R\i);
+        \draw[-,line width=1,color=DarkOrchid] (sa\j) -- ($(sa\j) - (.6,0)$) to[out=180,in=270] ($(R\i) - (0,.2)$) -- (R\i);
+    }
+
+    % policy function
+    \foreach \i in {0, ..., \nodes} {
+        \draw[-latex,line width=1,color=RoyalBlue] (s\i) -- ($(s\i) - (0,1.2)$) to[out=270,in=180] ($(a\i) - (.9,0)$) -- (a\i);
+        \node[circle, fill=RoyalBlue,draw=white, inner sep=1.5pt] (tmp) at ($(s\i) - (0,1.2)$) {};
+        \node at ($(tmp) - (.2,0)$) {\color{RoyalBlue}$\pi$};
+    }
+
+    % value function
+    \foreach \i in {1, ..., \nnodes} {
+        \node[circle, fill=BlueGreen,draw=BlueGreen,inner sep=2.2pt] (v\i) at ($(sa\i) + (0,1.5)$) {\color{white}$v'_\i$};
+        \draw[-latex,line width=1, color=BlueGreen] (sa\i) --  (v\i);
+        \node[circle, fill=BlueGreen,draw=white, inner sep=1.5pt] (tmp) at ($(sa\i) + (0,.7)$) {};
+        \node at ($(tmp) - (.25,0)$) {\color{BlueGreen}$V_\theta$};
+    }
+
+    % world model
+    \draw[draw=white,fill=Dandelion,rounded corners=.5ex] ($(s0) + (-.5, 1)$) rectangle ($(s\nnodes) + (.5,1.2)$); 
+    \node at ($(s0) + (-.75,1.05)$) {\color{Dandelion}$F_\theta$};
+    \draw[-latex,line width=1, color=Dandelion] (s0) -- ($(s0) + (0,1)$);
+    \foreach \i in {0, ..., \nodes} {
+        \draw[-latex,line width=1, color=Dandelion] (a\i) -- ($(a\i) + (0,2.4)$);
+    }
+    \foreach \i in {0, ..., \nnodes} {
+        \draw[-latex,line width=1, color=Dandelion] ($(sa\i) - (0,1)$) -- (sa\i);
+    }
+
+    % transition function
+    \foreach \i in {0, ..., \nodes} {
+        \pgfmathtruncatemacro{\j}{\i+1}
+        \draw[-latex,line width=1, color=orange, dashed] (s\i) -- (s\j) ;
+        \draw[-latex,line width=1, color=orange, dashed] (a\i) -- ($(a\i) + (0,1.1)$) to[out=90,in=180] ($(s\j) - (.9,0)$) -- (s\j);
+        \node[circle, fill=orange,draw=white, inner sep=1.5pt] (tmp) at ($(s\j) - (.8,0)$) {};
+        \node at ($(tmp) - (0,.3)$) {\color{orange}$\hat{F}$};
+    }
+
+    % loss policy function
+    \draw[draw=white,fill=LimeGreen,rounded corners=.5ex] ($(r0) + (-.5, 1)$) rectangle ($(v4) + (.5,1.2)$); 
+    \node at ($(r0) + (-.75,1.05)$) {\color{LimeGreen}$\mathcal{L}^\pi_\theta$};
+    \foreach \i in {0, ..., \nodes} {
+        \pgfmathtruncatemacro{\j}{\i+1}
+        \draw[-latex,line width=1, color=LimeGreen] (r\i) -- ($(r\i) + (0,1)$);
+        \draw[-latex,line width=1, color=LimeGreen] (v\j) -- ($(v\j) + (0,1)$);
+    }
+
+    \node[circle, fill=gray] (l) at ($(v\nnodes) + (1.5,1.1)$) {\color{white}$l$};
+    \draw[-latex,line width=1, color=gray] ($(v\nnodes) + (.5,1.1)$) -- (l);
+
+
+\end{tikzpicture}
+\end{document}
+
