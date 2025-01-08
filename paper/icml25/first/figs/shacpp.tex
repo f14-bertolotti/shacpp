@@ -31,16 +31,16 @@
     % reward function
     \foreach \i in {0, ..., \nodes} {
         \pgfmathtruncatemacro{\j}{\i+1}
-        \draw[-,line width=1,color=DarkOrchid] (a\i) -- (R\i);
-        \draw[-,line width=1,color=DarkOrchid] (sa\i) -- ($(sa\i) + (.6,0)$) to[out=0,in=270]   ($(R\i) - (0,.2)$) -- (R\i);
-        \draw[-,line width=1,color=DarkOrchid] (sa\j) -- ($(sa\j) - (.6,0)$) to[out=180,in=270] ($(R\i) - (0,.2)$) -- (R\i);
+        \draw[-,line width=1,color=DarkOrchid, rounded corners=1ex] (a\i) -- ($(a\i) + (-.2,.5)$) -- ($(R\i) - (.2,1.25)$) -- ($(R\i) - (0,1)$) -- (R\i);
+        \draw[-,line width=1,color=DarkOrchid, rounded corners=1ex] (sa\i) -- ($(sa\i) + (.6,0)$) -- ($(R\i) - (0,.7)$) -- ($(R\i) - (0,.2)$) -- (R\i);
+        \draw[-,line width=1,color=DarkOrchid, rounded corners=1ex] (sa\j) -- ($(sa\j) - (.6,0)$) -- ($(R\i) - (0,.7)$) -- ($(R\i) - (0,.2)$) -- (R\i);
     }
 
     % policy function
     \foreach \i in {0, ..., \nodes} {
         \draw[-latex,line width=1,color=RoyalBlue] (s\i) -- ($(s\i) - (0,1.2)$) to[out=270,in=180] ($(a\i) - (.9,0)$) -- (a\i);
         \node[circle, fill=RoyalBlue,draw=white, inner sep=1.5pt] (tmp) at ($(s\i) - (0,1.2)$) {};
-        \node at ($(tmp) - (.2,0)$) {\color{RoyalBlue}$\pi$};
+        \node at ($(tmp) - (.25,0)$) {\color{RoyalBlue}$\pi_\theta$};
     }
 
     % value function
@@ -66,9 +66,9 @@
     \foreach \i in {0, ..., \nodes} {
         \pgfmathtruncatemacro{\j}{\i+1}
         \draw[-latex,line width=1, color=orange, dashed] (s\i) -- (s\j) ;
-        \draw[-latex,line width=1, color=orange, dashed] (a\i) -- ($(a\i) + (0,1.1)$) to[out=90,in=180] ($(s\j) - (.9,0)$) -- (s\j);
+        \draw[-, line width=1, color=orange, dashed] (a\i) -- ($(a\i) + (.2,.5)$) -- ($(s\j) - (.8,0)$); 
         \node[circle, fill=orange,draw=white, inner sep=1.5pt] (tmp) at ($(s\j) - (.8,0)$) {};
-        \node at ($(tmp) - (0,.3)$) {\color{orange}$\hat{F}$};
+        \node at ($(tmp) + (0,.3)$) {\color{orange}$\hat{F}$};
     }
 
     % loss policy function
