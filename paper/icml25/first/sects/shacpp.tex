@@ -38,7 +38,7 @@ $$d(x,(a,b)) = \begin{cases}(a-x)^2 & \text{if } x < a \\ (x-b)^2 & \text{if } x
 
     Where $\alpha$ is a hyper-parameter that controls the strength of the penalty. In our experiments, we set $\alpha=1$. Usually, actions are either clipped to the allowed action space or, an activation function (such as hyperbolic tangent or sigmoid) is used to ensure that the actions are within the allowed range. While this approach is acceptable for algorithms like PPO and SHAC, the penalty we employ is crucial in our specific scenario. This necessity arises from the fact that we are training the policy to optimize two neural networks that serve as environment approximations. Because these networks are never trained with data outside the permissible action space, they are likely to be maximized beyond these bounds. Consequently, the policy may generate actions far outside the allowed range. This can ultimately result in 0-gradients when action clipping is applied or high pre-activation actions when activation function is used. 
 
-To summarize, our algorithm, aims to minimize the 4 presented losses, $\mathcal{L'}_\theta^{\pi}$, $\mathcal{L}_\theta^V$, $\mathcal{L}_\theta^R$, and $\mathcal{L}_\theta^F$. A minimal pseudocode of our algorithm is presented in \ref{alg:shacpp}. Figure~\ref{fig:shacpp} presents an unrolled view of the \fname{} algorithm.
+To summarize, our algorithm, aims to minimize the 4 presented losses, $\mathcal{L'}_\theta^{\pi}$, $\mathcal{L}_\theta^V$, $\mathcal{L}_\theta^R$, and $\mathcal{L}_\theta^F$. The parameters $\theta$ can be either shared or separated among the different networks, however, we always keep them separated in our experiments. A minimal pseudocode of our algorithm is presented in \ref{alg:shacpp}. Figure~\ref{fig:shacpp} presents an unrolled view of the \fname{} algorithm.
 
 However, consider that, to ensure fast convergence of the reward and transition networks, we employ a cache to store seen trajectories. To ensure that the cache is balanced, and not filled with $0$-reward trajectories (which are common in case of sparse rewards), we divide the cache in $K$ equally sized bins. Each bin is filled with trajectories that have a similar reward. 
 
@@ -59,19 +59,19 @@ The full implementation is openly available at
     
         
         \STATE $s,a,r,v \sim \mathcal{E}(\pi)$
-        \STATE $\hat{s} = W(s[0], a)$
-        \STATE $\hat{r} = R(\hat{s})$
-        \STATE $\hat{v} = V(\hat{s})$
+        \STATE $\hat{s} = F_\theta(s_{:,0}, a)$
+        \STATE $\hat{r} = R_\theta(\hat{s})$
+        \STATE $\hat{v} = V_\theta(\hat{s})$
         
-        \STATE $\pi_\theta \gets \pi_\theta - \eta_\pi \nabla \mathcal{L'}^\pi_\theta(\hat{r},\hat{v},\gamma,\alpha)$
-        \STATE $V_\theta \gets V_\theta - \eta_V \nabla \mathcal{L}^V_\theta(\hat{v},s,v)$
-        \STATE $R_\theta \gets R_\theta - \eta_R \nabla \mathcal{L}^R_\theta(\hat{r},s,r)$
-        \STATE $F_\theta \gets F_\theta - \eta_F \nabla \mathcal{L}^F_\theta(\hat{s},s,a)$
+        \STATE $\theta \gets \theta - \eta_\pi \nabla \mathcal{L'}^\pi_\theta(\hat{r},\hat{v},\gamma,\alpha)$
+        \STATE $\theta \gets \theta - \eta_V \nabla \mathcal{L}^V_\theta(\hat{v},s,v)$
+        \STATE $\theta \gets \theta - \eta_R \nabla \mathcal{L}^R_\theta(\hat{r},s,r)$
+        \STATE $\theta \gets \theta - \eta_F \nabla \mathcal{L}^F_\theta(\hat{s},s,a)$
     
     \ENDFOR
     
     \end{algorithmic}
-    \caption{SHAC++ minimal (no cache and no cool-down) pseudocode}
+    \caption{SHAC++ minimal (no cache and no cool-down) pseudocode. $s_{:,0}$ denotes the first step of each trajectory in $s$.}
     \label{alg:shacpp}
 \end{algorithm}
 
