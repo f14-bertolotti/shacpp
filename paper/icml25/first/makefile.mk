@@ -25,4 +25,8 @@ clean:
 	rm -f figs/shac.aux
 	rm -f figs/shac.log
 	rm -f figs/shac.out
+	rm -f figs/shacpp.pdf
+	rm -f figs/shacpp.aux
+	rm -f figs/shacpp.log
+	rm -f figs/shacpp.out
 

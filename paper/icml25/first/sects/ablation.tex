@@ -1,0 +1,6 @@
+\section{Ablation Study}\label{sect:ablation}
+While we mainly focus on replacing both the reward and transition function with neural networks, we also investigate the effect of replacing only the latter. 
+
+In fact, the transition function is the most complex component to replace as it requires modeling with precision the observations obtained from the environment after a number of $H$ actions from each agent. Avoiding the need of such network lightens the algorithm but it reintroduce the need for a differentiable environment. Nonetheless, the need for a differentiable reward, made by SHAC, is still relaxed.
+
+Studying such setup can provide insights on the importance and difficulty of the transition function in the SHAC algorithm. TODO 

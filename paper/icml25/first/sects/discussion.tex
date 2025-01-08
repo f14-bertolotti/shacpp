@@ -1,2 +1,19 @@
 \section{Discussion}
+
+Note that \fname{} does not aim to outperform SHAC, it merely aims to perform comparably with SHAC while being applicable even in non-differentiable environment. The result shown in Sect.~\ref{sect:experiments} seems to support this conclusion. More specifically, let us answer the research questions posed in Sect.~\ref{sect:introduction}.
+
+\begin{center}
+\RQ{1} \textbf{Can we train a neural network to approximate the gradients of a differentiable simulator?}
+\end{center}
+
+The propose framework, \fname{}, appears to be successful in emulating the behavior of SHAC in differentiable environments such as transport and sampling. Therefore, we can conclude that it is definitely possible to approximate the gradients of a differentiable environment with a neural network. However, we note that this approach, while obtaining comparable results in most setups, it tends to display higher variance. Further, before ebcoming effective, both neural network representing the reward and transition function need to become accurate which could require several episode of training.
+
+\begin{center}
+\RQ{2} \textbf{How does our algorithm compare to PPO and SHAC in both single-agent and multi-agent settings?}
+\end{center}
+TODO
+
+\begin{center}
+\RQ{3} \textbf{How does the performance of these algorithms change as the search space increases?}
+\end{center}
 TODO

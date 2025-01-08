@@ -51,8 +51,8 @@ The full implementation is openly available at
 
 \begin{algorithm}[t]
     \begin{algorithmic}[1]
-    \STATE Initialize $\pi_\theta,V_\theta,R_\theta,W_\theta$ networks
-    \STATE Initialize learning rates $\eta_\pi, \eta_R, \eta_V, \eta_W$
+    \STATE Initialize $\pi_\theta,V_\theta,R_\theta,F_\theta$ networks
+    \STATE Initialize learning rates $\eta_\pi, \eta_R, \eta_V, \eta_F$
     \STATE Initialize environment $\mathcal{E}$
     \STATE Initialize $\gamma, \alpha$
     \FOR{episode in $1, \ldots, N_{\text{episodes}}$}
@@ -66,7 +66,7 @@ The full implementation is openly available at
         \STATE $\pi_\theta \gets \pi_\theta - \eta_\pi \nabla \mathcal{L'}^\pi_\theta(\hat{r},\hat{v},\gamma,\alpha)$
         \STATE $V_\theta \gets V_\theta - \eta_V \nabla \mathcal{L}^V_\theta(\hat{v},s,v)$
         \STATE $R_\theta \gets R_\theta - \eta_R \nabla \mathcal{L}^R_\theta(\hat{r},s,r)$
-        \STATE $W_\theta \gets W_\theta - \eta_W \nabla \mathcal{L}^F_\theta(\hat{s},s,a)$
+        \STATE $F_\theta \gets F_\theta - \eta_F \nabla \mathcal{L}^F_\theta(\hat{s},s,a)$
     
     \ENDFOR
     
