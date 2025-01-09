@@ -1,11 +1,19 @@
 \section{Related Work}
 
 \paragraph{Differentiable Engines}
-Game engines~\cite{Bellemare13,Balla23} and Physics engines \cite{Todorov12,Coumans16} have been wildely used in the field of policy learning. Recently, there has been a trend towards differentiable engines, which allows for the use of gradient-based optimization methods, such as backpropagation. Notable examples are \cite{Freeman21,Howell22,Genesis24}. These framework may be built on top of auto differentiation libraries such \cite{Bradbury18,Ansel24} (this is the case of VMAS) or directly with analytical gradients \cite{Carpentier18,Werling21}. Further, several works tackle the challenge of the non-smoothness of the contact dynamics \cite{Degrave19,Moritz20}
+Game engines~\cite{Bellemare13,Balla23} and Physics engines \cite{Todorov12,Coumans16} have been widely used in the field of policy learning. Recently, there has been a trend towards differentiable engines, which allows for the use of gradient-based optimization methods, such as backpropagation. Notable examples are \cite{Freeman21,Howell22,Genesis24}. These frameworks may be built on top of auto differentiation libraries such \cite{Bradbury18,Ansel24} (this is the case of VMAS) or directly with analytical gradients \cite{Carpentier18,Werling21}. Further, several works tackle the challenge of the non-smoothness of the contact dynamics \cite{Degrave19,Moritz20}
 
 \paragraph{Deep Reinforcement Learning}
-Deep reinforcement learning has revolutionized policy learning tasks by combining reinforcement learning with deep neural networks. Foundational works like DQN \cite{Mnih13} and AlphaZero \cite{Silver17} demonstrated human-level performance in complex environments such as Atari games and chess. 
-
+Deep reinforcement learning has revolutionized policy learning tasks by combining reinforcement learning with deep neural networks. 
+Foundational works like DQN~\cite{Mnih13} (and its variants)
+and AlphaZero~\cite{Silver17} demonstrated human-level performance in complex environments such as Atari games and chess. 
+Over the years, several algorithms have been proposed to create more stable and efficient learning methods. 
+Notable examples include A3C for asynchronous learning~\cite{DBLP:conf/icml/MnihBMGLHSK16}, 
+DDPG and PPO for continuous action spaces~\cite{DBLP:journals/corr/LillicrapHPHETS15,Schulman17}, 
+and SAC for continuous action spaces with off-policy learning~\cite{DBLP:conf/icml/HaarnojaZAL18}. 
+Following the initial era of model-free algorithms, 
+model-based algorithms have been introduced to enhance sample efficiency. 
+Early works such as Dreamer~\cite{DBLP:conf/iclr/HafnerLB020} and PlaNet~\cite{DBLP:conf/icml/HafnerLFVHLD19} have demonstrated promising results in terms of both sample efficiency and performance.
 \paragraph{Multi-Agent Reinforcement Learning}
 
 \paragraph{Reinforcement Learning on Differentiable Engines}
