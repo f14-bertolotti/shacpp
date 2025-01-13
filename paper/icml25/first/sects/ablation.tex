@@ -1,6 +1,47 @@
+\begin{figure*}[!t]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/dispersion-ablation-1-mlp.pdf}
+        \caption{Dispersion, MLP, 1 agent}
+        \label{fig:dispersion-ablation-mlp-1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/dispersion-ablation-3-transformer.pdf}
+        \caption{Dispersion, Transformer, 3 agents}
+        \label{fig:dispersion-ablation-transformer-3}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/dispersion-ablation-5-transformer.pdf}
+        \caption{Dispersion, Transformer, 5 agents}
+        \label{fig:dispersion-ablation-transformer-5}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/transport-ablation-1-mlp.pdf}
+        \caption{Transport, MLP, 1 agent}
+        \label{fig:transport-ablation-mlp-1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/transport-ablation-3-transformer.pdf}
+        \caption{Transport, Transformer, 3 agents}
+        \label{fig:transport-ablation-transformer-3}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/transport-ablation-5-transformer.pdf}
+        \caption{Transport, Transformer, 5 agents}
+        \label{fig:transport-ablation-transformer-5}
+    \end{subfigure}
+
+    \caption{Comparison between \fname{} with and without transition network, labelled \fnamer{}, for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios.}
+    \label{fig:ablation}
+\end{figure*}
+
+
+
+
 \section{Ablation Study}\label{sect:ablation}
 While we mainly focus on replacing both the reward and transition function with neural networks, we also investigate the effect of replacing only the latter. 
 
-In fact, the transition function is the most complex component to replace as it requires modeling with precision the observations obtained from the environment after a number of $H$ actions from each agent. Avoiding the need of such network lightens the algorithm but it reintroduce the need for a differentiable environment. Nonetheless, the need for a differentiable reward, made by SHAC, is still relaxed.
+In fact, the transition function is the most complex component to replace as it requires modeling with precision the observations obtained from the environment after a number of $H$ actions from each agent. Avoiding the need of such network lightens the algorithm but it reintroduce the need for a differentiable environment.
 
-Studying such setup can provide insights on the importance and difficulty of the transition function in the SHAC algorithm. TODO 
+Fig.~\ref{fig:ablation} summarizes the results. Most notably, using the true transition function does not appear to provide any significant advantage in terms of reward achieved. In fact, in some cases, we report better results for \fname{}, namely in Fig.~\ref{fig:transport-ablation-1-mlp}. 

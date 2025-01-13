@@ -1,4 +1,5 @@
-\begin{figure*}[t]
+
+\begin{figure*}[!t]
     \centering
     \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{figs/dispersion-1-mlp.pdf}
@@ -32,6 +33,25 @@
         \label{fig:transport-transformer-5}
     \end{subfigure}
 
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-1-mlp.pdf}
+        \caption{Discovery, MLP, 1 agent}
+        \label{fig:discovery-mlp-1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-3-transformer.pdf}
+        \caption{Discovery, Transformer, 3 agents}
+        \label{fig:discovery-transformer-3}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-5-transformer.pdf}
+        \caption{Discovery, Transformer, 5 agents}
+        \label{fig:discovery-transformer-5}
+    \end{subfigure}
+
+    \caption{Comparison between \fname{}, PPO, and SHAC for increasing number of agents for Dispersion, Transport, Sampling, and Discovery scenarios.}
+    \label{fig:experiments}
+
 \end{figure*}
 
 \section{Experiments}\label{sect:experiments}
@@ -39,10 +59,10 @@
 \paragraph{Scenarios}
 As mentioned previously, we choose a few multi-agent scenarios from the VMAS\footnote{\url{https://github.com/proroklab/VectorizedMultiAgentSimulator}} package to test \fname{} aganist SHAC and PPO. In particular, we choose the following scenario:
 \begin{compactitem}
-    \item \textbf{Dispersion}: a scenario where $n$ agents need to reach $n$ goal locations, in such case the agent receives a sparse reward of $1$. Agents observe only their own position, velocity and relative position to each goal. Despite the transition function being differentiable, the reward function is not. Therefore, only PPO and \fname{} are applicable to this scenario.
-    \item \textbf{Transport}: a scenario where $n$ agents need to collaborate to push a package into a goal location. Agents observe their own position, velocity, relative position to the package and relative position between package and the goal. The agents receive a reward proportional to the distance between package and the goal. In this scenario, both the reward and transition functions are differentiable.
-    \item \textbf{Sampling}: a scenario where $n$ agents need to collect rewards from a grid. The reward are sampled from $k$ gaussians. Agents observe their own position, velocity, lidar values to since each other, and rewards in a 3x3 grid around themselves.  In this scenario, both the reward and transition functions are differentiable.
-    \item \textbf{Discovery}: a scenario where $n$ agents need to collect $k$ goal place randomly. A goal is collected if at least $s$ agents stand in proximity to it, in this case they receive a reward of $1$. If agents collide with each other, they receive a penalty. Every agent observes its position, velocity, lidar measurements to other agents and goals. In this scenario, only the transition function is differentiable. Therefore, only PPO and \fname{} are applicable to this scenario.
+    \item \textbf{Dispersion} (Fig.~\ref{fig:dispersion}): a scenario where $n$ agents need to reach $n$ goal locations, in such case the agent receives a sparse reward of $1$. Agents observe only their own position, velocity and relative position to each goal. Despite the transition function being differentiable, the reward function is not. Therefore, only PPO and \fname{} are applicable to this scenario. The maximum reward is $n$.
+    \item \textbf{Transport} (Fig.~\ref{fig:transport}): a scenario where $n$ agents need to collaborate to push a package into a goal location. Agents observe their own position, velocity, relative position to the package and relative position between package and the goal. The agents receive a reward proportional to the distance between package and the goal. In this scenario, both the reward and transition functions are differentiable. The maximum reward varies from environement to environment. It is the scaled distance between the package and the goal times the number of agents.
+    \item \textbf{Discovery} (Fig.~\ref{fig:discovery}): a scenario where $n$ agents need to collect $k$ goal place randomly. A goal is collected if at least $s$ agents stand in proximity to it, in this case they receive a reward of $1$. If agents collide with each other, they receive a penalty. Every agent observes its position, velocity, lidar measurements to other agents and goals. In this scenario, only the transition function is differentiable. Therefore, only PPO and \fname{} are applicable to this scenario. When $n=1$ we set $s=1$ and $k=7$. When $n>1$ we set $s=2$. The maximum rewards depends from the time available, but we set it to $k$.
+    \item \textbf{Sampling} (Fig.~\ref{fig:sampling}): a scenario where $n$ agents need to collect rewards from a grid. The reward are sampled from $k$ gaussians. Agents observe their own position, velocity, lidar values to each other, and rewards in a 3x3 grid around themselves.  In this scenario, both the reward and transition functions are differentiable. The maximum reward depends on where the gaussians are placed.
 \end{compactitem}
 
 \paragraph{Architectures}
@@ -66,8 +86,9 @@ Firstly, we compare the performance of these algorithms on a non-differentiable 
 \paragraph{Transport}
 Now, we compare the performance of these algorithms on a fully differentiable scenario, transport. On the single agent setting, shown in Fig.~\ref{fig:transport-mlp-1}, PPO fails to converge, meanwhile both SHAC and \fname{} perform similarly well. While \fname{} appears to converge earlier SHAC appear to be more consistent. With $3$ and $5$ agents, shown in Fig.~\ref{fig:transport-transformer-3} and \ref{fig:transport-transformer-5}, PPO fails to converge, meanwhile both SHAC and \fname{} perform similarly well albeit SHAC is more stable. 
 
-\paragraph{Sampling}
-TODO
+\paragraph{Discovery}
+Similar consideration hold also for the discovery scenario. In the single agent setting, shown in Fig.~\ref{fig:discovery-mlp-1}, \fname{} performs better, but comparitavely, to PPO . However, with $3$ and $5$ agents, shown in Fig.~\ref{fig:discovery-transformer-3} and \ref{fig:discovery-transformer-5}, PPO fails to converge, meanwhile \fname{} performs better. 
 
-\paragraph{Dispersion}
-TODO
+\paragraph{Sampling}
+
+

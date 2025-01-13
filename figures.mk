@@ -6,6 +6,24 @@ SHAC_COLOR=1 0.1 0.1
 SHACRM_COLOR=0.1 .1 1
 SHACWM_COLOR=.6 0.2 .6
 
+define make-discovery
+data/discovery-$1-$2.pdf: 
+	jet init --shape 1 1 --font-size 24 \
+	jet mod --x-bins 7 \
+	jet line --color ${PPO_COLOR}   --input-path data/ppo/discovery/$1/$2/44/eval.log --input-path data/ppo/discovery/$1/$2/43/eval.log  --input-path data/ppo/discovery/$1/$2/42/eval.log --x message/episode --y message/reward --label ppo \
+	jet line --color ${SHACWM_COLOR}  --input-path data/shacwm/discovery/$1/$2/44/eval.log  --input-path data/shacwm/discovery/$1/$2/43/eval.log  --input-path data/shacwm/discovery/$1/$2/42/eval.log --x message/episode --y message/reward --label shacwm \
+	jet legend \
+		--frameon False \
+		--line ppo ${PPO_COLOR} 1 \
+		--line shac++ ${SHACWM_COLOR} 1 \
+	jet mod \
+		--right-spine False \
+		--top-spine False \
+		--x-label "episode" \
+		--y-label "reward" \
+	jet plot --show False --output-path data/discovery-$1-$2.pdf
+endef
+
 define make-transport
 data/transport-$1-$2.pdf: 
 	jet init --shape 1 1 --font-size 24 \
@@ -83,11 +101,13 @@ MODELS=mlp transformer
 
 $(foreach g,$(AGENTS),$(foreach m,$(MODELS),$(eval $(call make-transport,$g,$m))))
 $(foreach g,$(AGENTS),$(foreach m,$(MODELS),$(eval $(call make-dispersion,$g,$m))))
+$(foreach g,$(AGENTS),$(foreach m,$(MODELS),$(eval $(call make-discovery,$g,$m))))
 
 transport-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/transport-$g-$m.pdf))
 dispersion-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/dispersion-$g-$m.pdf))
+discovery-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/discovery-$g-$m.pdf))
 dispersion-ablation-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/dispersion-ablation-$g-$m.pdf))
 transport-ablation-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/transport-ablation-$g-$m.pdf))
-all: transport-fig dispersion-fig transport-ablation-fig dispersion-ablation-fig
+all: transport-fig dispersion-fig transport-ablation-fig dispersion-ablation-fig discovery-fig
 clean:
 	rm -f data/*.pdf
