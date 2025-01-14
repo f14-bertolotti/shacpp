@@ -22,6 +22,23 @@ data/discovery-$1-$2.pdf:
 		--x-label "episode" \
 		--y-label "reward" \
 	jet plot --show False --output-path data/discovery-$1-$2.pdf
+
+data/discovery-ablation-$1-$2.pdf:
+	jet init --shape 1 1 --font-size 24 \
+	jet mod --x-bins 7 \
+	jet line --color ${SHACRM_COLOR}  --input-path data/shacrm/discovery/$1/$2/44/eval.log  --input-path data/shacrm/discovery/$1/$2/43/eval.log  --input-path data/shacrm/discovery/$1/$2/42/eval.log --x message/episode --y message/reward --label shacrm \
+	jet line --color ${SHACWM_COLOR}  --input-path data/shacwm/discovery/$1/$2/44/eval.log  --input-path data/shacwm/discovery/$1/$2/43/eval.log  --input-path data/shacwm/discovery/$1/$2/42/eval.log --x message/episode --y message/reward --label shacwm \
+	jet legend \
+		--frameon False \
+		--line shac+ ${SHACRM_COLOR} 1 \
+		--line shac++ ${SHACWM_COLOR} 1 \
+	jet mod \
+		--right-spine False \
+		--top-spine False \
+		--x-label "episode" \
+		--y-label "reward" \
+	jet plot --show False --output-path data/discovery-ablation-$1-$2.pdf
+
 endef
 
 define make-transport
@@ -108,6 +125,7 @@ dispersion-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/dispersion-$g-$
 discovery-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/discovery-$g-$m.pdf))
 dispersion-ablation-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/dispersion-ablation-$g-$m.pdf))
 transport-ablation-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/transport-ablation-$g-$m.pdf))
+discovery-ablation-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/discovery-ablation-$g-$m.pdf))
 all: transport-fig dispersion-fig transport-ablation-fig dispersion-ablation-fig discovery-fig
 clean:
 	rm -f data/*.pdf
