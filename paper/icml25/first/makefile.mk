@@ -7,7 +7,7 @@ figs/shacpp.pdf: figs/shacpp.tex
 main.pdf: \
 	figs/shac.pdf \
 	figs/shacpp.pdf \
-	main.tex sects/* \
+	main.tex sects/* tables/* appendices/* \
 	local.bib
 	pdflatex --shell-escape main.tex
 	bibtex main

@@ -7,33 +7,125 @@
     \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{figs/dispersion-1-mlp.pdf}
         \caption{Dispersion, MLP, 1 agent}
-        \label{fig:dispersion-mlp-1}
+        \label{apx:fig:dispersion-mlp-1}
     \end{subfigure}
     \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{figs/dispersion-3-mlp.pdf}
         \caption{Dispersion, MLP, 3 agents}
-        \label{fig:dispersion-mlp-3}
+        \label{apx:fig:dispersion-mlp-3}
     \end{subfigure}
     \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{figs/dispersion-5-mlp.pdf}
         \caption{Dispersion, MLP, 5 agents}
-        \label{fig:dispersion-mlp-5}
+        \label{apx:fig:dispersion-mlp-5}
     \end{subfigure}
 
     \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{figs/transport-1-mlp.pdf}
         \caption{Transport, MLP, 1 agent}
-        \label{fig:transport-mlp-1}
+        \label{apx:fig:transport-mlp-1}
     \end{subfigure}
     \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{figs/transport-3-mlp.pdf}
         \caption{Transport, MLP, 3 agents}
-        \label{fig:transport-mlp-3}
+        \label{apx:fig:transport-mlp-3}
     \end{subfigure}
     \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{figs/transport-5-mlp.pdf}
         \caption{Transport, MLP, 5 agents}
-        \label{fig:transport-mlp-5}
+        \label{apx:fig:transport-mlp-5}
     \end{subfigure}
 
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-1-mlp.pdf}
+        \caption{Discovery, MLP, 1 agent}
+        \label{apx:fig:discovery-mlp-1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-3-mlp.pdf}
+        \caption{Discovery, MLP, 3 agents}
+        \label{apx:fig:discovery-mlp-3}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-5-mlp.pdf}
+        \caption{Discovery, MLP, 5 agents}
+        \label{apx:fig:discovery-mlp-5}
+    \end{subfigure}
+
+    \caption{Comparison between \fname{}, PPO, and SHAC for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios with the MLP architecture.}
+    \label{apx:fig:experiments-mlp}
+
 \end{figure}
+
+\begin{figure}[!t]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/dispersion-ablation-1-mlp.pdf}
+        \caption{Dispersion, MLP, 1 agent}
+        \label{fig:dispersion-ablation-mlp-1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/dispersion-ablation-3-mlp.pdf}
+        \caption{Dispersion, MLP, 3 agents}
+        \label{fig:dispersion-ablation-mlp-3}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/dispersion-ablation-5-mlp.pdf}
+        \caption{Dispersion, MLP, 5 agents}
+        \label{fig:dispersion-ablation-mlp-5}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/transport-ablation-1-mlp.pdf}
+        \caption{Transport, MLP, 1 agent}
+        \label{fig:transport-ablation-mlp-1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/transport-ablation-3-mlp.pdf}
+        \caption{Transport, MLP, 3 agents}
+        \label{fig:transport-ablation-mlp-3}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/transport-ablation-5-mlp.pdf}
+        \caption{Transport, MLP, 5 agents}
+        \label{fig:transport-ablation-mlp-5}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-ablation-1-mlp.pdf}
+        \caption{Discovery, MLP, 1 agent}
+        \label{fig:discovery-ablation-mlp-1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-ablation-3-mlp.pdf}
+        \caption{Discovery, MLP, 3 agents}
+        \label{fig:discovery-ablation-mlp-3}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery-ablation-5-mlp.pdf}
+        \caption{Discovery, MLP, 5 agents}
+        \label{fig:discovery-ablation-mlp-5}
+    \end{subfigure}
+
+    \caption{Comparison between \fname{} with and without transition network, labelled \fnamer{}, for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios.}
+    \label{fig:ablation}
+\end{figure}
+
+%\input tables/shacwm-transformer.tex
+%\input tables/shacwm-mlp.tex
+
+% make subtables
+\begin{table}[t]
+        \centering
+        \input{tables/shacwm.tex}
+        \caption{SHAC/\fname{}/\fnamer{} Hyperparameters}
+        \label{apx:tab:shac}
+\end{table}
+
+\begin{table}[t]
+        \centering
+        \input{tables/ppo.tex}
+        \caption{PPO Hyperparmeters}
+        \label{apx:tab:ppo}
+\end{table}
+
