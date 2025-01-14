@@ -38,7 +38,6 @@ def maxreward_table(input_path, output_path):
                     data = [json.loads(line) for line in f]
                     path2data[path] = data
 
-
     # get max reward
     path2max = {}
     for path, data in path2data.items():
@@ -58,21 +57,23 @@ def maxreward_table(input_path, output_path):
         else:
             path2max_by_seed[key] = max(path2max_by_seed[key], rew)
 
+    # transformer agent 1 is not available
+    for key in path2max_by_seed:
+        if key[0] == "transformer" and key[1] == 1:
+            path2max_by_seed[key] = -9999
+
+    pprint.pprint(path2max_by_seed)
+    print()
+
     # get max in scenario-agents
     path2reference = {}
-    for path, rew in path2max.items():
-        scenario = path2scenario(path)
-        agent = path2agents(path)
-        #architecture = path2architecture(path)
-        #key = (architecture, agent, scenario)
+    for (arch, agent, scenario, algo), rew in path2max_by_seed.items():
         key = (agent, scenario)
         if key not in path2reference:
             path2reference[key] = rew
         else:
             path2reference[key] = max(path2reference[(key)], rew)
 
-    pprint.pprint(path2max_by_seed)
-    print()
     pprint.pprint(path2reference)
     print()
 
@@ -84,8 +85,6 @@ def maxreward_table(input_path, output_path):
         arch = path2architecture(path)
         algo = path2algorithm(path)
         path2max_by_seed_norm[(arch, agent, scenario, algo)] = path2max_by_seed[(arch, agent, scenario, algo)] / path2reference[(agent, scenario)]
-
-    pprint.pprint(path2max_by_seed_norm)
 
     # write latex table
     with open(output_path, "w") as f:
