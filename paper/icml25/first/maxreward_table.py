@@ -1,3 +1,4 @@
+import pprint
 import click
 import json
 import os
@@ -44,31 +45,47 @@ def maxreward_table(input_path, output_path):
         rewards = [d["message"]["reward"] for d in data]
         path2max[path] = max(rewards)
 
-    # aggregate rewards by seed
+    # aggregate by seed
     path2max_by_seed = {}
-    for path,reward in path2max.items():
-        seed = path.split("/")[-2]
-        path_no_seed = os.path.join(*path.split("/")[:-2],path.split("/")[-1])
-        if path_no_seed not in path2max_by_seed:
-            path2max_by_seed[path_no_seed] = reward
+    for path, rew in path2max.items():
+        agent = path2agents(path)
+        scenario = path2scenario(path)
+        arch = path2architecture(path)
+        algo = path2algorithm(path)
+        key = (arch, agent, scenario, algo)
+        if key not in path2max_by_seed:
+            path2max_by_seed[key] = rew
         else:
-            path2max_by_seed[path_no_seed] = max(path2max_by_seed[path_no_seed], reward)
+            path2max_by_seed[key] = max(path2max_by_seed[key], rew)
 
-    # drop all transformer with 1 agent
-    path2max_by_seed = {path:reward if path2agents(path) > 1 or path2architecture(path) == "mlp" else 0 for path,reward in path2max_by_seed.items() }
-
-    # normalize by algorithm max
-    algorithm2max = {}
-    for path in path2max_by_seed:
-        algorithm = path.split("/")[-4]
-        if algorithm not in algorithm2max:
-            algorithm2max[algorithm] = path2max_by_seed[path]
+    # get max in scenario-agents
+    path2reference = {}
+    for path, rew in path2max.items():
+        scenario = path2scenario(path)
+        agent = path2agents(path)
+        #architecture = path2architecture(path)
+        #key = (architecture, agent, scenario)
+        key = (agent, scenario)
+        if key not in path2reference:
+            path2reference[key] = rew
         else:
-            algorithm2max[algorithm] = max(algorithm2max[algorithm], path2max_by_seed[path])
-    path2max_by_seed_normalized = {}
-    for path in path2max_by_seed:
-        algorithm = path.split("/")[-4]
-        path2max_by_seed_normalized[path] = path2max_by_seed[path] / algorithm2max[algorithm]
+            path2reference[key] = max(path2reference[(key)], rew)
+
+    pprint.pprint(path2max_by_seed)
+    print()
+    pprint.pprint(path2reference)
+    print()
+
+    # normalize wrt reference
+    path2max_by_seed_norm = {}
+    for path, rew in path2max.items():
+        scenario = path2scenario(path)
+        agent = path2agents(path)
+        arch = path2architecture(path)
+        algo = path2algorithm(path)
+        path2max_by_seed_norm[(arch, agent, scenario, algo)] = path2max_by_seed[(arch, agent, scenario, algo)] / path2reference[(agent, scenario)]
+
+    pprint.pprint(path2max_by_seed_norm)
 
     # write latex table
     with open(output_path, "w") as f:
@@ -79,22 +96,20 @@ def maxreward_table(input_path, output_path):
         f.write("\\midrule\n")
         for scenario in scenarios:
             f.write("\\multirow{3}{*}{" + scenario + "}")
-            for agents_ in agents:
-                f.write(f"& {agents_}")
+            for agent in agents:
+                f.write(f"& {agent}")
                 for architecture in architectures:
                     for algorithm in algorithms:
-                        path = f"{input_path}/{algorithm}/{scenario}/{agents_}/{architecture}/eval.log"
-                        if path not in path2max_by_seed_normalized:
+                        key = (architecture, agent, scenario, algorithm)
+                        if key not in path2max_by_seed_norm:
                             f.write(" & -")
-                        elif architecture == "transformer" and agents_ == 1:
+                        elif architecture == "transformer" and agent == 1:
                             f.write(" & -")
-                        elif path in path2max_by_seed_normalized:
-                            value = path2max_by_seed_normalized[path]
-                            f.write(" & \\textbf{"+f"{value:.2f}"+"}" if value == 1 else f" & {value:.2f}")
+                        elif key in path2max_by_seed_norm:
+                            value = path2max_by_seed_norm[key]
+                            f.write(" & \\textbf{"+f"{value:.2f}"+"}" if value >= .999 else f" & {value:.2f}")
                         else:
                             raise ValueError("Path not found")
-                        
-
                 f.write(" \\\\\n")
         f.write("\\bottomrule\n")
         f.write("\\end{tabular}\n")
