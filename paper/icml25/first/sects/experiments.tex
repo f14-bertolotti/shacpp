@@ -79,6 +79,12 @@ As mentioned previously, we choose a few multi-agent scenarios from the VMAS\foo
         \sentence{World Model} Similarly to discovery, this scenario is particularly challenging for \fname{} as we do not provide the full world state, but only the agents observations, to the world model.
 \end{compactitem}
 
+\begin{table*}[!t]
+    \centering
+    \input tables/max.tex
+    \caption{Normalized maximum (relative to the best performing model) rewards for the different scenarios.}
+\end{table*}
+
 \paragraph{Architectures}
 We test SHAC, PPO, and \fname{} with both an MLP and a Transformer architecture. Specifically, we use a 1-layer MLP with hidden size 64 or a 1-layer single-head Transformer with hidden size 64 for the Policy Network and Value Network (for PPO, SHAC, and \fname{}). For the Reward Network, we use a 1-layer MLP with hidden size 64 or a 1-layer single-head Transformer with hidden size 64 (for \fname{}). The Transition Network for \fname{} is a 3-layer single-head Transformer with hidden size 64.
 
