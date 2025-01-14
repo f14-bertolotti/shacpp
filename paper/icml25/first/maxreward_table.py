@@ -70,8 +70,6 @@ def maxreward_table(input_path, output_path):
         algorithm = path.split("/")[-4]
         path2max_by_seed_normalized[path] = path2max_by_seed[path] / algorithm2max[algorithm]
 
-    print(path2max_by_seed_normalized)
-
     # write latex table
     with open(output_path, "w") as f:
         f.write("\\begin{tabular}{ c c c c c c c c c c }\n")
@@ -88,13 +86,11 @@ def maxreward_table(input_path, output_path):
                         path = f"{input_path}/{algorithm}/{scenario}/{agents_}/{architecture}/eval.log"
                         if path not in path2max_by_seed_normalized:
                             f.write(" & -")
-                        elif architecture == "transformer" and agents_ >1 and scenario=="dispersion":
-                            print(path, path2max_by_seed_normalized[path])
-                            f.write(f" & {path2max_by_seed_normalized[path]:.3f}")
                         elif architecture == "transformer" and agents_ == 1:
                             f.write(" & -")
                         elif path in path2max_by_seed_normalized:
-                            f.write(f" & {path2max_by_seed_normalized[path]:.3f}")
+                            value = path2max_by_seed_normalized[path]
+                            f.write(" & \\textbf{"+f"{value:.2f}"+"}" if value == 1 else f" & {value:.2f}")
                         else:
                             raise ValueError("Path not found")
                         
