@@ -164,6 +164,7 @@ def shacrm(config):
         out_coefficient         = config.out_coefficient         ,
         reward_ett              = config.reward_ett              ,
         value_ett               = config.value_ett               ,
+        log_grads               = config.log_grads               ,
     ) 
 
     pathlib.Path(os.path.join(config.dir, "done")).touch()

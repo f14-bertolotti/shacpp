@@ -54,6 +54,7 @@ def shacrm(
         out_coefficient        : float                                  ,
         reward_ett             : int                                    ,
         value_ett              : int                                    ,
+        log_grads              : bool                                   ,
     ):
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
@@ -121,7 +122,8 @@ def shacrm(
             gammas           = gammas                  ,
             logger           = policy_logger           ,
             clip_coefficient = policy_clip_coefficient ,
-            out_coefficient  = out_coefficient
+            out_coefficient  = out_coefficient         ,
+            log_grads        = log_grads               ,
         )
          
         # train reward model ##########################################

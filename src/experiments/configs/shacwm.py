@@ -112,6 +112,9 @@ class Shacwm:
         self.etr                    = 5   # epochs before envs. reset
         self.etv                    = 100 # epochs before evaluation
 
+        # training configurations
+        self.is_deterministic       = True
+
         # rl gamma and lambda coefficients
         self.gamma_factor           = 0.99
         self.lambda_factor          = 0.95

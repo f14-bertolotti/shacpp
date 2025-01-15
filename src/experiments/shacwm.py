@@ -190,6 +190,7 @@ def shacwm(config):
         world_tolerance         = config.world_tolerance         ,
         reward_tolerance        = config.reward_tolerance        ,
         value_tolerance         = config.value_tolerance         ,
+        log_grads               = config.log_grads               ,
     ) 
 
     pathlib.Path(os.path.join(config.dir, "done")).touch()

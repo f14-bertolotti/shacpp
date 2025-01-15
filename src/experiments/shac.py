@@ -126,6 +126,7 @@ def shac(config):
         restore_path           = config.restore_path            ,
         device                 = config.device                  ,
         early_stopping         = config.early_stopping          ,
+        log_grads              = config.log_grads               ,
     ) 
 
     pathlib.Path(os.path.join(config.dir, "done")).touch()

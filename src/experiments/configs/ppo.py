@@ -57,6 +57,9 @@ class Ppo():
         # type of nn model
         self.nn                     = "transformer"
 
+        # should we log gradients?
+        self.log_grads              = False
+
         # TBD
         self.observation_size = 0
         self.action_size      = 0
@@ -64,7 +67,6 @@ class Ppo():
         self.agents           = 0
         self.dir              = ""
         self.env_name         = ""
-
 
 
 ppo = Ppo()

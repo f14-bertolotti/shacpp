@@ -12,6 +12,7 @@ def train_policy(
         logger           : logging.Logger         ,
         clip_coefficient : float|None = .5        ,
         out_coefficient  : float = .1             ,
+        log_grads        : bool  = False          ,
     ):
     """ Train the policy model """
 
@@ -45,6 +46,8 @@ def train_policy(
             "loss"    : loss.item(),
             "done"    : episode_data["dones"][-1,:,0].sum().int().item(),
             "reward"  : episode_data["rewards"].sum(0).mean(0).sum().item()
-    }))
+    } | ({} if not log_grads else {
+            "grads"     : torch.cat([param.grad.detach().flatten() for param in policy_model.parameters()]).norm().item(),
+    })))
 
 

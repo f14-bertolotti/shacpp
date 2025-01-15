@@ -75,6 +75,9 @@ class Shac:
         self.etr                    = 5   # epochs before envs. reset
         self.etv                    = 100 # epochs before evaluation
 
+        # should we log gradients?
+        self.log_grads              = False
+
         # rl gamma and lambda coefficients
         self.gamma_factor           = 0.99
         self.lambda_factor          = 0.95

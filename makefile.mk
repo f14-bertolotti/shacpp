@@ -1,5 +1,6 @@
 EPISODES=20000
 COMPILE=True
+LOGGRAD=False
 
 venv/bin/python3:
 	python3 -m venv venv
@@ -12,14 +13,14 @@ data/$1/$2/$3/mlp/$4/done: venv/bin/python3
 		modelcfg --model policy --nn mlp --hidden-size $(shell echo $$((32 * $(3)))) \
 		modelcfg --model value  --nn mlp --hidden-size $(shell echo $$((32 * $(3)))) \
 		modelcfg --model reward --nn mlp --hidden-size $(shell echo $$((32 * $(3)))) \
-		run --alg-name $1 --env-name $2 --agents $3 --seed $4 --compile $(COMPILE) --episodes $(EPISODES)
+		run --log-grads $(LOGGRAD) --alg-name $1 --env-name $2 --agents $3 --seed $4 --compile $(COMPILE) --episodes $(EPISODES)
 
 data/$1/$2/$3/transformer/$4/done: venv/bin/python3
 	CUBLAS_WORKSPACE_CONFIG=":4096:8" venv/bin/python3 src/experiments.py \
 		modelcfg --model policy --nn transformer \
 		modelcfg --model value  --nn transformer \
 		modelcfg --model reward --nn transformer \
-		run --alg-name $1 --env-name $2 --agents $3 --seed $4 --compile $(COMPILE) --episodes $(EPISODES)
+		run --log-grads $(LOGGRAD) --alg-name $1 --env-name $2 --agents $3 --seed $4 --compile $(COMPILE) --episodes $(EPISODES)
 
 clean-$1-$2-$3-mlp-$4:
 	rm -rf data/$1/$2/$3/mlp/$4

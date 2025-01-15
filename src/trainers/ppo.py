@@ -33,6 +33,7 @@ def ppo(
         compile                : bool                                   ,
         restore_path           : str|None                               ,
         early_stopping         : dict                                   ,
+        log_grads              : bool                                   ,
     ):
 
     ppo_logger    = utils.get_file_logger(os.path.join(dir,"ppo.log"))
@@ -66,15 +67,16 @@ def ppo(
 
         # train policy and value models ##############################
         trainers.routines.ppo_policy_value(
-            policy_model     = policy_model,
-            value_model      = value_model,
-            policy_optimizer = policy_model_optimizer,
-            value_optimizer  = value_model_optimizer,
-            episode_data     = episode_data,
-            batch_size       = batch_size,
-            ppo_logger       = ppo_logger,
-            gamma            = gamma_factor,
-            epochs           = epochs
+            policy_model     = policy_model           ,
+            value_model      = value_model            ,
+            policy_optimizer = policy_model_optimizer ,
+            value_optimizer  = value_model_optimizer  ,
+            episode_data     = episode_data           ,
+            batch_size       = batch_size             ,
+            ppo_logger       = ppo_logger             ,
+            gamma            = gamma_factor           ,
+            epochs           = epochs                 ,
+            log_grads        = log_grads              ,
         )
 
         # checkpoint ##################################################

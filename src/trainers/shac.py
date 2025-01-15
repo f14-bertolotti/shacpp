@@ -43,6 +43,7 @@ def shac(
         out_coefficient        : float                                  ,
         value_ett              : int                                    ,
         use_diffreward         : bool = True                            ,
+        log_grads              : bool = False                           ,
     ):
 
     eval_logger   = utils.get_file_logger(os.path.join(dir,  "eval.log"))
@@ -91,6 +92,7 @@ def shac(
             logger           = policy_logger           ,
             clip_coefficient = policy_clip_coefficient ,
             out_coefficient  = out_coefficient         ,
+            log_grads        = log_grads               ,
         )
 
         # train value model ###########################################

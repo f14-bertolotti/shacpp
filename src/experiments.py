@@ -52,8 +52,9 @@ def cli(): pass
 @click.option("--train-steps"   , "train_steps"   , type=int                    , default=32           , help="Number of steps to train"                 )
 @click.option("--eval-envs"     , "eval_envs"     , type=int                    , default=512          , help="Number of environments to evaluate"       )
 @click.option("--eval-steps"    , "eval_steps"    , type=int                    , default=512          , help="Number of steps to evaluate"              )
+@click.option("--log-grads"     , "log_grads"     , type=bool                   , default=False        , help="Log gradients"                            )
 @click.pass_context
-def run(ctx, algname, envname, agents, episodes, seed, etr, etv, compile, device, deterministic, dir, early_stopping, out_coeff, var, restore_path, lambda_factor, gamma_factor, train_envs, train_steps, eval_envs, eval_steps):
+def run(ctx, algname, envname, agents, episodes, seed, etr, etv, compile, device, deterministic, dir, early_stopping, out_coeff, var, restore_path, lambda_factor, gamma_factor, train_envs, train_steps, eval_envs, eval_steps, log_grads):
     config = getattr(experiments.configs, algname)
     config.compile  = compile
     config.device   = device
@@ -77,6 +78,7 @@ def run(ctx, algname, envname, agents, episodes, seed, etr, etv, compile, device
         "max_envs_fraction"   : early_stopping[1]
     }
     config.restore_path = restore_path
+    config.log_grads    = log_grads
 
     if ctx.obj is not None:
         for key, value in ctx.obj.items():

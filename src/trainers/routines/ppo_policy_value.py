@@ -20,6 +20,7 @@ def ppo_policy_value(
         value_coefficient   : float = .5             ,
         entropy_coefficient : float = .0             ,
         max_grad_norm       : float = .5             ,
+        log_grads           : bool  = False           ,
     ):
 
     # comute values ###########################################################
@@ -96,5 +97,7 @@ def ppo_policy_value(
                 "entropy"   : entropy   .mean().item(),
                 "advantages": advantages.mean().item(),
                 "returns"   : returns   .mean().item(),
-            }))
+            } | ({} if not log_grads else {
+                "grads"     : torch.cat([param.grad.detach().flatten() for param in policy_model.parameters()]).norm(),
+            })))
 

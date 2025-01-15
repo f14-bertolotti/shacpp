@@ -118,6 +118,7 @@ def ppo(config):
         compile                = config.compile          ,
         restore_path           = config.restore_path     ,
         early_stopping         = config.early_stopping   ,
+        log_grads              = config.log_grads        ,
     )
 
     pathlib.Path(os.path.join(config.dir, "done")).touch()
