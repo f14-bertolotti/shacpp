@@ -32,8 +32,8 @@ def train_policy(
 
     # add action space loss
     if out_coefficient > 0:
-        loss += ((episode_data["logits"][episode_data["logits"] < policy_model.action_space[0]] - policy_model.action_space[0])**2).mean() * out_coefficient
-        loss += ((episode_data["logits"][episode_data["logits"] > policy_model.action_space[1]] - policy_model.action_space[1])**2).mean() * out_coefficient
+        loss += ((episode_data["logits"][episode_data["logits"] < policy_model.action_space[0]] - policy_model.action_space[0])**2).mean().nan_to_num() * out_coefficient
+        loss += ((episode_data["logits"][episode_data["logits"] > policy_model.action_space[1]] - policy_model.action_space[1])**2).mean().nan_to_num() * out_coefficient
 
     # backward pass
     loss.backward()
