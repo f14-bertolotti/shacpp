@@ -19,6 +19,8 @@ In this work, we will often approximate functions, such as transition ($F$) or r
 
 While we use a unique set of parameters $\theta$ for all the networks. Each network can either use its own subset of $\theta$ or it can share parameters with other networks. In practice, the parameters will never be shared.
 
+For simplicity, we formally treat only the case where the policy observe the full state to make the action. However, in our experiments, we consider also scenarios where the full state is not available to the policy. In such cases, the MDP includes a set of observations, $\mathcal{O}$, an observation function $O:\mathcal{S}\rightarrow\mathcal{O}$, and the policy is a function $\pi:\mathcal{O}\rightarrow\mathcal{A}$. In such cases, the MDP takes the name of Partially Observable Markov Decision Process (POMDP). 
+
 \subsection{SHAC}
 
 To solve an MDP $\mathcal{M}$, SHAC trains a policy $\pi_\theta$ by minimizing the loss function $\mathcal{L}_\theta^{\pi}:\mathcal{T}^N\rightarrow\mathbb{R}$ for a batch of $N$ trajectories $B = \{\tau_1, \ldots, \tau_N\}$ sampled from the MDP. The loss is defined as:  

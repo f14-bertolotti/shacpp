@@ -62,10 +62,12 @@ As mentioned previously, we choose a few multi-agent scenarios from the VMAS\foo
     \item \textbf{Dispersion} (Fig.~\ref{fig:dispersion}): 
         \sentence{Environment} a scenario where $n$ agents need to reach $n$ goal locations, in such case the agent receives a sparse reward of $1$. Agents observe only their own position, velocity and relative position to each goal. 
         \sentence{Differentiability} Despite the transition function being differentiable, the reward function is not. Therefore, only PPO and \fname{} are applicable to this scenario. 
+        \sentence{World Model} The world model has enough information to predict the next states accurately.
         \sentence{Max Reward} The maximum reward is $n$.
     \item \textbf{Transport} (Fig.~\ref{fig:transport}): 
         \sentence{Environment} a scenario where $n$ agents need to collaborate to push a package into a goal location. Agents observe their own position, velocity, relative position to the package and relative position between package and the goal. The agents receive a reward proportional to the distance between package and the goal. 
         \sentence{Differentiability} In this scenario, both the reward and transition functions are differentiable. 
+        \sentence{World Model} The world model has enough information to predict the next states accurately.
         \sentence{Max Reward} The maximum reward varies from environement to environment. It is the scaled distance between the package and the goal times the number of agents.
     \item \textbf{Discovery} (Fig.~\ref{fig:discovery}): 
         \sentence{Environment} a scenario where $n$ agents need to collect $k$ goal place randomly. A goal is collected if at least $s$ agents stand in proximity to it, in this case they receive a reward of $1$. If agents collide with each other, they receive a penalty. Every agent observes its position, velocity, lidar measurements to other agents and goals. When $n=1$ we set $s=1$ and $k=7$. When $n>1$ we set $s=2$.

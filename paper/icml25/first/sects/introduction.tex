@@ -3,7 +3,7 @@
 Learning control policies has important applications in robotics~\cite{Singh22}, autonomous driving~\cite{Elallid22}, swarm intelligence~\cite{Tang21} and many other fields. These scenarios present a variety of different challenges, such as sparse rewards, complex dynamics, and multi-agent interactions. Current approaches often focus on either single- or multi-agent scenarios, lacking a unified solution that works effectively in both settings. Moreover, reinforcement learning algorithms tend to be \emph{sample inefficient}, namely requiring a large number of interactions with the environment to learn a good policy.
 \texttt{\color{DarkOrchid}{<- FB: non mi è super chiara questa frase}}. A recently introduced method for the latter problem is SHAC~\cite{Xu22} which exploits differentiable simulators to provide precise gradient information, thereby expediting policy optimization and improving learning efficiency.
 
-Despite its effectiveness, SHAC has two main limitations. First, it requires both a differentiable simulator and a differentiable reward function to operate correctly. Obtaining these can be impractical, particularly in scenarios with inherently sparse rewards. Second, even when a differentiable simulator is available, SHAC has been found to be sensitive to complex dynamics, such as object collisions~\cite{Georgiev24} or interactions in multi-agent systems.
+Despite its effectiveness, SHAC has two main limitations. First, it requires both a differentiable simulator and a differentiable reward function to operate correctly. Obtaining these can be impractical, particularly in scenarios with inherently sparse rewards. Second, even when a differentiable simulator is available, SHAC has been found to be sensitive to complex dynamics, such as object collisions~\cite{Georgiev24} or interactions in multi-agent systems. Backpropagation through these dynamics has been found, in general, to lead to unstable gradients \cite{Bengio94,Metz21}.
 
 In this work, we aim to address both limitations by approximating the gradients of the differentiable simulator. Specifically, we propose replacing both the simulator and the reward function with two neural networks trained alongside the policy and value networks. This approach is designed to create an algorithm that is more robust to complex dynamics and sparse rewards, enabling it to function effectively across a broader range of environments, including both single-agent and multi-agent scenarios. However, this method also introduces additional complexity and computational overhead due to the need for training these additional networks.
 
@@ -23,3 +23,5 @@ We summarize our contributions as follows:
     \item We evaluate our algorithm against PPO and SHAC on a set of environments with increasing numbers of agents.
     \item We show that our algorithm achieve SHAC-like performance in differentiable environments and outperform PPO in non-differentiable environments.
 \end{compactitem}
+
+
