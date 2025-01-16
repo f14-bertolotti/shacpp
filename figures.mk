@@ -139,6 +139,24 @@ discovery-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/discovery-$g-$m.
 dispersion-ablation-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/dispersion-ablation-$g-$m.pdf))
 transport-ablation-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/transport-ablation-$g-$m.pdf))
 discovery-ablation-fig: $(foreach g,$(AGENTS),$(foreach m,$(MODELS),data/discovery-ablation-$g-$m.pdf))
-all: transport-fig dispersion-fig transport-ablation-fig dispersion-ablation-fig discovery-fig discovery-ablation-fig
+
+data/grads-transformer-transport.pdf:
+	jet init --shape 1 1 --font-size 24 \
+	jet mod --x-bins 7 \
+	jet line --color ${SHAC_COLOR}   --input-path data/withgrads/shac/transport/5/transformer/42/policy.log   --x message/episode --y message/grads \
+	jet line --color ${SHACWM_COLOR} --input-path data/withgrads/shacwm/transport/5/transformer/42/policy.log --x message/episode --y message/grads \
+	jet legend \
+		--frameon False \
+		--line shac++ ${SHACWM_COLOR} 1 "-" \
+		--line shac ${SHAC_COLOR} 1 "-" \
+	jet mod \
+		--right-spine False \
+		--top-spine False \
+		--x-label "episode" \
+		--y-label "||∇f(x)||" \
+	jet plot --show True --output-path $@
+
+
+all: transport-fig disperion-fig transport-ablation-fig dispersion-ablation-fig discovery-fig discovery-ablation-fig
 clean:
 	rm -f data/*.pdf
