@@ -51,8 +51,12 @@
 
     \caption{Comparison between \fname{}, PPO, and SHAC for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios for the Transformer Architecture.}
     \label{fig:experiments}
-
 \end{figure*}
+
+\begin{figure}[t]
+    \includegraphics[width=\columnwidth]{figs/grads-transformer-transport.pdf}
+    \caption{Norm of policy gradients on the Transport environment across 5000 epochs. The raise in norm for SHAC (epoch 2700) corresponds with occurence of generalization, where collision between agents and the packages become frequent. Also \fname{} experience a raise in norm, albeit more behaved, corresponds with the occurence of generalization (epoch 3200).}
+\end{figure}
 
 \section{Experiments}\label{sect:experiments}
 
