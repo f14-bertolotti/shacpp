@@ -24,6 +24,7 @@ def train_policy(
     live_runs = dead_runs.logical_not()
     live_steps = dones[:,live_runs,0].logical_not().sum(0) - 1
 
+
     # compute loss
     optimizer.zero_grad()
     loss = -(
@@ -38,6 +39,7 @@ def train_policy(
 
     # backward pass
     loss.backward()
+    if log_grads: gradnorm = torch.cat([param.grad.detach().flatten() for param in policy_model.parameters()]).norm().item()
     if clip_coefficient is not None: torch.nn.utils.clip_grad_norm_(policy_model.parameters(), clip_coefficient)
     optimizer.step()
 
@@ -47,7 +49,7 @@ def train_policy(
             "done"    : episode_data["dones"][-1,:,0].sum().int().item(),
             "reward"  : episode_data["rewards"].sum(0).mean(0).sum().item()
     } | ({} if not log_grads else {
-            "grads"     : torch.cat([param.grad.detach().flatten() for param in policy_model.parameters()]).norm().item(),
+            "grads"   : gradnorm,
     })))
 
 

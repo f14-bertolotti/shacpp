@@ -30,6 +30,22 @@ clean-$1-$2-$3-transformer-$4:
 
 endef
 
+data/withgrads/shac/transport/5/transformer/42/done: venv/bin/python3
+	CUBLAS_WORKSPACE_CONFIG=":4096:8" venv/bin/python3 src/experiments.py \
+		modelcfg --model policy --nn transformer \
+		modelcfg --model value  --nn transformer \
+		modelcfg --model reward --nn transformer \
+		run --dir $(dir $@) --log-grads True --alg-name shac --env-name transport --agents 5 --seed 42 --compile True --episodes 5000 --early-stopping 2 2
+data/withgrads/shacwm/transport/5/transformer/42/done: venv/bin/python3
+	CUBLAS_WORKSPACE_CONFIG=":4096:8" venv/bin/python3 src/experiments.py \
+		modelcfg --model policy --nn transformer \
+		modelcfg --model value  --nn transformer \
+		modelcfg --model reward --nn transformer \
+		run --dir $(dir $@) --log-grads True --alg-name shacwm --env-name transport --agents 5 --seed 42 --compile True --episodes 5000 --early-stopping 2 2
+
+
+
+
 # generate all possible targets
 ALGOS=ppo shac shacrm shacwm
 ENVS=transport dispersion sampling discovery
