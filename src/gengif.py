@@ -64,7 +64,7 @@ def run(
         checkpoint = torch.load(input_path)
         print("restoring from:", input_path)
         print("checkpoint ep :", checkpoint["episode"])
-        policy.load_state_dict(checkpoint["policy_state_dict"])
+        policy.load_state_dict({k.replace("_orig_mod.",""):v for k,v in checkpoint["policy_state_dict"].items()})
     
     frames, observation = [], torch.stack(world.reset()).transpose(0,1)
     
@@ -74,14 +74,12 @@ def run(
         total_reward = 0
         for step in range(0, steps):
             actions = policy.act(observation)["actions"]
-            print(actions)
             frames.append(world.render(mode="rgb_array"))
             observation, reward, done, info = world.step(actions.transpose(0,1))
+            print(world.scenario.max_rewards())
             observation = torch.stack(observation).transpose(0,1)
-            print(f"{torch.stack(reward).sum().item():3.2f} ", end=" ")
             total_reward += torch.stack(reward).sum().item()
         
-        print()
         print("total reward", total_reward, world.scenario.max_rewards().sum().item())
     
     

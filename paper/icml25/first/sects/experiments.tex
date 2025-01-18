@@ -1,52 +1,68 @@
 
 \begin{figure*}[!t]
     \centering
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/dispersion-1-mlp.pdf}
         \caption{Dispersion, MLP, 1 agent}
         \label{fig:dispersion-mlp-1}
     \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/dispersion-3-transformer.pdf}
         \caption{Dispersion, Transformer, 3 agents}
         \label{fig:dispersion-transformer-3}
     \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/dispersion-5-transformer.pdf}
         \caption{Dispersion, Transformer, 5 agents}
         \label{fig:dispersion-transformer-5}
     \end{subfigure}
 
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/transport-1-mlp.pdf}
         \caption{Transport, MLP, 1 agent}
         \label{fig:transport-mlp-1}
     \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/transport-3-transformer.pdf}
         \caption{Transport, Transformer, 3 agents}
         \label{fig:transport-transformer-3}
     \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/transport-5-transformer.pdf}
         \caption{Transport, Transformer, 5 agents}
         \label{fig:transport-transformer-5}
     \end{subfigure}
 
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/discovery-1-mlp.pdf}
         \caption{Discovery, MLP, 1 agent}
         \label{fig:discovery-mlp-1}
     \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/discovery-3-transformer.pdf}
         \caption{Discovery, Transformer, 3 agents}
         \label{fig:discovery-transformer-3}
     \end{subfigure}
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.30\textwidth}
         \includegraphics[width=\textwidth]{figs/discovery-5-transformer.pdf}
         \caption{Discovery, Transformer, 5 agents}
         \label{fig:discovery-transformer-5}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.30\textwidth}
+        \includegraphics[width=\textwidth]{figs/sampling-1-mlp.pdf}
+        \caption{Discovery, MLP, 1 agent}
+        \label{fig:sampling-mlp-1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.30\textwidth}
+        \includegraphics[width=\textwidth]{figs/sampling-3-transformer.pdf}
+        \caption{Discovery, Transformer, 3 agents}
+        \label{fig:sampling-transformer-3}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.30\textwidth}
+        \includegraphics[width=\textwidth]{figs/sampling-5-transformer.pdf}
+        \caption{Discovery, Transformer, 5 agents}
+        \label{fig:sampling-transformer-5}
     \end{subfigure}
 
     \caption{Comparison between \fname{}, PPO, and SHAC for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios for the Transformer Architecture.}
@@ -99,7 +115,7 @@ While the MLP architecture is the simplest, the Transformer baseline benefits fr
 \paragraph{Hyperparameters}
 For all networks we use learning rate of $1e\text{-}3$ with Adam Optimizer~\cite{Kingma14}. For all scenarios, each training episode consists of $512$ environments of $32$ steps each. Each validation episode is composed of $512$ environments of $512$ steps each. We employ early stopping when the agents achieve $90\%$ of the maximum reward in $90\%$ of the episode's environments. If early stopping is not triggered, we stop training after $20,000$ episodes. The discount factor is set to $0.99$ and lambda factor is set to $0.95$. We report results for increasing number of agents $n\in\{1,3,5\}$. We repeat and report results for $3$ runs with different seeds. See Table~\ref{apx:tab:ppo} and Table~\ref{apx:tab:shac} for a complete list of hyperparameters.
 
-Overall, considering different training algorithms, architectures, scenarios, hyperparameters, we completed a total of $216$ runs lasting between $1$ to $8$ hours each. 
+Overall, considering different training algorithms, architectures, scenarios, hyperparameters, we completed a total of $254$ runs lasting between $1$ to $8$ hours each. 
 
 \paragraph{Hardware Setup}
 Our experiments were conducted on a cluster of machines composed of 2 computational nodes, each with one Nvidia Tesla V100 GPU (with 32GB of memory), 200GB of RAM, and two Intel Xeon Gold 6226R processors (32 cores each).
