@@ -1,7 +1,7 @@
 \section{Related Work}
 
 \paragraph{Differentiable Engines}
-Game engines~\cite{Bellemare13,Balla23} and Physics engines \cite{Todorov12,Coumans16} have been widely used in the field of policy learning. Recently, there has been a trend towards differentiable engines, which allows for the use of gradient-based optimization methods, such as backpropagation. Notable examples are \cite{Freeman21,Howell22,Genesis24}. These frameworks may be built on top of auto differentiation libraries such \cite{Bradbury18,Ansel24} (this is the case of VMAS) or directly with analytical gradients \cite{Carpentier18,Werling21}. Further, several works tackle the challenge of the non-smoothness of the contact dynamics \cite{Degrave19,Moritz20}
+Game engines~\cite{Bellemare13,Balla23} and Physics engines~\cite{Todorov12,Coumans16} have been widely used in the field of policy learning. Recently, there has been a trend towards differentiable engines, which allows for the use of gradient-based optimization methods, such as backpropagation. Notable examples are~\cite{Freeman21,Howell22,Genesis24}. These frameworks may be built on top of auto differentiation libraries such~\cite{Bradbury18,Ansel24} (this is the case of VMAS) or directly with analytical gradients~\cite{Carpentier18,Werling21}. Further, several works tackle the challenge of the non-smoothness of the contact dynamics~\cite{Degrave19,Moritz20}
 
 \paragraph{Deep Reinforcement Learning}
 Deep reinforcement learning has revolutionized policy learning tasks by combining reinforcement learning with deep neural networks. 
@@ -31,5 +31,5 @@ QMIX~\cite{DBLP:conf/icml/RashidSWFFW18} for coordination in cooperative multi-a
 and Mean Field MARL~\cite{DBLP:conf/icml/YangLLZZW18} for handling a large number of agents.
 
 \paragraph{Reinforcement Learning on Differentiable Engines}
-Precursors of SHAC with similar intuition are PODS~\cite{Mora21} and CE-APG~\cite{Gillen22}. In \cite{Lv23}, the authors introduce rendering to enhance model-based RL. \cite{Zheng24} employes a differentiable symbolic expression search engine. Trajectory optimization approach is taken in \cite{Wan24}. \cite{Georgiev24} takles unstable gradient due to stiff dynamics by adaptively truncating trajectories when these occur. With respect to this approach, we take a substantially different method, by emulating the differentiable environment with a trained neural network.
+Precursors of SHAC with similar intuition are PODS~\cite{Mora21} and CE-APG~\cite{Gillen22}. In~\cite{Lv23}, the authors introduce rendering to enhance model-based RL. \cite{Zheng24} employes a differentiable symbolic expression search engine. Trajectory optimization approach is taken in~\cite{Wan24}. \cite{Georgiev24} takles unstable gradient due to stiff dynamics by adaptively truncating trajectories when these occur. With respect to this approach, we take a substantially different method, by emulating the differentiable environment with a trained neural network.
 

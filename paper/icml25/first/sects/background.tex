@@ -27,7 +27,7 @@ To solve an MDP $\mathcal{M}$, SHAC trains a policy $\pi_\theta$ by minimizing t
 \begin{equation}\label{eq:shac}
     \mathcal{L}_\theta^{\pi}(B) = \frac{1}{NH}\sum_{\tau\in B} \sum_{t=t_0}^{t_0+H-1} \gamma^{t-t_0} R(s_t^\tau, a_t^\tau) + \gamma^H V_\theta(s^\tau_{t_0+T})
 \end{equation}
-where $N$ is the number of sampled trajectories, $H \ll T$ is a time horizon, $s_t^\tau$ is the state at time $t$ for trajectory $\tau$, $a_t^\tau$ is the action taken at time $t$ for trajectory $\tau$, and $V(s): \mathcal{S} \rightarrow \mathbb{R}$ is the value function estimating the expected return starting from state $s$. From Equation~\ref{eq:shac}, it is apparent that SHAC assumes that the policy, reward, value, and transition functions are all differentiable, i.e., $\pi_\theta,V_\theta,F,R \in \mathcal{C}^1$. While this is an common requirement for policy and value functions, differentiable transition and reward functions are rarely available. 
+where $N$ is the number of sampled trajectories, $H \ll T$ is a time horizon, $s_t^\tau$ is the state at time $t$ for trajectory $\tau$, $a_t^\tau$ is the action taken at time $t$ for trajectory $\tau$, and $V(s): \mathcal{S} \rightarrow \mathbb{R}$ is the value function estimating the expected return starting from state $s$. From \Cref{eq:shac}, it is apparent that SHAC assumes that the policy, reward, value, and transition functions are all differentiable, i.e., $\pi_\theta,V_\theta,F,R \in \mathcal{C}^1$. While this is an common requirement for policy and value functions, differentiable transition and reward functions are rarely available. 
 
 The value function $V_\theta$ is trained to approximate a temporal difference-$\lambda$ formulation \cite{Sutton98} $V$, which in SHAC translates to minimize the loss $\mathcal{L}_\theta^{V}:\mathcal{T}^N\rightarrow\mathbb{R}$.
 
@@ -37,4 +37,4 @@ $$ G_t^k = \left(\sum_{l=0}^{k-1}\gamma^l r_{t+l}\right) + \gamma^k V(s_{t+k})$$
 
 $G^t_k$ represents the discounted sum of rewards up to step $k$, plus the bootstrapped value of the state at step $t+k$. The estimates $V$ is computed by discounting longer (higher $k$) discounted sums, $G^k_t$.
 
-Finally, Figure~\ref{fig:shac} presents an unrolled view of the SHAC algorithm.
+Finally, \Cref{fig:shac} presents an unrolled view of the SHAC algorithm.
