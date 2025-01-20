@@ -11,6 +11,8 @@
 \section{Ablation Study}\label{sect:ablation}
 While we mainly focus on replacing both the reward and transition function with neural networks, we also investigate the effect of replacing only the latter. 
 
-In fact, the transition function is the most complex component to replace as it requires modeling with precision the observations obtained from the environment after a number of $H$ actions from each agent. Avoiding the need of such network lightens the algorithm but it reintroduce the need for a differentiable environment.
+In fact, the transition function is the most complex component to replace as it requires modeling with precision the observations obtained from the environment after a number of $H$ actions from each agent. Avoiding the need of such network lightens the algorithm but it reintroduces the need for a differentiable environment.
+\Cref{fig:ablation} presents a comparative analysis between \fname{} and \fnamer{}. The results demonstrate that utilizing the true transition function significantly impacts the performance of \fname{}. This performance difference is particularly pronounced in the Sampling and Transport scenarios, where \fname{} consistently achieves superior results compared to \fnamer{}, both in terms of maximum reward and sample efficiency. This advantage is most evident in the Sampling scenario with one and three agents.
 
-\Cref{fig:ablation} summarizes the results. Most notably, using the true transition function does not appear to provide any significant advantage in terms of reward achieved. In fact, in some cases, we report better results for \fname{}, namely in \Cref{fig:transport-ablation-1-mlp}. 
+However, the performance gap narrows in certain scenarios. For instance, in the Dispersion scenario, \fnamer{} achieves comparable performance to \fname{}. This equivalence might be attributed to the increased complexity of learning the transition function in this particular environment.
+\comment{GA: qui ho cambiato l'ablation perché ora mi sembra che shac++ in realtà vada meglio negli scenari aggiunti, che ne dici?}
