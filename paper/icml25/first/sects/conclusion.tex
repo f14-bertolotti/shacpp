@@ -1,2 +1,12 @@
 \section{Conclusion}
-TODO
+In this paper, we proposed \fname{}, an extension of SHAC, 
+to provide a reinforcement learning solution that is both sample efficient,
+able to work in both single-agent and multi-agent scenarios,
+and capable of handling non-differentiable scenarios. 
+We demonstrated that this solution maintains alignment with SHAC (\RQ{1}), outperforms the current state-of-the-art PPO in both single-agent and multi-agent scenarios (\RQ{2}), 
+and exhibits promising scaling capabilities in multi-agent settings with emergent collaborative behaviors (\RQ{3}).
+
+Despite these encouraging results, several directions for future work remain. 
+First, we aim to explore scalability beyond the current limitation of tens of agents. 
+Additionally, as evidenced in the discovery scenario, the current approach struggles when agents have highly partial observations of the environment. 
+Furthermore, we plan to evaluate our approach in other multi-agent environments, such as those presented from the cooperative AI community~\cite{DBLP:journals/corr/abs-2211-13746} and also in adversarial settings. 
