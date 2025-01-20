@@ -1,13 +1,15 @@
 \section{Discussion}
-
-Note that \fname{} does not aim to outperform SHAC, it merely aims to perform comparably with SHAC while being applicable even in non-differentiable environment. The result shown in \Cref{sect:experiments} seems to support this conclusion. More specifically, let us answer the research questions posed in \Cref{sect:introduction}.
-
+In the following, we discuss the results obtained in \Cref{sect:experiments} and provide some insights into the performance of \fname{} compared to SHAC and PPO trying to answer the research questions posed in \Cref{sect:introduction}.
+Note that \fname{} does not aim to outperform SHAC, it merely aims to perform comparably with SHAC while being applicable even in non-differentiable environment. 
 \begin{center}
 \RQ{1} \textbf{Can we train a neural network to approximate the gradients of a differentiable simulator?}
 \end{center}
 
-The propose framework, \fname{}, appears to be successful in emulating the behavior of SHAC in differentiable environments such as transport and sampling. Therefore, we can conclude that it is definitely possible to approximate the gradients of a differentiable environment with a neural network. However, we note that this approach, while obtaining comparable results in most setups, it tends to display higher variance. Further, before ebcoming effective, both neural network representing the reward and transition function need to become accurate which could require several episode of training.
-
+The proposed framework, \fname{}, appears to be successful in emulating the behavior of SHAC in differentiable environments such as transport and sampling. 
+Therefore, we can conclude that it is definitely possible to approximate the gradients of a differentiable environment with a neural network. 
+However, we note that this approach, while obtaining comparable results in most setups, it tends to display higher variance. 
+Both neural networks representing the reward and transition functions require sufficient training before becoming effective, which may entail multiple episodes. Interestingly, \fname{} outperforms SHAC in the Sampling scenario. A possible explanation is that the transition network focuses on the scenario's nuanced dynamics, whereas SHAC relies on broader environmental dynamics, creating additional gradient noise.
+\sentence{GA: francesco verifica che questa discussione può essere allienata con i risultati ottenuti, o magari c'è un'altra spiegazione che mi sono perso?}
 \begin{center}
 \RQ{2} \textbf{How does our algorithm compare to PPO and SHAC in both single-agent and multi-agent settings?}
 \end{center}
