@@ -26,4 +26,17 @@ In these cases, PPO often struggles to find even marginally good policies.
 \begin{center}
 \RQ{3} \textbf{How does the performance of these algorithms change as the search space increases?}
 \end{center}
-TODO
+To analyze the impact of increasing search spaces, we primarily focused on scenarios with varying numbers of agents.
+The results demonstrate that performance patterns differ across scenarios.
+In the Dispersion scenario, \fname{} shows increasing difficulty in finding optimal policies as the number of agents grows.
+Conversely, in Transport and Sampling scenarios, the system appears to converge more quickly with more agents.
+This counterintuitive behavior likely stems from the fact that, despite larger search spaces, the fundamental tasks in Sampling and Transport become relatively easier to solve with multiple agents, making policy discovery more straightforward.
+Even with approximated world dynamics (transition and reward functions), the guidance provided is sufficient to lead policies toward optimal behavior.
+
+This advantage does not hold in the Dispersion scenario, where complexity increases substantially with additional agents.
+Nevertheless, we observe the emergence of cooperation across all scenarios, suggesting potential scalability to larger agent populations.
+The main bottleneck lies in the transformer architecture, whose size depends on the agent population in our solution.
+With significantly large populations (~50 agents), network sizes grow considerably, leading to prohibitively long training times.
+
+The Discovery scenario, exhibiting high variance, shows no clear pattern compared to the other three scenarios.
+This might be attributed to partial observability, which significantly complicates convergence and inter-agent cooperation.
