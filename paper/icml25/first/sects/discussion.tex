@@ -13,8 +13,16 @@ Both neural networks representing the reward and transition functions require su
 \begin{center}
 \RQ{2} \textbf{How does our algorithm compare to PPO and SHAC in both single-agent and multi-agent settings?}
 \end{center}
-TODO
-
+The proposed algorithm appears capable of outperforming PPO across all scenarios showing also a better sample efficiency.
+In single-agent cases, while PPO manages to find near-good policies (e.g., in the Dispersion scenario), 
+it often fails to complete scenarios within the same number of steps. 
+Indeed, \fname{} achieves better results in all environments (see \Cref{tab:max-rewards}). 
+Despite having to train multiple networks, \fname{} converges much faster to optimal policies, 
+as gradient guidance enables quicker and more accurate convergence to the desired outcome. 
+This pattern becomes even more evident in multi-agent scenarios. 
+In these cases, PPO often struggles to find even marginally good policies. 
+\fname{}, on the other hand, eventually succeeds in understanding the environment and subsequently improves the policy to enable cooperation---see both \Cref{tab:max-rewards} and \Cref{fig:experiments}.
+\comment{GA: c'è altro che possiamo discutere rispetto a PPO? Forse dobbiamo dire che anche se converge prima è computazionalmente più costoso?}
 \begin{center}
 \RQ{3} \textbf{How does the performance of these algorithms change as the search space increases?}
 \end{center}
