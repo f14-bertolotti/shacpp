@@ -57,8 +57,8 @@ data/main-transformer.pdf:
 	jet mod --ax 2 0 --x-ticks none --y-ticks "0.0,45,90"    --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "Transport" \
 	jet mod --ax 2 1 --x-ticks none --y-ticks "0.0,130,260"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "" \
 	jet mod --ax 2 2 --x-ticks none --y-ticks "0.0,215,430"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "" \
-	jet mod --ax 3 0 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,65,130"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "Sampling" \
-	jet mod --ax 3 1 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,300,600" --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
+	jet mod --ax 3 0 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,65,130"   --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "Sampling" \
+	jet mod --ax 3 1 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,300,600"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
 	jet mod --ax 3 2 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,550,1100" --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
 	jet legend --frameon False \
 		--ax 0 1 \
@@ -124,8 +124,8 @@ data/main-mlp.pdf:
 	jet mod --ax 2 0 --x-ticks none --y-ticks "0.0,45,90"    --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "Transport" \
 	jet mod --ax 2 1 --x-ticks none --y-ticks "0.0,130,260"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "" \
 	jet mod --ax 2 2 --x-ticks none --y-ticks "0.0,215,430"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "" \
-	jet mod --ax 3 0 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,65,130"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "Sampling" \
-	jet mod --ax 3 1 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,300,600" --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
+	jet mod --ax 3 0 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,65,130"   --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "Sampling" \
+	jet mod --ax 3 1 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,300,600"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
 	jet mod --ax 3 2 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,550,1100" --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
 	jet legend --frameon False \
 		--ax 0 1 \
@@ -185,15 +185,14 @@ data/ablation-transformer.pdf:
 	jet mod --ax 2 0 --x-ticks none --y-ticks "0.0,45,90"    --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "Transport" \
 	jet mod --ax 2 1 --x-ticks none --y-ticks "0.0,130,260"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "" \
 	jet mod --ax 2 2 --x-ticks none --y-ticks "0.0,215,430"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine False --x-label "" --y-label "" \
-	jet mod --ax 3 0 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,65,130"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "Sampling" \
-	jet mod --ax 3 1 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,300,600" --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
+	jet mod --ax 3 0 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,65,130"   --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "Sampling" \
+	jet mod --ax 3 1 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,300,600"  --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
 	jet mod --ax 3 2 --x-ticks default --x-ticks "0,10000,20000" --y-ticks "0.0,550,1100" --x-lim 0 20000 --right-spine False --top-spine False --bottom-spine True --x-label "Episode" --y-label "" \
 	jet legend --frameon False \
 		--ax 0 1 \
 		--cols 4 \
 		--loc "upper center" \
 		--shift 0.5 1.5 \
-		--line "ppo" $(PPO_COLOR) 1 "-" \
 		--line "shac++" $(SHACWM_COLOR) 1 "-" \
 		--line "shac+" $(SHACRM_COLOR) 1 "-" \
 		--line "max" $(REF_COLOR) 1 "--" \
@@ -255,7 +254,6 @@ data/ablation-mlp.pdf:
 		--cols 4 \
 		--loc "upper center" \
 		--shift 0.5 1.5 \
-		--line "ppo" $(PPO_COLOR) 1 "-" \
 		--line "shac++" $(SHACWM_COLOR) 1 "-" \
 		--line "shac+" $(SHACRM_COLOR) 1 "-" \
 		--line "max" $(REF_COLOR) 1 "--" \
