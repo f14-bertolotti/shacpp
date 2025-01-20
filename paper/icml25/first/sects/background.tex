@@ -1,40 +1,43 @@
+\newcommand{\agents}{\mathcal{N}}
+
+
 \section{Background \& Notation}\label{sect:background}
 
 \subsection{Markov Decision Processes}
-To provide context for our work, we first introduce the reinforcement learning (RL) framework. Each task is modeled as a finite-horizon Markov Decision Process (MDP) $\mathcal{M} = (\mathcal{S}, \mathcal{A}, F, R, T, \gamma, \mu)$, where $\mathcal{S}$ represents the state space, $\mathcal{A}$ denotes the action space, $F:\mathcal{S} \times \mathcal{A} \rightarrow \mathcal{S}$ is the transition function, $R:\mathcal{S} \times \mathcal{A} \times \mathcal{S} \rightarrow \mathbb{R}$ is the reward function, $\gamma \in [0, 1]$ is the discount factor, and $T \in \mathbb{N}$ is the time horizon. The initial state distribution is denoted by $\mu$.
+To provide context for our work, we first introduce the reinforcement learning (RL) framework. Each task is modeled as a partially observable, finite-horizon, Markov Decision Process (MDP)~\cite{Shapley53}, $\mdp$: 
+$$(\agents,\states,\{\observations{i}\}_{\scriptscriptstyle i\in\agents},\{\actions{i}\}_{\scriptscriptstyle i\in\agents},\{\stateobs{i}\}_{\scriptscriptstyle i\in\agents}, \{\rewards{i}\}_{\scriptscriptstyle i\in\agents}, \transition, \horizon, \discount, \initdist)$$
+Where $\agents=[\na]$ and $\states$ denote the set of agents and the state space, respectively. $\observations{i}$ and $\actions{i}$ are the observation space and action space for the $i$-th agent ($i\in\agents$). $\stateobs{i}:\states\rightarrow\observations{i}$ is the projection to the observation space and $\rewards{i}:\states\times\actions{i}\times\states\rightarrow\mathbb{R}$ is the reward function for the $i$-th agent. $\transition:\states\times\{\actions{i}\}_{i\in\agents}$ denotes the transition function. $\discount$ and $\horizon$ denote the discount factor and the time horizon respectively. Finally, $\initdist$ is the initial state distribution.
 
-Further, let $\mathcal{T}$ denote the space of trajectories, defined as $\mathcal{T} = (\mathcal{S} \times \mathcal{A} \times \mathcal{S} \times \mathbb{R})^*$, where each trajectory consists of a sequence of starting states, actions, subsequent states, and rewards. We will use the symbols $\tau=((s_0, a_0, s_1, r_0), (s_1, a_1, s_2, r_1), \ldots)$ to denote a generic trajectory in $\mathcal{T}$. When dealing with multiple trajectories, we will use the notation $s_i^\tau, a_i^\tau$, and $r_i^\tau$.
+Further, let us denote denote the space of trajectories, $\trajectories = \left(\states\times\{\actions{i}\}_{i\in\agents}\times\states\times\mathbb{R}^{n}\right)^*$, where each trajectory consists of a sequence of: starting state, action per agent, subsequent state, and reward per agent. Given a generic trajectory $\tau\in\trajectories$, we denote its $i$-th starting state with $s_i^\tau$, its $i$-th action for agent $j$ with $a_{ij}^\tau$, and its $i$-th reward for agent $j$ with $r_{ij}^\tau$. 
 
-A policy is a function $\pi:\mathcal{S}\rightarrow\mathcal{A}$ that maps states to actions. We can use the policy to sample trajectories from the MDP by iteratively applying the transition and reward function and the policy. In this case, we have that the $i$-th element of a trajectory is $(s_i, a_i, s_{i+1}, r_i) = (s_i, \pi(s_i), F(s_i, a_i), R(s_i,a_i,F(s_i, a_i))$. The initial state $s_0$ is sampled from the initial state distribution $\mu$.
-
-For brevity, we will simply denote with $\tau\sim\pi$ a trajectory sampled by following the policy $\pi$.
+A policy for agent $i$ is a function $\policy{i}:\observations{i}\rightarrow\actions{i}$ that maps its observation space to its action space. We will denote the collective policy, determined by the collection of agent-specific policy simply with $\pi$. We can use the policy to sample trajectories from the MDP by iteratively applying the transition, reward, projection and policy functions. In this case, for trajectory $\tau$, we have that the $i$-th action for the $j$-th agent is $a_{ij}^\tau = \policy{j}(\stateobs{j}(s_i^\tau))$ and the next state is $s_{i+1}^\tau = \transition(s_i^\tau,a_{i1},\dots,a_{i\na})$. The $i$-th reward for the $j$-th agent is $r_{ij}^\tau = \rewards{j}(s_i^\tau,a_{ij}^\tau,s_{i+1}^\tau)$. Finally, $s_0$ is sampled from the initial state distribution $\initdist$. For brevity, we will simply denote with $\tau\sim\pi$ a trajectory sampled following the policies.
 
 The goal of the MDP is to find a policy that maximizes the expected return 
-$$\mathbb{E}_{\tau\sim\pi}\left[\sum_{t=0}^{T-1}\gamma^t r_t^\tau \right]$$
+$$\mathbb{E}_{\tau\sim\pi}\left[\sum_{t=0}^{\horizon-1}\sum_{i\in\agents}\gamma^t r_{ti}^\tau \right]$$
 
 \subsection{Neural Networks}
 A neural network is a function $f_{\theta}:\mathbb{R}^n\rightarrow\mathbb{R}^m$ parameterized by $\theta$ that maps an input vector $x\in\mathbb{R}^n$ to an output vector $y\in\mathbb{R}^m$. The parameters $\theta$ of the network are learned by minimizing a loss function $\mathcal{L}_\theta$ with respect to the training data.
 
-In this work, we will often approximate functions, such as transition ($F$) or reward ($R$), with neural network. Therefore, for each function $g$, we will denote the corresponding neural network with $g_\theta$. For instance, the transition and its corresponding neural network are denoted as $F$ and $F_{\theta}$, respectively. The corresponding loss will be denoted as $\mathcal{L}_\theta^g$ and it will aim to minimize the differences between $g$ and $g_\theta$.
+In this work, we will often approximate functions (such as transition $\transition$) with neural network. Therefore, for each function $g$, we will denote the corresponding neural network with $g_\theta$. For instance, the transition and its corresponding neural network are denoted as $F$ and $F_{\theta}$, respectively. The corresponding loss will be denoted as $\mathcal{L}_\theta^g$ and it will aim to minimize the differences between $g$ and $g_\theta$.
 
-While we use a unique set of parameters $\theta$ for all the networks. Each network can either use its own subset of $\theta$ or it can share parameters with other networks. In practice, the parameters will never be shared.
+While we use a unique set of parameters $\theta$ for all the networks. Each network can either use its own subset of $\theta$ or it can share parameters with other networks. In practice, the parameters will be shared only for the policies.
 
-For simplicity, we formally treat only the case where the policy observe the full state to make the action. However, in our experiments, we consider also scenarios where the full state is not available to the policy. In such cases, the MDP includes a set of observations, $\mathcal{O}$, an observation function $O:\mathcal{S}\rightarrow\mathcal{O}$, and the policy is a function $\pi:\mathcal{O}\rightarrow\mathcal{A}$. In such cases, the MDP takes the name of Partially Observable Markov Decision Process (POMDP). 
+For simplicity, we formally treat only the case where the policy observe the full state to make the action, meaning that $\stateobs{i}$ is the identity function. However, in our experiments, we consider also scenarios where the full state is not available to the policies.
 
 \subsection{SHAC}
 
-To solve an MDP $\mathcal{M}$, SHAC trains a policy $\pi_\theta$ by minimizing the loss function $\mathcal{L}_\theta^{\pi}:\mathcal{T}^N\rightarrow\mathbb{R}$ for a batch of $N$ trajectories $B = \{\tau_1, \ldots, \tau_N\}$ sampled from the MDP. The loss is defined as:  
-\begin{equation}\label{eq:shac}
-    \mathcal{L}_\theta^{\pi}(B) = \frac{1}{NH}\sum_{\tau\in B} \sum_{t=t_0}^{t_0+H-1} \gamma^{t-t_0} R(s_t^\tau, a_t^\tau) + \gamma^H V_\theta(s^\tau_{t_0+T})
-\end{equation}
-where $N$ is the number of sampled trajectories, $H \ll T$ is a time horizon, $s_t^\tau$ is the state at time $t$ for trajectory $\tau$, $a_t^\tau$ is the action taken at time $t$ for trajectory $\tau$, and $V(s): \mathcal{S} \rightarrow \mathbb{R}$ is the value function estimating the expected return starting from state $s$. From \Cref{eq:shac}, it is apparent that SHAC assumes that the policy, reward, value, and transition functions are all differentiable, i.e., $\pi_\theta,V_\theta,F,R \in \mathcal{C}^1$. While this is an common requirement for policy and value functions, differentiable transition and reward functions are rarely available. 
+In its trivial multi-agent extension, SHAC trains policies ${\pi_1}_\theta,\dots,{\pi_\na}_\theta$ by minimizing the loss function $\mathcal{L}_\theta^{\pi}:\trajectories^\bs\rightarrow\mathbb{R}$ for a batch of $\bs$ trajectories $\batch = \{\tau_1, \ldots, \tau_\bs\}$ sampled from $\mdp$. The loss $\mathcal{L}_\theta^{\pi}(\batch)$ is defined as:  
+\begin{equation*}\label{eq:shac}
+    \frac{1}{\bs\na\mh}\sum_{\tau\in\batch} \sum_{t=t_0}^{t_0+\mh-1} \sum_{i\in\agents} \discount^{t-t_0} R(s_{t}^\tau, a_{ti}^\tau) + \discount^\mh \valuef_\theta(s^\tau_{t_0+\mh})
+\end{equation*}
+where $\mh \ll \horizon$ is the roullout size, $t_0$ is the initial time step of the rollout, $\valuef: \states \rightarrow \mathbb{R}$ is the value function estimating the expected return. From \Cref{eq:shac}, it is apparent that SHAC assumes that the policy, reward, value, projection, and transition functions are all differentiable, i.e., $\{\policy{i}\}_{i\in\agents},\{\rewards{i}\}_{i\in\agents},\valuef_\theta,\transition \in \mathcal{C}^1$. While this is an common requirement for policy and value functions, differentiable transition and reward functions are rarely available. 
 
-The value function $V_\theta$ is trained to approximate a temporal difference-$\lambda$ formulation \cite{Sutton98} $V$, which in SHAC translates to minimize the loss $\mathcal{L}_\theta^{V}:\mathcal{T}^N\rightarrow\mathbb{R}$.
+The value function $\valuef_\theta$ is trained to approximate a temporal difference-$\lambda$ formulation \cite{Sutton98} $\valuef$, which in SHAC translates to minimize the loss $\mathcal{L}_\theta^{\valuef}:\trajectories^\bs\rightarrow\mathbb{R}$.
 
-$$ \mathcal{L}_\theta^V(B)=\frac{1}{NT}\sum_{\tau\in B}\sum_{t=0}^T\left|\left| V_\theta(s^\tau_t) - V(s^\tau_t) \right|\right|^2 $$
-$$ V(s_t) = (1-\lambda) \left(\sum_{k=1}^{h-t-1}\lambda^{k-1}G_t^k\right) + \lambda^{h-t-1}G_t^{h-t}$$
-$$ G_t^k = \left(\sum_{l=0}^{k-1}\gamma^l r_{t+l}\right) + \gamma^k V(s_{t+k})$$
+$$ \mathcal{L}_\theta^\valuef(\batch)=\frac{1}{\bs\mh}\sum_{\tau\in\batch}\sum_{t=0}^\mh\left|\left| \valuef_\theta(s^\tau_t) - \valuef(s^\tau_t) \right|\right|^2 $$
+$$ \valuef(s_t) = (1-\lambda) \left(\sum_{k=1}^{h-t-1}\lambda^{k-1}G_t^k\right) + \lambda^{h-t-1}G_t^{h-t}$$
+$$ G_t^k = \left(\sum_{l=t}^{k-1+t}\sum_{i\in\agents}\gamma^{l-t} r_{li}\right) + \gamma^k V(s_{t+k})$$
 
 $G^t_k$ represents the discounted sum of rewards up to step $k$, plus the bootstrapped value of the state at step $t+k$. The estimates $V$ is computed by discounting longer (higher $k$) discounted sums, $G^k_t$.
 
-Finally, \Cref{fig:shac} presents an unrolled view of the SHAC algorithm.
+Finally, \Cref{fig:shac} presents an unrolled view of the SHAC algorithm for a single-agent scenario.
