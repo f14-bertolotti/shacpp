@@ -1,3 +1,6 @@
+# if you want to use this makefile, you need to have jet installed https://github.com/f14-bertolotti/jet
+# specifically, commit 2ed72d5
+
 PPO_COLOR=1 0.5 0
 SHAC_COLOR=1 0.1 0.1
 SHACRM_COLOR=0.1 .1 1
@@ -69,7 +72,7 @@ data/main-transformer.pdf:
 		--line "shac++" $(SHACWM_COLOR) 1 "-" \
 		--line "shac" $(SHAC_COLOR) 1 "-" \
 		--line "max" $(REF_COLOR) 1 "--" \
-	jet plot --show False --output-path $@
+	jet plot --show True --output-path $@
 
 data/main-mlp.pdf:
 	jet init --shape 4 3 \

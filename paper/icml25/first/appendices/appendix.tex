@@ -2,6 +2,35 @@
 \appendix
 \onecolumn
 
+\input appendices/scenarios.tex
+\input appendices/ablation.tex
+\input appendices/arch.tex
+
+\begin{figure*}[!t]
+    \centering
+    \begin{subfigure}[b]{0.24\textwidth}
+        \includegraphics[width=\textwidth]{figs/dispersion.png}
+        \caption{Dispersion}
+        \label{fig:dispersion}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \includegraphics[width=\textwidth]{figs/transport.png}
+        \caption{Transport}
+        \label{fig:transport}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery.png}
+        \caption{Discovery}
+        \label{fig:discovery}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \includegraphics[width=\textwidth]{figs/sampling.png}
+        \caption{Sampling}
+        \label{fig:sampling}
+    \end{subfigure}
+    \caption{VMAS environments used in the experiments.}\label{fig:scenarios}
+\end{figure*}
+
 \begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figs/main-mlp.pdf}
@@ -11,6 +40,13 @@
     \label{apx:fig:experiments-mlp}
 \end{figure}
 
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figs/ablation-transformer.pdf}
+    \caption{Comparison between \fname{} with and without transition network, labelled \fnamer{}, for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios.}
+    \label{fig:ablation}
+\end{figure*}
+
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\columnwidth]{figs/ablation-mlp.pdf}
@@ -18,17 +54,4 @@
     \label{fig:ablation}
 \end{figure}
 
-\begin{table}[t]
-        \centering
-        \input{tables/shacwm.tex}
-        \caption{SHAC/\fname{}/\fnamer{} Hyperparameters}
-        \label{apx:tab:shac}
-\end{table}
-
-\begin{table}[t]
-        \centering
-        \input{tables/ppo.tex}
-        \caption{PPO Hyperparmeters}
-        \label{apx:tab:ppo}
-\end{table}
 

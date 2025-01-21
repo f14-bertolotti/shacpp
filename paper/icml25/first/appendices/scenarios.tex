@@ -1,0 +1,26 @@
+\section{Environments}\label{apx:scenarios}
+
+\begin{compactitem}
+    \item \textbf{Dispersion} (\Cref{fig:dispersion}): 
+        \sentence{Environment} a scenario where $n$ agents need to reach $n$ goal locations, in such case the agent receives a sparse reward of $1$. Agents observe only their own position, velocity and relative position to each goal. 
+        \sentence{Differentiability} Despite the transition function being differentiable, the reward function is not. Therefore, only PPO and \fname{} are applicable to this scenario. 
+        \sentence{World Model} The world model has enough information to predict the next states accurately.
+        \sentence{Max Reward} The maximum reward is $n$.
+    \item \textbf{Transport} (\Cref{fig:transport}): 
+        \sentence{Environment} a scenario where $n$ agents need to collaborate to push a package into a goal location. Agents observe their own position, velocity, relative position to the package and relative position between package and the goal. The agents receive a reward proportional to the distance between package and the goal. 
+        \sentence{Differentiability} In this scenario, both the reward and transition functions are differentiable. 
+        \sentence{World Model} The world model has enough information to predict the next states accurately.
+        \sentence{Max Reward} The maximum reward varies from environement to environment. It is the scaled distance between the package and the goal times the number of agents.
+    \item \textbf{Discovery} (\Cref{fig:discovery}): 
+        \sentence{Environment} a scenario where $n$ agents need to collect $k$ goal place randomly. A goal is collected if at least $s$ agents stand in proximity to it, in this case they receive a reward of $1$. If agents collide with each other, they receive a penalty. Every agent observes its position, velocity, lidar measurements to other agents and goals. When $n=1$ we set $s=1$ and $k=7$. When $n>1$ we set $s=2$.
+        \sentence{Differentiability} In this scenario, only the transition function is differentiable. Therefore, only PPO and \fname{} are applicable to this scenario. 
+        \sentence{Max Reward} The maximum rewards depends on the number evaluation steps, but for early stopping purposes, we set it to $k$. 
+        \sentence{World Model} Note that, a world model (or an action world model) that uses only the agents observation cannot predict the evolution correctly, as goals may not be visible to the agents. For this reason, this scenario is particularly challenging for \fname{} as we do not provide the full world state to the world model.
+     \item \textbf{Sampling} (\Cref{fig:sampling}): 
+        \sentence{Environment} a scenario where $n$ agents need to collect rewards from a grid. The reward are sampled from $k$ gaussians. Agents observe their own position, velocity, lidar values to each other, and rewards in a 3x3 grid around themselves.  
+        \sentence{Differentiability} In this scenario, both the reward and transition functions are differentiable. 
+        \sentence{Max Reward} The maximum reward depends on where the gaussians are placed.
+        \sentence{World Model} Similarly to discovery, this scenario is particularly challenging for \fname{} as we do not provide the full world state, but only the agents observations, to the world model.
+\end{compactitem}
+
+

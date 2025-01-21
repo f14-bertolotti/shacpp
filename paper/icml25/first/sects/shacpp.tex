@@ -13,6 +13,7 @@
     \caption{Comparison between SHAC and \fname{}. Nodes with labels (such as $r_i$ or $r'_i$ represents values). Nodes without labels (such as $\pi$ or $R$) represents functions. Dashed lines are used to represent non differentiability}\label{fig:shac-shacpp}
 \end{figure*}
 
+
 \begin{algorithm}[t]
     \begin{algorithmic}[1]
     \STATE Initialize $\pi_\theta,V_\theta,R_\theta,F_\theta$ networks
@@ -44,57 +45,31 @@
 
 As mentioned previously, we aim to address the limitations of SHAC by approximating the gradients of a differentiable environment ($R$ and $F$) with neural networks ($R_\theta$ and $F_\theta$). In particular, we aim to train a neural network to approximate the reward function by minimizing: 
 \begin{align*}
-    \mathbb{E}_{\tau\sim\pi}\left[\left\vert\left\vert \frac{1}{\horizon\na}\sum_{j=0}^{\horizon-1} \sum_{i\in\agents} {\rewards{i}}_\theta(s_j^\tau, a_j^\tau, s_{j+1}^\tau) \right.\right.\right. -\\ \left.\left.\left. \rewards{i}(s_j^\tau, a_j^\tau, s_{j+1}^\tau) \right\vert\right\vert^2\right] 
+    \underset{\tau\sim\pi}{E}\left[\hspace{-.7cm}\sum_{\hspace{.7cm}\scriptscriptstyle s_i,a_{ij},s_{i+1}\in\tau} \hspace{-.8cm}\left\vert\left\vert {\rewards{i}}_\theta(s_i, a_{ij}, s_{i+1}) -\rewards{i}(s_i, a_{ij}, s_{i+1}) \right\vert\right\vert^2\right] 
 \end{align*}
 
 In practice, this is achieved by leveraging a \emph{replay buffer} to cache the state-action-reward triplets obtained from the environment. The neural network is then trained to minimize the mean squared error (MSE) loss. Specifically, we minimize the loss $\mathcal{L}_\theta^{\rewards{i}}:(\states\times\actions{i}\times\states)^N\rightarrow\mathbb{R}$:
-$$ \mathcal{L}_\theta^{\rewards{i}}(\batch) = \frac{1}{\bs}\sum_{s,a,r \in \batch}\left|\left| {\rewards{i}}_\theta(s, a) - r \right|\right|^2 $$
-Where $B$ represents a batch of state-action-reward triplets sampled uniformly from the cache.
+$$ \mathcal{L}_\theta^{\rewards{i}}(\batch) = \frac{1}{\bs}\sum_{s,a,s',r \in \batch}\left|\left| {\rewards{i}}_\theta(s, a) - r \right|\right|^2 $$
+Where $B$ represents a batch of state-action-state-reward tuples sampled uniformly from the cache.
 
-Similarly, we aim to train a neural network to approximate the transition function. However, to avoid vanishing or exploding gradients, we employ a non-recursive approach similar to Action World Model~\cite{Ma24}. This corresponds to train a neural network that given a starting observation from $\mathcal{S}$ and a sequence of $\mh$ actions from $(\{\actions{i}\}_{i\in\agents})^\mh$, predicts the next $\mh$ observations from $\states^\mh$. We aim to minimize:
-%\sum_{j=0}^{\scriptscriptstyle\mh-1}
+Similarly, we aim to train a neural network to approximate the transition function. However, to avoid vanishing or exploding gradients, we employ a non-recursive approach similar to Action World Model~\cite{Ma24}. This corresponds to train a neural network that given a starting observation from $\mathcal{S}$ and a sequence of $\mh$ actions from $\alla^\mh$, predicts the next $\mh$ observations from $\states^\mh$. We aim to minimize:
+
 \begin{align*}
-    \mathbb{E}_{\tau\sim\pi}\left[\frac{1}{\bs\mh}\sum_{t=0}^{\scriptscriptstyle\horizon-\mh-1}\left|\left| \transition_{\theta}(s_t^\tau, \{a^\tau_t\}_{i}^{\na},\dots,\{a^\tau_{\scriptscriptstyle t+H-1}\}_{i}^{\na}) \right.\right.\right.-\\\left.\left.\left. \left[s_t^\tau,\dots,s_{t+h}^\tau\right] \right|\right|^2\right] 
+    \underset{\tau\sim\pi}{E}\left[\hspace{-1.2cm}\sum_{\scriptscriptstyle \hspace{1cm}\substack{s_t,\dots,s_{t+h+1},\\\hspace{.3cm}a_{t*},\dots,a_{t+h*}\in\tau}}\hspace{-1.2cm} \left|\left| \transition_{\theta}(s_t, a_{t*},\dots,a_{\scriptscriptstyle i+h*}) - [s_t,\dots,s_{\scriptscriptstyle t+h+1}] \right|\right|^2\right] 
 \end{align*}
 
-In practice, this is achieved by caching trajectories and then training the neural network to minimize the MSE loss. That is, we minimize the loss $\mathcal{L}_\theta^{F}:\mathcal{T}^N\rightarrow\mathbb{R}$:
-$$ \frac{1}{\bs\mh}\sum_{\tau \in B}\left|\left| \transition_{\theta}(s_0^\tau, \{a_1^\tau\}_i^\na, \dots, \{a_{\mh}^\tau\}_i^\na) - \left[ s^\tau_1, \dots, s^\tau_\mh \right] \right|\right|^2 $$
+Where $a_{t*}=\{a_{ti}\}_{i\in\agents}$. In practice, this is achieved by caching trajectories and then training the neural network to minimize the MSE loss. That is, we minimize the loss $\mathcal{L}_\theta^{F}:\mathcal{T}^N\rightarrow\mathbb{R}$:
+$$ \frac{1}{\bs\mh}\sum_{\tau \in B}\left|\left| \transition_{\theta}(s_0^\tau, a_{1*}^\tau, \dots, a_{\mh*}) - \left[ s^\tau_1, \dots, s^\tau_\mh \right] \right|\right|^2 $$
 Where $B$ represents a batch of trajectories of length $\mh$ sampled uniformly from the cache.
 
 Further, we modify the SHAC policy loss, $\mathcal{L}_\theta^{\pi}$, to include a term that penalizes actions outside the action space. Suppose the action space is $(l,r)$ (with $l<r$) for all agents, we minimize the loss $\mathcal{L'}_\theta^\pi:$
-\begin{figure*}[!t]
-    \centering
-    \begin{subfigure}[b]{0.24\textwidth}
-        \includegraphics[width=\textwidth]{figs/dispersion.png}
-        \caption{Dispersion}
-        \label{fig:dispersion}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.24\textwidth}
-        \includegraphics[width=\textwidth]{figs/transport.png}
-        \caption{Transport}
-        \label{fig:transport}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.24\textwidth}
-        \includegraphics[width=\textwidth]{figs/discovery.png}
-        \caption{Discovery}
-        \label{fig:discovery}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.24\textwidth}
-        \includegraphics[width=\textwidth]{figs/sampling.png}
-        \caption{Sampling}
-        \label{fig:sampling}
-    \end{subfigure}
-    \caption{VMAS environments used in the experiments.}\label{fig:scenarios}
-\end{figure*}
 
 $$\mathcal{L}_\theta^\pi(\batch) + \alpha \frac{1}{\bs\horizon}\sum_{\tau\in\batch}\sum_{a\in\tau} d(a^\tau,(a,b))$$
-$$d(x,(l,r)) = \begin{cases}(l-x)^2 & \text{if } x < l \\ (x-r)^2 & \text{if } x > e \\ 0 & \text{otherwise} \end{cases}$$
+$$d(x,(l,r)) = \begin{cases}(l-x)^2 & \text{if } x < l \\ (x-r)^2 & \text{if } x > r \\ 0 & \text{otherwise} \end{cases}$$
 
     Where $\alpha$ is a hyper-parameter that controls the strength of the penalty. In our experiments, we set $\alpha=1$. Usually, actions are either clipped to the allowed action space or, an activation function (such as hyperbolic tangent or sigmoid) is used to ensure that the actions are within the allowed range. While this approach is acceptable for algorithms like PPO and SHAC, the penalty we employ is crucial in our specific scenario. This necessity arises from the fact that we are training the policy to optimize two neural networks that serve as environment approximations. Because these networks are never trained with data outside the permissible action space, they are likely to be maximized beyond these bounds. Consequently, the policy may generate actions far outside the allowed range. This can ultimately result in 0-gradients when action clipping is applied or high pre-activation actions when activation function is used. 
 
 To summarize, our algorithm, aims to minimize the 4 presented losses, $\mathcal{L'}_\theta^{\pi}$, $\mathcal{L}_\theta^V$, $\mathcal{L}_\theta^R$, and $\mathcal{L}_\theta^F$. A minimal pseudocode of our algorithm is presented in \Cref{alg:shacpp}. \Cref{fig:shacpp} presents an unrolled view of the \fname{} algorithm.
-
-
 
 However, consider that, to ensure fast convergence of the reward and transition networks, we employ a cache to store seen trajectories. To ensure that the cache is balanced, and not filled with $0$-reward trajectories (which are common in case of sparse rewards), we divide the cache in $K$ equally sized bins. Each bin is filled with trajectories that have a similar reward. 
 

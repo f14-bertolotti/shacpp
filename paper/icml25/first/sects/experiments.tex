@@ -1,6 +1,6 @@
 \begin{figure*}[!t]
     \includegraphics[width=\textwidth]{figs/main-transformer.pdf}
-    \caption{Performance comparison of \fname{}, PPO, and SHAC across different scenarios (Dispersion, Transport, Discovery, and Sampling) using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of normalized rewards over 3 runs. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.}
+    \caption{Performance comparison of \fname{}, PPO, and SHAC across different scenarios (Dispersion, Transport, Discovery, and Sampling) using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of rewards over 3 runs. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.}
     \label{fig:experiments}
 \end{figure*}
 
@@ -11,41 +11,21 @@
 
 \section{Experiments}\label{sect:experiments}
 
+In this section, we test \fname{} with PPO and SHAC for a set of multi-agent scenarios and architectures. An ablation study when replacing only the transition function (meaning that the reward function is assumed differentiable) is also conducted in \Cref{apx:ablation}.
+
 \paragraph{Scenarios}
-As mentioned previously, we choose a few multi-agent scenarios from the VMAS\footnote{\url{https://github.com/proroklab/VectorizedMultiAgentSimulator}} package to test \fname{} aganist SHAC and PPO. In particular, we choose the following scenario:
-\begin{compactitem}
-    \item \textbf{Dispersion} (\Cref{fig:dispersion}): 
-        \sentence{Environment} a scenario where $n$ agents need to reach $n$ goal locations, in such case the agent receives a sparse reward of $1$. Agents observe only their own position, velocity and relative position to each goal. 
-        \sentence{Differentiability} Despite the transition function being differentiable, the reward function is not. Therefore, only PPO and \fname{} are applicable to this scenario. 
-        \sentence{World Model} The world model has enough information to predict the next states accurately.
-        \sentence{Max Reward} The maximum reward is $n$.
-    \item \textbf{Transport} (\Cref{fig:transport}): 
-        \sentence{Environment} a scenario where $n$ agents need to collaborate to push a package into a goal location. Agents observe their own position, velocity, relative position to the package and relative position between package and the goal. The agents receive a reward proportional to the distance between package and the goal. 
-        \sentence{Differentiability} In this scenario, both the reward and transition functions are differentiable. 
-        \sentence{World Model} The world model has enough information to predict the next states accurately.
-        \sentence{Max Reward} The maximum reward varies from environement to environment. It is the scaled distance between the package and the goal times the number of agents.
-    \item \textbf{Discovery} (\Cref{fig:discovery}): 
-        \sentence{Environment} a scenario where $n$ agents need to collect $k$ goal place randomly. A goal is collected if at least $s$ agents stand in proximity to it, in this case they receive a reward of $1$. If agents collide with each other, they receive a penalty. Every agent observes its position, velocity, lidar measurements to other agents and goals. When $n=1$ we set $s=1$ and $k=7$. When $n>1$ we set $s=2$.
-        \sentence{Differentiability} In this scenario, only the transition function is differentiable. Therefore, only PPO and \fname{} are applicable to this scenario. 
-        \sentence{Max Reward} The maximum rewards depends on the number evaluation steps, but for early stopping purposes, we set it to $k$. 
-        \sentence{World Model} Note that, a world model (or an action world model) that uses only the agents observation cannot predict the evolution correctly, as goals may not be visible to the agents. For this reason, this scenario is particularly challenging for \fname{} as we do not provide the full world state to the world model.
-     \item \textbf{Sampling} (\Cref{fig:sampling}): 
-        \sentence{Environment} a scenario where $n$ agents need to collect rewards from a grid. The reward are sampled from $k$ gaussians. Agents observe their own position, velocity, lidar values to each other, and rewards in a 3x3 grid around themselves.  
-        \sentence{Differentiability} In this scenario, both the reward and transition functions are differentiable. 
-        \sentence{Max Reward} The maximum reward depends on where the gaussians are placed.
-        \sentence{World Model} Similarly to discovery, this scenario is particularly challenging for \fname{} as we do not provide the full world state, but only the agents observations, to the world model.
-\end{compactitem}
+As mentioned previously, we choose a few multi-agent scenarios from the VMAS package to test \fname{}, SHAC and PPO. In particular, we choose the scenarios Dispersion, Discovery, Transport, and Sampling. For details regarding each scenario, see \Cref{apx:scenarios}. Dispersion and Discovery have non-differentiable reward functions, thus SHAC is not applicable. Transport and Sampling have differentiable reward functions, thus SHAC is applicable. For Transport and Dispersion, the observation space is complete wrt. the state. For Discovery and Sampling, the observation space is incomplete wrt. the state. In these scenario, \fname{} is slightly disadvantaged as it does not have access to the full state of the environment compared to SHAC.
 
 \begin{table*}[!t]
     \centering
     \input tables/max.tex
-    \caption{Normalized maximum rewards (relative to the best performing model) for the different scenarios. Best results are in bold.}\label{tab:max-rewards}
+    \caption{Normalized rewards (relative to the best performing model) for the different scenarios. Best results are in bold.}\label{tab:max-rewards}
 \end{table*}
 
 \paragraph{Architectures}
-We test SHAC, PPO, and \fname{} with both an MLP and a Transformer architecture. Specifically, we use a 1-layer MLP with hidden size 64 or a 1-layer single-head Transformer with hidden size 64 for the Policy Network and Value Network (for PPO, SHAC, and \fname{}). For the Reward Network, we use a 1-layer MLP with hidden size 64 or a 1-layer single-head Transformer with hidden size 64 (for \fname{}). The Transition Network for \fname{} is a 3-layer single-head Transformer with hidden size 64.
+We test SHAC, PPO, and \fname{} with both an MLP and a Transformer architecture. Specifically, we use a 1-layer MLP or a 1-layer single-head Transformer for policy, reward, and value network. The transition network used by \fname{} is always a 3-layer single-head Transformer
 
-While the MLP architecture is the simplest, the Transformer baseline benefits from position invariance property of the agents observations. We apply the transformer architecture only if the number of agents is greater than $1$, otherwise we use only the MLP architecture. 
+While the MLP architecture is the simplest, the Transformer baseline benefits from positional invariance property of the agents observations. We apply the transformer architecture only if the number of agents is greater than $1$, otherwise we use only the MLP architecture. For more details on the architectures, see \Cref{apx:arch}.
 
 \paragraph{Hyperparameters}
 For all networks we use learning rate of $1e\text{-}3$ with Adam Optimizer~\cite{Kingma14}. For all scenarios, each training episode consists of $512$ environments of $32$ steps each. Each validation episode is composed of $512$ environments of $512$ steps each. We employ early stopping when the agents achieve $90\%$ of the maximum reward in $90\%$ of the episode's environments. If early stopping is not triggered, we stop training after $20,000$ episodes. The discount factor is set to $0.99$ and lambda factor is set to $0.95$. We report results for increasing number of agents $n\in\{1,3,5\}$. We repeat and report results for $3$ runs with different seeds. See \Cref{apx:tab:ppo} and \Cref{apx:tab:shac} for a complete list of hyperparameters.
@@ -56,7 +36,7 @@ Overall, considering different training algorithms, architectures, scenarios, hy
 Our experiments were conducted on a cluster of machines composed of 2 computational nodes, each with one Nvidia Tesla V100 GPU (with 32GB of memory), 200GB of RAM, and two Intel Xeon Gold 6226R processors (32 cores each).
 
 \subsection{Results}
-In this section, we compare the performance of \fname{}, PPO, and SHAC across different scenarios using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of normalized rewards over 3 runs. An overview of the results is shown in \Cref{fig:experiments} and \Cref{tab:max-rewards}. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.
+In this section, we compare the performance of \fname{}, PPO, and SHAC across different scenarios using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of achieved rewards over 3 runs. An overview of the results is shown in \Cref{fig:experiments} and \Cref{tab:max-rewards}. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.
 
 \paragraph{Dispersion}
 In \Cref{fig:experiments}, the first row displays results for the dispersion scenario (non-differentiable, thus SHAC is not applicable). In the first column (single agent, see also \Cref{tab:max-rewards} and \Cref{apx:fig:experiments-mlp}), both PPO and \fname{} perform well, though \fname{} converges faster thanks to gradient approximation. In the second column (3 agents), PPO fails to converge, whereas \fname{} converges in fewer than 10,000 episodes, suggesting emergent cooperative behavior. In the third column (5 agents), PPO fails to converge, while \fname{} achieves high rewards (with no early stopping) but shows high variance due to increased environment complexity.
@@ -65,7 +45,7 @@ In \Cref{fig:experiments}, the first row displays results for the dispersion sce
 The second row of \Cref{fig:experiments} shows a scenario with partial observability, namely discovery. In the first column (single agent), \fname{} outperforms PPO, though it does not reach the maximum reward, suggesting the world model struggles to capture dynamics. In the second and third columns (3 and 5 agents), PPO again fails to converge, whereas \fname{} maintains superior results, indicating cooperative behavior.
 
 \paragraph{Transport}
-The third row of \Cref{fig:experiments} presents a differentiable scenario, transport. In the first column (single agent), PPO fails to converge, while SHAC and \fname{} achieve comparable performance. \fname{} converges faster, but SHAC is more consistent due to direct gradient stability. In the second and third columns (3 and 5 agents), PPO fails to converge, while SHAC and \fname{} both complete the task around 10,000 episodes, with SHAC again more stable. 
+The third row of \Cref{fig:experiments} presents a differentiable scenario, transport. In the first column (single agent), PPO fails to converge, while SHAC and \fname{} achieve comparable performance. \fname{} converges faster, but SHAC is more consistent due to direct gradient stability. In the second and third columns (3 and 5 agents), PPO fails to converge, while SHAC and \fname{} both complete the task around 10,000 episodes. 
 With more agents, convergence is faster because the task becomes easier (more agents can push the package).
 The emergent of cooperation can be also display but looking to the gradient norm in \Cref{fig:grads-transformer-transport} we can see that the norm of the gradients for SHAC and \fname{} increases when the agents start to collide with each other and the package. This is a sign of generalization, as the agents learn to avoid collisions and push the package together.
 
