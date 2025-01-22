@@ -4,9 +4,13 @@ figs/shac.pdf: figs/shac.tex
 figs/shacpp.pdf: figs/shacpp.tex
 	pdflatex --output-directory=figs --shell-escape figs/shacpp.tex
 
+figs/attention.pdf: figs/attention.tex
+	pdflatex --output-directory=figs --shell-escape figs/attention.tex
+
 main.pdf: \
 	figs/shac.pdf \
 	figs/shacpp.pdf \
+	figs/attention.pdf \
 	main.tex sects/* tables/* appendices/* \
 	local.bib
 	pdflatex --shell-escape main.tex
@@ -29,4 +33,7 @@ clean:
 	rm -f figs/shacpp.aux
 	rm -f figs/shacpp.log
 	rm -f figs/shacpp.out
+	rm -f figs/attention.pdf
+	rm -f figs/attention.aux
+	rm -f figs/attention.log
 
