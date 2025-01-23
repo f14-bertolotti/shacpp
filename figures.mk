@@ -264,9 +264,27 @@ data/ablation-mlp.pdf:
 
 data/grads-transformer-transport.pdf:
 	jet init --shape 1 1 --font-size 24 \
-	jet line --color ${SHAC_COLOR}   --input-path data/withgrads/shac/transport/5/transformer/42/policy.log   --x message/episode --y message/grads \
-	jet line --color ${SHACWM_COLOR} --input-path data/withgrads/shacwm/transport/5/transformer/42/policy.log --x message/episode --y message/grads \
-	jet line --color .2 1 .2 --input-path data/withgrads/shacwm/transport/5/mlp/42/policy.log --x message/episode --y message/grads --linestyle "--" \
+	jet line --color ${SHAC_COLOR}   --input-path data/withgrads/shac/transport/3/transformer/42/policy.log   --x message/episode --y message/grads \
+	jet line --color ${SHACWM_COLOR} --input-path data/withgrads/shacwm/transport/3/transformer/42/policy.log --x message/episode --y message/grads \
+	jet mod \
+		--right-spine False \
+		--top-spine False \
+		--x-label "Episode" \
+		--y-label "||∇f(x)||" \
+	jet legend \
+		--ax 0 0 \
+		--cols 2 \
+		--loc "upper center" \
+		--frameon False \
+		--line "shac++" ${SHACWM_COLOR} 1 "-" \
+		--line shac ${SHAC_COLOR} 1 "-" \
+	jet plot --show False --output-path $@
+
+
+data/grads-mlp-transport.pdf:
+	jet init --shape 1 1 --font-size 24 \
+	jet line --color .2 .2 1 --input-path data/withgrads/shacwm/transport/3/mlp/42/policy.log --x message/episode --y message/grads --linestyle "-" \
+	jet line --color ${SHACWM_COLOR} --input-path data/withgrads/shacwm/transport/3/transformer/42/policy.log --x message/episode --y message/grads \
 	jet mod \
 		--right-spine False \
 		--top-spine False \
@@ -278,10 +296,8 @@ data/grads-transformer-transport.pdf:
 		--loc "upper center" \
 		--frameon False \
 		--line "shac++ transformer" ${SHACWM_COLOR} 1 "-" \
-		--line shac ${SHAC_COLOR} 1 "-" \
-		--line "scha++ mlp" .2 1 .2 1 "--" \
+		--line "scha++ mlp" .2 .2 1 1 "-" \
 	jet plot --show False --output-path $@
-
 
 all: \
 	data/main-transformer.pdf \

@@ -1,8 +1,17 @@
+
+
 \begin{figure}[t]
     \centering
-    \includegraphics[width=.5\textwidth]{figs/attention.pdf} 
+    \includegraphics[width=.45\textwidth]{figs/attention.pdf} 
     \caption{Attention matrix for the world model.}
     \label{fig:apx:attention}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=.45\textwidth]{figs/grads-mlp-transport.pdf}
+    \caption{Gradient norm for a transformer architecture wrt. a MLP architecture.}
+    \label{fig:grads-mlp}
 \end{figure}
 
 
@@ -23,19 +32,4 @@ When implementing the policy, value, and reward functions with a transformer, we
 
 \subsection{World Model}
 When implementing the action world model, we consistently use a transformer architecture. Each action is represented as an embedding fed into the network. To maintain positional invariance between the agents, we employ a custom attention matrix that allows the action for step $i$ of agent $j$, $a_{ij}$, to attend only to actions from the same step or previous steps of the same agent. Formally, $a_{ij}$ can attend to all $a_{kj}$ for $k<i$ and to all $a_{ik}$ for $k \in \agents$. This attention pattern is shown in \Cref{apx:fig:attention}. As a result, the world models process sequences of length $32 \cdot \na$. We use a slightly deeper architecture to account for the increased complexity of the task, with $3$ layers. The hidden size is set to $64$ and the feed-forward size to $128$. The remaining hyperparameters are set consistently with those used in the MLP architecture. For a full list of hyperparameters, see \Cref{apx:tab:shac}.
-
-
-\begin{table}[t]
-        \centering
-        \input{tables/shacwm.tex}
-        \caption{SHAC/\fname{}/\fnamer{} Hyperparameters}
-        \label{apx:tab:shac}
-\end{table}
-
-\begin{table}[t]
-        \centering
-        \input{tables/ppo.tex}
-        \caption{PPO Hyperparmeters}
-        \label{apx:tab:ppo}
-\end{table}
 

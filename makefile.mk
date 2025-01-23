@@ -30,18 +30,37 @@ clean-$1-$2-$3-transformer-$4:
 
 endef
 
-data/withgrads/shac/transport/5/transformer/42/done: venv/bin/python3
+data/withgrads/shac/transport/3/transformer/42/done: venv/bin/python3
 	CUBLAS_WORKSPACE_CONFIG=":4096:8" venv/bin/python3 src/experiments.py \
 		modelcfg --model policy --nn transformer \
 		modelcfg --model value  --nn transformer \
 		modelcfg --model reward --nn transformer \
-		run --dir $(dir $@) --log-grads True --alg-name shac --env-name transport --agents 5 --seed 42 --compile True --episodes 5000 --early-stopping 2 2
-data/withgrads/shacwm/transport/5/transformer/42/done: venv/bin/python3
+		run --dir $(dir $@) --log-grads True --alg-name shac --env-name transport --agents 3 --seed 42 --compile True --episodes 10000 --early-stopping 2 2
+data/withgrads/shac/transport/3/mlp/42/done: venv/bin/python3
+	CUBLAS_WORKSPACE_CONFIG=":4096:8" venv/bin/python3 src/experiments.py \
+		modelcfg --model policy --nn mlp \
+		modelcfg --model value  --nn mlp \
+		modelcfg --model reward --nn mlp \
+		run --dir $(dir $@) --log-grads True --alg-name shac --env-name transport --agents 3 --seed 42 --compile True --episodes 10000 --early-stopping 2 2
+data/withgrads/shacwm/transport/3/transformer/42/done: venv/bin/python3
 	CUBLAS_WORKSPACE_CONFIG=":4096:8" venv/bin/python3 src/experiments.py \
 		modelcfg --model policy --nn transformer \
 		modelcfg --model value  --nn transformer \
 		modelcfg --model reward --nn transformer \
-		run --dir $(dir $@) --log-grads True --alg-name shacwm --env-name transport --agents 5 --seed 42 --compile True --episodes 5000 --early-stopping 2 2
+		run --dir $(dir $@) --log-grads True --alg-name shacwm --env-name transport --agents 3 --seed 42 --compile True --episodes 10000 --early-stopping 2 2
+data/withgrads/shacwm/transport/3/mlp/42/done: venv/bin/python3
+	CUBLAS_WORKSPACE_CONFIG=":4096:8" venv/bin/python3 src/experiments.py \
+		modelcfg --model policy --nn mlp \
+		modelcfg --model value  --nn mlp \
+		modelcfg --model reward --nn mlp \
+		run --dir $(dir $@) --log-grads True --alg-name shacwm --env-name transport --agents 3 --seed 42 --compile True --episodes 10000 --early-stopping 2 2
+
+
+withgrads: \
+	data/withgrads/shacwm/transport/3/mlp/42/done \
+	data/withgrads/shac/transport/3/mlp/42/done \
+	data/withgrads/shacwm/transport/3/transformer/42/done \
+	data/withgrads/shac/transport/3/transformer/42/done
 
 # generate all possible targets
 ALGOS=ppo shac shacrm shacwm

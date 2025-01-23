@@ -1,18 +1,4 @@
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\textwidth]{figs/ablation-transformer.pdf}
-    \caption{Comparison between \fname{} with and without transition network, labelled \fnamer{}, for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios. Transformer architecture.}
-    \label{fig:ablation-transformer}
-\end{figure}
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\columnwidth]{figs/ablation-mlp.pdf}
-    \caption{Comparison between \fname{} with and without transition network, labelled \fnamer{}, for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios. MLP architecture.}
-    \label{fig:ablation-mlp}
-\end{figure}
-
 \section{Ablation Study}\label{apx:ablation}
 In the main paper, we focused on simultaneously replacing both the transition and reward functions with neural networks. This approach allows for greater generality and can be applied across a multitude of environments. However, when only the transition or reward function is differentiable and available, it is feasible to replace only one of them. This simplifies the algorithm, requiring the training of only a single additional network alongside the policy and value functions.
 
@@ -32,8 +18,35 @@ For the MLP architecture, the results are more mixed. In the Dispersion environm
 \subsection{Discussion}
 We can easily observe that the transformer architecture leads, generally speaking, to better policies. This is also evident by inspecting \Cref{tab:max-rewards}. This may be due to the positional invariance property of the transformers leading to more sample efficient networks. 
 
-Furthermore, with the transformer architecture, we observe a tendency for \fname{} to produce better results. This may be attributed to the generated gradients being more stable, as shown in ~\cref{TODO}.
+Furthermore, with the transformer architecture, we observe a tendency for \fname{} to produce better results. This may be attributed to the generated gradients being more stable, as shown in \Cref{fig:grads-mlp}.
 
 In contrast, for the MLP architecture, the results are more mixed. This could be attributed to the MLP architecture being less sample-efficient, which ultimately leads to less accurate gradients.
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{figs/ablation-transformer.pdf}
+    \caption{Comparison between \fname{} with and without transition network, labelled \fnamer{}, for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios. Transformer architecture.}
+    \label{fig:ablation-transformer}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{figs/ablation-mlp.pdf}
+    \caption{Comparison between \fname{} with and without transition network, labelled \fnamer{}, for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios. MLP architecture.}
+    \label{fig:ablation-mlp}
+\end{figure}
+
+\begin{table}[t]
+        \centering
+        \input{tables/shacwm.tex}
+        \caption{SHAC/\fname{}/\fnamer{} Hyperparameters}
+        \label{apx:tab:shac}
+\end{table}
+
+\begin{table}[t]
+        \centering
+        \input{tables/ppo.tex}
+        \caption{PPO Hyperparmeters}
+        \label{apx:tab:ppo}
+\end{table}
 
