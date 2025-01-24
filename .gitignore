@@ -13,5 +13,7 @@ venv
 *.fdb_latexmk
 *.bbl
 *.blg
+.*.swp
+*.tex~
 *.synctex.gz
 paper/icml25/first/main.pdf
