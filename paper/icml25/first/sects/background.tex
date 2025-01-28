@@ -13,14 +13,14 @@ The goal of the MDP is to find a policy that maximizes the expected return
 \[\mathbb{E}_{\tau\sim\pi}\left[\sum_{t=0}^{\horizon-1}\sum_{i\in\agents}\gamma^t r_{ti}^\tau \right]\]
 
 \subsection{Neural Networks}
-A neural network is a function $f_{\theta}:\mathbb{R}^n\rightarrow\mathbb{R}^m$ parameterized by its weights $\theta$, which maps an input vector $x\in\mathbb{R}^n$ to an output vector $y\in\mathbb{R}^m$. 
+A neural network is a function $f_{\theta}:\mathbb{R}^n\rightarrow\mathbb{R}^m$ parameterized by its weights $\theta \in \mathbb{R}^w$, which maps an input vector $x\in\mathbb{R}^n$ to an output vector $y\in\mathbb{R}^m$. 
 The network parameters $\theta$ are optimized by minimizing the loss function $\mathcal{L}_\theta$, which quantifies the discrepancy between the network's predictions and the target outputs based on the training data.
 
 In this work, we will often approximate functions (such as transition $\transition$) with neural networks. Therefore, for each function $g$, we will denote the corresponding neural network with $g_\theta$. For instance, the transition and its corresponding neural network are denoted as $F$ and $F_{\theta}$, respectively. The corresponding loss will be denoted as $\mathcal{L}_\theta^g$ and it will aim to minimize the differences between $g$ and $g_\theta$.
 
 While we use a unique set of parameters $\theta$ for all the networks. Each network can either use its own subset of $\theta$ or it can share parameters with other networks. In practice, the parameters will be shared only for the policies.
 
-For simplicity, we formally treat only the case where the policies observe the full state, meaning that $\stateobs{i}$ is the identity function. However, in our experiments, we consider also scenarios where the full state is not available to the policies.
+For simplicity, we formally consider only the case where policies have access to the full state, meaning that $\stateobs{i}$ is the identity function. This allows us to focus on the fundamental aspects of our approach without the added complexity of partial observability. Extending our framework to handle partial observability is straightforward; however, we choose not to address it here to maintain clarity and simplicity in our presentation. Nonetheless, our experiments do include scenarios where policies do not have access to the complete state information.
 
 \subsection{SHAC}
 
