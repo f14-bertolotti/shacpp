@@ -13,7 +13,8 @@ The goal of the MDP is to find a policy that maximizes the expected return
 \[\mathbb{E}_{\tau\sim\pi}\left[\sum_{t=0}^{\horizon-1}\sum_{i\in\agents}\gamma^t r_{ti}^\tau \right]\]
 
 \subsection{Neural Networks}
-A neural network is a function $f_{\theta}:\mathbb{R}^n\rightarrow\mathbb{R}^m$ parameterized by $\theta$ that maps an input vector $x\in\mathbb{R}^n$ to an output vector $y\in\mathbb{R}^m$. The parameters $\theta$ of the network are learned by minimizing a loss function $\mathcal{L}_\theta$ with respect to the training data.
+A neural network is a function $f_{\theta}:\mathbb{R}^n\rightarrow\mathbb{R}^m$ parameterized by its weights $\theta$, which maps an input vector $x\in\mathbb{R}^n$ to an output vector $y\in\mathbb{R}^m$. 
+The network parameters $\theta$ are optimized by minimizing the loss function $\mathcal{L}_\theta$, which quantifies the discrepancy between the network's predictions and the target outputs based on the training data.
 
 In this work, we will often approximate functions (such as transition $\transition$) with neural networks. Therefore, for each function $g$, we will denote the corresponding neural network with $g_\theta$. For instance, the transition and its corresponding neural network are denoted as $F$ and $F_{\theta}$, respectively. The corresponding loss will be denoted as $\mathcal{L}_\theta^g$ and it will aim to minimize the differences between $g$ and $g_\theta$.
 
