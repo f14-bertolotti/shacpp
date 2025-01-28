@@ -52,7 +52,7 @@ In practice, this is achieved by leveraging a \emph{replay buffer} to cache the 
 $$ \mathcal{L}_\theta^{\rewards{i}}(\batch) = \frac{1}{\bs}\sum_{s,a,s',r \in \batch}\left( {\rewards{i}}_\theta(s, a) - r \right)^2 $$
 Where $B$ represents a batch of state-action-state-reward tuples sampled uniformly from the cache.
 
-Similarly, we aim to train a neural network to approximate the transition function. However, to avoid vanishing or exploding gradients, we employ a non-recursive approach similar to Action World Model~\cite{Ma24}. This corresponds to train a neural network that given a starting observation from $\mathcal{S}$ and a sequence of $\mh$ actions from $\alla^\mh$, predicts the next $\mh$ observations from $\states^\mh$. We aim to minimize:
+Similarly, we aim to train a neural network to approximate the transition function. However, to avoid vanishing or exploding gradients, we employ a non-recursive approach similar to Action World Model~\cite{Ma24}. This corresponds to train a neural network that given a starting observation from $\mathcal{S}$ and a sequence of $\mh$ actions from $\alla^\mh$, predicts the next $\mh$ states from $\states^\mh$. We aim to minimize:
 \begin{align*}
     \underset{\tau\sim\pi}{E}\left[\hspace{-1.2cm}\sum_{\scriptscriptstyle \hspace{1cm}\substack{s_t,\dots,s_{t+h+1},\\\hspace{.3cm}a_{t*},\dots,a_{t+h*}\in\tau}}\hspace{-1.2cm} \left\vert\left\vert \transition_{\theta}(s_t, a_{t*},\dots,a_{\scriptscriptstyle i+h*}) - [s_t,\dots,s_{\scriptscriptstyle t+h+1}] \right\vert\right\vert^2\right] 
 \end{align*}
@@ -62,8 +62,8 @@ Where $B$ represents a batch of trajectories of length $\mh$ sampled uniformly f
 
 Further, we modify the SHAC policy loss, $\mathcal{L}_\theta^{\pi}$, to include a term that penalizes actions outside the action space. Suppose the action space is $(l,r)$ (with $l<r$) for all agents, we minimize the loss $\mathcal{L'}_\theta^\pi:$
 
-$$\mathcal{L}_\theta^\pi(\batch) + \alpha \frac{1}{\bs\horizon}\sum_{\tau\in\batch}\sum_{a\in\tau} d(a^\tau,(a,b))$$
-$$d(x,(l,r)) = \begin{cases}(l-x)^2 & \text{if } x < l \\ (x-r)^2 & \text{if } x > r \\ 0 & \text{otherwise} \end{cases}$$
+$$\mathcal{L}_\theta^\pi(\batch) + \alpha \frac{1}{\bs\horizon}\sum_{\tau\in\batch}\sum_{a\in\tau} d(a^\tau,(l,r))$$
+$$d(x,(l,r)) = \begin{cases}(x-l)^2 & \text{if } x < l \\ (x-r)^2 & \text{if } x > r \\ 0 & \text{otherwise} \end{cases}$$
 
     Where $\alpha$ is a hyper-parameter that controls the strength of the penalty. In our experiments, we set $\alpha=1$. Usually, actions are either clipped to the allowed action space or, an activation function (such as hyperbolic tangent or sigmoid) is used to ensure that the actions are within the allowed range. While this approach is acceptable for algorithms like PPO and SHAC, the penalty we employ is crucial in our specific scenario. This necessity arises from the fact that we are training the policy to optimize two neural networks that serve as environment approximations. Because these networks are never trained with data outside the permissible action space, they are likely to be maximized beyond these bounds. Consequently, the policy may generate actions far outside the allowed range. This can ultimately result in 0-gradients when action clipping is applied or high pre-activation actions when activation function is used. 
 
