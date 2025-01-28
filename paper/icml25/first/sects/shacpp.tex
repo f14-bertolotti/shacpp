@@ -50,7 +50,7 @@ As mentioned previously, we aim to address the limitations of SHAC by approximat
     \underset{\tau\sim\pi}{E}\left[\hspace{-.7cm}\sum_{\hspace{.7cm}\scriptscriptstyle s_i,a_{ij},s_{i+1}\in\tau} \hspace{-.8cm}\left( {\rewards{i}}_\theta(s_i, a_{ij}, s_{i+1}) -\rewards{i}(s_i, a_{ij}, s_{i+1}) \right)^2\right] 
 \end{align*}
 
-In practice, this is achieved by leveraging a \emph{replay buffer} to cache the state-action-reward triplets obtained from the environment. The neural network is then trained to minimize the mean squared error (MSE) loss. Specifically, we minimize the loss $\mathcal{L}_\theta^{\rewards{i}}:(\states\times\actions{i}\times\states)^N\rightarrow\mathbb{R}$:
+In practice, this is achieved by leveraging a \emph{replay buffer} to cache the state-action-reward triplets obtained from the simulator. The neural network is then trained to minimize the mean squared error (MSE) loss. Specifically, we minimize the loss $\mathcal{L}_\theta^{\rewards{i}}:(\states\times\actions{i}\times\states)^N\rightarrow\mathbb{R}$:
 $$ \mathcal{L}_\theta^{\rewards{i}}(\batch) = \frac{1}{\bs}\sum_{s,a,s',r \in \batch}\left( {\rewards{i}}_\theta(s, a) - r \right)^2 $$
 Where $B$ represents a batch of state-action-state-reward tuples sampled uniformly from the cache.
 
