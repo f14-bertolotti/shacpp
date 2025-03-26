@@ -56,25 +56,25 @@ We understand that more complex enviroments with more agents may offer more chal
 
 **Why not SAC**: We appreciate the author suggestion to include SAC and we will consider adding it to the baselines for the next revision. However, the original SHAC paper already included a SAC baseline. Ultimately, we believe that the inclusion of SAC would not add much to the main discussion.
 
-**Why not the algorithm in related work section**: We did not include PODS, CE-APG, and BPTT as baselines as we see these a precursors of SHAC. The authors of SAM-RL introduce a differentiable renderer on top of the differentiable enviroment which is even more difficult to obtain in practice (Although also this component could be replaced with a learned model in our framework). Instead, DiffTORI applies a test-time optimization on the agent trajectory. This choice render the extension of DiffTORI to the multi-agent setting difficult. The authors of AHAC address the issue of stiff dynamic by simply truncating trajectories, while this choice can boost performance of SHAC, it mantains the fundamental limitation of the original framework.
+**Why not the algorithm in related work section**: We did not include PODS, CE-APG, and BPTT as baselines as we see these a precursors of SHAC. The authors of SAM-RL introduce a differentiable renderer on top of the differentiable enviroment which is even more difficult to obtain in practice (Although also this component could be replaced with a learned model in our framework). Instead, DiffTORI applies a test-time optimization on the agent trajectory. This choice render the extension of DiffTORI to the multi-agent setting difficult. The authors of AHAC address the issue of stiff dynamic by simply truncating trajectories, while this choice can boost performance of SHAC, it maintains the fundamental limitation of the original framework.
 
 We will provide a more detailed explanation in the paper.
 
 > The authors estimate the reward function and state transition using only local agent states and actions as input. This approach may limit the method's generality and correctness.
 
-Yes, this is a deliberate choice on our part. Since in some enviroment their state may be only partially observable then a broad algorithm need to be able to handle this. While with SHAC this is not possible, since for gradient computation the global state is needed, SHAC++ can handle this by unsing the local information available to the agents. Despite this choice may skew the performance in favor of SHAC, we believe that this is a more realistic scenario. We will include this discussion in the paper.
+Yes, this is a deliberate choice on our part. Since in some environment their state may be only partially observable then a broad algorithm need to be able to handle this. While with SHAC this is not possible, since for gradient computation the global state is needed, SHAC++ can handle this by unsing the local information available to the agents. Despite this choice may skew the performance in favor of SHAC, we believe that this is a more realistic scenario. We will include this discussion in the paper.
 
 > The parameters for the policy, value, reward, and state transition networks are all denoted by $\theta$. 
 
-This is a deliberate choice that allows us to denote a genera framework where the parameters can be arbitrarly shared. For example, all parameter may be separate such as in $\theta=[\theta_{\text{policy}}, \theta_{\text{reward}}, \theta_{\text{value}}, \theta_{\text{world}}]$. Or, $\theta$ could be designed with some degree of sharing.
+This is a deliberate choice that allows us to denote a general framework where the parameters can be arbitrarly shared. For example, all parameter may be separate such as in $\theta=[\theta_{\text{policy}}, \theta_{\text{reward}}, \theta_{\text{value}}, \theta_{\text{world}}]$. Or, $\theta$ could be designed with some degree of sharing.
 
 > modeling the environment instead of directly utilizing its information might introduce biases and lead to performance degradation.
 
-Modeling the enviroment means that the policy will be only as good as the enviroment model is. If the world model is very accurate, the gradient will be informative. If the world model is inaccurate or only partially accurate, the gradient will be noisy leading to degradation. However, while we train the world model in tandem with the policy, it is possible to bootstrap the world model with already available traces. This can lead to a more stable training of the policy. We will include this discussion in the paper.
+Modeling the environment means that the policy will be only as good as the environment model is. If the world model is very accurate, the gradient will be informative. If the world model is inaccurate or only partially accurate, the gradient will be noisy leading to degradation. However, while we train the world model in tandem with the policy, it is possible to bootstrap the world model with already available traces. This can lead to a more stable training of the policy. We will include this discussion in the paper.
 
 > To what SHAC+ stands for?
 
-The SHAC++ framework allows for replacing only certain components with learned models. For example, if a differentialble enviroment is available, but not a differentiable reward. Then we can only learn the latter. SHAC+ refers to the case where only the reward is learned. We will provide a more detailed explanation in the paper.
+The SHAC++ framework allows for replacing only certain components with learned models. For example, if a differentiable environment is available, but not a differentiable reward. Then we can only learn the latter. SHAC+ refers to the case where only the reward is learned. We will provide a more detailed explanation in the paper.
 
 > Visual analysis of the trained policies' behavior would be more convincing.
 
@@ -99,7 +99,7 @@ We believe that SHAC has demonstrated excellent performance in single-agent sett
 
 > Not convincing evaluation
 
-We choose VMAS because it offers differentiable and single/multi-agent enviroments. Further, these enviroments are able to scale in complexity by increasing the number of agents. Ultimately, we believe VMAS to be a good testbed to assess the scaling performance of RL algorithm in general. 
+We choose VMAS because it offers differentiable and single/multi-agent environments. Further, these environments are able to scale in complexity by increasing the number of agents. Ultimately, we believe VMAS to be a good testbed to assess the scaling performance of RL algorithm in general. 
 
 > results do not seem significant enough to make a deep statement about SHAC/SHAC++ in multi-agent settings.
 
@@ -111,11 +111,11 @@ We agree. While, we do explore the theoretical desirable property, Sect D.2 prov
 
 > why not using the full VMAS suite?
 
-The VMAS suite is fairly extensive offering 21 different enviroments. A full evualtion of this enviroments even with a small degree of statistical significance would require thousands of runs. Therefore, we limited ourself to the 4 mentioned enviromens which we believe to be representative of the whole suite. We will update Sect.A to offer more insight on this choice.
+The VMAS suite is fairly extensive offering 21 different environments. A full evaluation of this environments even with a small degree of statistical significance would require thousands of runs. Therefore, we limited ourselves to the 4 mentioned environment which we believe to be representative of the whole suite. We will update Sect.A to offer more insight on this choice.
 
 > The most convincing evaluation would be in comparison to exactly the settings from the original SHAC paper
 
-We understand the author point of view. In this revision, we mainly focused on a multi-agent evaluation. We believe that an evaluation with respect to some original enviroment would be valuable. We will work towards this direction for the next revision. [Ci penso io a questo] 
+We understand the author point of view. In this revision, we mainly focused on a multi-agent evaluation. We believe that an evaluation with respect to some original environment would be valuable. We will work towards this direction for the next revision. [Ci penso io a questo] 
 
 > Omitted references
 
@@ -123,6 +123,6 @@ We will make sure to include TD-MPC2 and DreamerV3 in the related work section.
 
 > I am also curious about the design space of improving bad simulator gradients. 
 
-While we do not perform an extensive analysis on the design choices for improving the enviromen gradients. Section D.2 offers a preliminary results comparing the transformer gradients with the mlp gradient. Our intuition is that the neural network architecture has definetely an impact. However, a more in depth study comparing normalization layer, weigh decay, optimizers and etc. would be needed in order to draw meaningful conclusions.
+While we do not perform an extensive analysis on the design choices for improving the environment gradients. Section D.2 offers a preliminary results comparing the transformer gradients with the mlp gradient. Our intuition is that the neural network architecture has definitely an impact. However, a more in depth study comparing normalization layer, weigh decay, optimizers, etc. would be needed in order to draw meaningful conclusions.
 
 
