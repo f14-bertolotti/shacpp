@@ -1,6 +1,5 @@
 from vmas.scenarios import discovery
 from vmas.simulator.core import Agent
-from vmas.simulator.utils import ScenarioUtils
 import torch
 
 class Discovery(discovery.Scenario):

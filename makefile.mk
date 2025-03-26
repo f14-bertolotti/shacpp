@@ -64,7 +64,7 @@ withgrads: \
 
 # generate all possible targets
 ALGOS=ppo shac shacrm shacwm
-ENVS=transport dispersion sampling discovery
+ENVS=transport dispersion sampling discovery ant
 AGENTS=1 3 5
 MODELS=mlp transformer
 SEEDS=42 43 44
@@ -75,6 +75,7 @@ transport-mlp: $(foreach a,$(ALGOS),$(foreach g,$(AGENTS),$(foreach s,$(SEEDS),d
 transport-transformer: $(foreach a,$(ALGOS),$(foreach g,$(AGENTS),$(foreach s,$(SEEDS),data/$a/transport/$g/transformer/$s/done)))
 sampling-mlp: $(foreach a,$(ALGOS),$(foreach g,$(AGENTS),$(foreach s,$(SEEDS),data/$a/sampling/$g/mlp/$s/done)))
 sampling-transformer: $(foreach a,$(ALGOS),$(foreach g,$(AGENTS),$(foreach s,$(SEEDS),data/$a/sampling/$g/transformer/$s/done)))
+ant-mlp: $(foreach a,$(ALGOS),$(foreach g,$(AGENTS),$(foreach s,$(SEEDS),data/$a/ant/$g/mlp/$s/done)))
 
 # the following two are not differentiable, so no point in using shac or shacrm
 ALGOS=ppo shacwm

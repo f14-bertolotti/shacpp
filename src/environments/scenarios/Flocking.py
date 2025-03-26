@@ -1,6 +1,4 @@
 from vmas.scenarios import flocking
-from vmas.simulator.utils import Color
-import torch
 
 class Flocking(flocking.Scenario):
 

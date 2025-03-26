@@ -6,6 +6,7 @@ ENVNAMES = [
     "transport" ,
     "sampling"  ,
     "discovery" ,
+    "ant"       ,
 ]
 
 NNS = [
