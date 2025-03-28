@@ -33,49 +33,52 @@ we believe that the number of potential factors (NN arch., NN size, environment 
 
 > What are the computational requirements and training times for SHAC++ compared to SHAC and PPO?
 
-We can include the training times in the paper. However, it should be noted that the performance also depends heavily on some parameters such as training epochs for value, policy (and, reward and world model for SHAC++). Therefore, this would not be indicative on what method is the fastest to train. Nonetheless, SHAC++ is definetely more computationally heavy this is because it needs to train the reward and world model in addition to what SHAC does. However, for a comparison consider that for the sampling enviroment (which is the slowest in VMAS) SHAC++ takes 16 hours to complete the 20000 episodes similarly to PPO, while SHAC takes about 10 hours.
+We can include the training times in the paper. However, it should be noted that the performance also depends heavily on some parameters such as training epochs for value, policy (and, reward and world model for SHAC++). Therefore, this would not be indicative on what method is the fastest to train. Nonetheless, SHAC++ is definitely more computationally heavy this is because it needs to train the reward and world model in addition to what SHAC does. 
+However, for a comparison consider that for the sampling environment (which is the slowest in VMAS) SHAC++ takes 16 hours to complete the 20000 episodes similarly to PPO, while SHAC takes about 10 hours.
 
 # Reviewer 2
 
 > problematic claims that are misaligned with each other and with the supporting evidence. 
 
-We are sorry for the confusion. We will revise the introduction to better reflect the goal of the paper. Briefly, we believe that SHAC demostrated excellent perfomance in single-agent and differentiable scenarios. In this work, we aim to lift these requirements (single-agent and differentiability) to broaden the applicability of SHAC. This led us to develop SHAC++ that can handle multi-agent and non-differentiable environments while mantaining performance comparable to SHAC.
+We are sorry for the confusion. 
+We will revise the introduction to better reflect the goal of the paper. Briefly, we believe that SHAC demonstrated excellent performance in single-agent and differentiable scenarios. In this work, we aim to lift these requirements (single-agent and differentiability) to broaden the applicability of SHAC. This led us to develop SHAC++ that can handle multi-agent and non-differentiable environments while maintaining performance comparable to SHAC.
 
 > lower performance in some cases
 
 **Goal**: We want to stress the fact that the goal is not to outperform SHAC, but to lift the requirements of the original framework (single-agent and differentiability) while maintaining comparable performance.
 
-**Skewed results**: In VMAS as in many other enviroments, the agents are able to experience only local observetions and not the whole world state. While SHAC++ remains faithful to accessing only this partial information, SHAC access the whole global information through its gradients. This puts SHAC in a more favorable position. Despite this, SHAC++ and SHAC perform similarly.
+**Skewed results**: In VMAS as in many other environments, the agents are able to experience only local observations and not the whole world state. While SHAC++ remains faithful to accessing only this partial information, SHAC access the whole global information through its gradients. This puts SHAC in a more favorable position. Despite this, SHAC++ and SHAC perform similarly.
 
 **Early stopping** We also note that as soon as a run achieves the 90% of the maximum reward, we stop the training, this can lead to some variance in the final performance.  
 
 > The proposed method is not evaluated in such complex environments; the test environments are very simple.
 
-We believe that the chose enviroments offer a good degree of complexity especially when the number of agents is increased. This is also reflected by the poor performance achieved by PPO/MAPPO. Despite this, we recognize that the statement in the abstract may be misleading. We will revise the abstract and introduction to better reflect the complexity of the environments.
+We believe that the chose environments offer a good degree of complexity especially when the number of agents is increased. This is also reflected by the poor performance achieved by PPO/MAPPO. Despite this, we recognize that the statement in the abstract may be misleading. We will revise the abstract and introduction to better reflect the complexity of the environments.
 
 > The performance of SHAC++ is questionable in more complex MARL.
 
-We understand that more complex enviroments with more agents may offer more challenging scenarios and more compelling results. However, we want to stress that these enviroments are already incapacitating for PPO. [RUN experiment with more agents]. Further, we will consider adding more complex enviroments for future revision, we kindly ask the reviewer to suggest a differentiable enviroment that can scale in the number of agents which he would believe to be adequate for the evaluation of SHAC++.
+We understand that more complex environments with more agents may offer more challenging scenarios and more compelling results. However, we want to stress that these environments are already incapacitating for PPO. [RUN experiment with more agents]. Further, we will consider adding more complex environments for future revision, we kindly ask the reviewer to suggest a differentiable environment that can scale in the number of agents which he would believe to be adequate for the evaluation of SHAC++.
 
 > Numerous practical algorithms already exist for such environments, for example MAPPO, HAPPO, and QMIX in multi-agent scenarios.
 
 **PPO & MAPPO confusion**: While we do not evaluate against also HAPPO and QMIX, we always use MAPPO where PPO is evaluated for multi-agent setting. Since the MAPPO formulation is fairly natural extension to PPO, we always referred to PPO in the figures and tables, and only briefly mention that MAPPO is used in the case of multi-agent setting. We will revise the paper to better reflect this.
 
-**Why MAPPO and not the others**: While HAPPO and QMIX are both valid candidate for baseline. In order to offers an ablation study and a degree of statistical significance we had to limit the number of baselines. We also note that HAPPO authors designed their algorithm to be non-homogeneous (parameters between agents are not shared). This choice renders its application problematic as istantiating and traiing several NN at the same time quickly becomes computationally infeasible. Meanwhile MAPPO can be applied with both shared and non-shared parameters. In our experiments, in order to be consisted while scaling the number of agents, we always apply parameter sharing. 
+**Why MAPPO and not the others**: While HAPPO and QMIX are both valid candidate for baseline. In order to offer an ablation study and a degree of statistical significance we had to limit the number of baselines. We also note that HAPPO authors designed their algorithm to be non-homogeneous (parameters between agents are not shared). This choice renders its application problematic as instantiating and training several NNs at the same time quickly becomes computationally infeasible. Meanwhile, MAPPO can be applied with both shared and non-shared parameters. In our experiments, in order to be consisted while scaling the number of agents, we always apply parameter sharing.
+We will include a more detailed explanation of why we chose MAPPO as a baseline in the paper. 
 
 **Why not SAC**: We appreciate the author suggestion to include SAC and we will consider adding it to the baselines for the next revision. However, the original SHAC paper already included a SAC baseline. Ultimately, we believe that the inclusion of SAC would not add much to the main discussion.
 
-**Why not the algorithm in related work section**: We did not include PODS, CE-APG, and BPTT as baselines as we see these a precursors of SHAC. The authors of SAM-RL introduce a differentiable renderer on top of the differentiable enviroment which is even more difficult to obtain in practice (Although also this component could be replaced with a learned model in our framework). Instead, DiffTORI applies a test-time optimization on the agent trajectory. This choice render the extension of DiffTORI to the multi-agent setting difficult. The authors of AHAC address the issue of stiff dynamic by simply truncating trajectories, while this choice can boost performance of SHAC, it maintains the fundamental limitation of the original framework.
+**Why not the algorithm in related work section**: We did not include PODS, CE-APG, and BPTT as baselines as we see these a precursor of SHAC. The authors of SAM-RL introduce a differentiable renderer on top of the differentiable environment which is even more difficult to obtain in practice (Although also this component could be replaced with a learned model in our framework). Instead, DiffTORI applies a test-time optimization on the agent trajectory. This choice render the extension of DiffTORI to the multi-agent setting difficult. The authors of AHAC address the issue of stiff dynamic by simply truncating trajectories, while this choice can boost performance of SHAC, it maintains the fundamental limitation of the original framework.
 
 We will provide a more detailed explanation in the paper.
 
 > The authors estimate the reward function and state transition using only local agent states and actions as input. This approach may limit the method's generality and correctness.
 
-Yes, this is a deliberate choice on our part. Since in some environment their state may be only partially observable then a broad algorithm need to be able to handle this. While with SHAC this is not possible, since for gradient computation the global state is needed, SHAC++ can handle this by unsing the local information available to the agents. Despite this choice may skew the performance in favor of SHAC, we believe that this is a more realistic scenario. We will include this discussion in the paper.
+Yes, this is a deliberate choice on our part. Since in some environment their state may be only partially observable then a broad algorithm need to be able to handle this. While with SHAC this is not possible, since for gradient computation the global state is needed, SHAC++ can handle this by using the local information available to the agents. Despite this choice may skew the performance in favor of SHAC, we believe that this is a more realistic scenario. We will include this discussion in the paper.
 
 > The parameters for the policy, value, reward, and state transition networks are all denoted by $\theta$. 
 
-This is a deliberate choice that allows us to denote a general framework where the parameters can be arbitrarly shared. For example, all parameter may be separate such as in $\theta=[\theta_{\text{policy}}, \theta_{\text{reward}}, \theta_{\text{value}}, \theta_{\text{world}}]$. Or, $\theta$ could be designed with some degree of sharing.
+This is a deliberate choice that allows us to denote a general framework where the parameters can be arbitrary shared. For example, all parameter may be separate such as in $\theta=[\theta_{\text{policy}}, \theta_{\text{reward}}, \theta_{\text{value}}, \theta_{\text{world}}]$. Or, $\theta$ could be designed with some degree of sharing.
 
 > modeling the environment instead of directly utilizing its information might introduce biases and lead to performance degradation.
 
@@ -120,7 +123,9 @@ We agree. While, we do explore the theoretical desirable property, Sect D.2 prov
 
 > why not using the full VMAS suite?
 
-The VMAS suite is fairly extensive offering 21 different environments. A full evaluation of this environments even with a small degree of statistical significance would require thousands of runs. Therefore, we limited ourselves to the 4 mentioned environment which we believe to be representative of the whole suite. We will update Sect.A to offer more insight on this choice.
+The VMAS suite is fairly extensive offering 21 different environments. A full evaluation of this environments even with a small degree of statistical significance would require thousands of runs. Therefore, we limited ourselves to the 4 mentioned environment which we believe to be representative of the whole suite, 
+and capture the main challenges we would like to address, like cooperation, partial observability, and stiff dynamics. 
+We will update Sect.A to offer more insight on this choice.
 
 > The most convincing evaluation would be in comparison to exactly the settings from the original SHAC paper
 
