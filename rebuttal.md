@@ -2,25 +2,34 @@
 
 > In some cases, SHAC++ shows slightly lower performance.
 
-**skewed results** In VMAS all agents experience partial observability, some cases more severe than others. In SHAC++ reward and world model learn to predict the their output from partial observation. Instead SHAC world model and reward function have access to the full state. This can skew the results in favor of SHAC. Despite this, both algorithms perform similarly. 
+**skewed results** In VMAS all agents experience partial observability, 
+some cases more severe than others. 
+In SHAC++ reward and world model learn to predict their output from partial observation. 
+Instead SHAC world model and reward function have access to the full state. 
+This can skew the results in favor of SHAC. Despite this, both algorithms perform similarly. 
 
-**Early stopping** We also note that as soon as a run achieves the 90% of the maximum reward, we stop the training, this can lead to some variance in the final performance.  
+**Early stopping** We also note that as soon as a run achieves the 90% of the maximum reward, 
+we stop the training, this can lead to some variance in the final performance.  
 
 > How well does it scale with larger numbers of agents? Specifically, have the authors conducted any experiments with agent populations larger than those presented?
 
-We executed some experiment up to 7 agents, but discarded the runs as the performance was too heavily impacted to perform the 3 runs with different seeds. Scaling the number of agents has two main effects:
-1. It become easier to discover action that lead to rewards, in this sense, the enviroment become less sparse.
-2. It become more difficult to coordinate between the agents. 
-For the dispersion environment 2. seems to be the main factor limiting the performance.
-For the transport environement 1. seems to be the main factor pushing the agents to perform better.
+We executed some experiment up to 7 agents, 
+but discarded the runs as the performance was too heavily impacted to perform the 3 runs with different seeds. Scaling the number of agents has two main effects:
+1. It becomes easier to discover action that lead to rewards, in this sense, the environment become less sparse.
+2. It becomes more difficult to coordinate between the agents. 
+For the dispersion environment 2. it seems to be the main factor limiting the performance.
+For the transport environment 1. it seems to be the main factor pushing the agents to perform better.
 
 > The paper mentions challenges in scenarios with partial observability, such as the Discovery task. Are there any planned modifications or extensions to SHAC++ to better handle these scenarios?
 
-We believe that partial observability is an intrinsic property of some enviroments that RL algorithm need to deal with. SHAC can access the global state through its gradient in order to inform the policy update, however, this feels like cheating. On the other hand, SHAC++ uses reward and world model that access only local observation. While this choice may skew the performance in favor of SHAC, we believe that this is a more realistic scenario. We can include this discussion in the paper.
+We believe that partial observability is an intrinsic property of some environments that RL algorithm need to deal with. SHAC can access the global state through its gradient in order to inform the policy update, however, this feels like cheating. On the other hand, SHAC++ uses reward and world model that access only local observation. While this choice may skew the performance in favor of SHAC, we believe that this is a more realistic scenario. We can include this discussion in the paper, and we plan to add this as an extension to the SHAC++ framework in future work.
 
 > Could the authors provide more insights into the factors contributing to the higher variance observed in some scenarios with SHAC++?
 
-In SHAC++ also the reward and world model are intialized randomly. This can lead to this model to learn different solutions that impact the final reward differently, leading to higher variance. While a full analysis of the components that impact this variance would be definetely valuable, we believe that the number of potential factors (NN arch., NN size, environment type, no. agents) would render this analysis too complex for the scope of this paper.
+In SHAC++ also the reward and world model are initialized randomly. 
+This can lead to this model to learn different solutions that impact the final reward differently, leading to higher variance. 
+While a full analysis of the components that impact this variance would be definitely valuable, 
+we believe that the number of potential factors (NN arch., NN size, environment type, no. agents) would render this analysis too complex for the scope of this paper.
 
 > What are the computational requirements and training times for SHAC++ compared to SHAC and PPO?
 
