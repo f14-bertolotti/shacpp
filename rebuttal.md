@@ -5,7 +5,7 @@
 **skewed results** In VMAS all agents experience partial observability, 
 some cases more severe than others. 
 In SHAC++ reward and world model learn to predict their output from partial observation. 
-Instead SHAC world model and reward function have access to the full state. 
+Instead, SHAC world model and reward function have access to the full state. 
 This can skew the results in favor of SHAC. Despite this, both algorithms perform similarly. 
 
 **Early stopping** We also note that as soon as a run achieves the 90% of the maximum reward, 
@@ -15,10 +15,10 @@ we stop the training, this can lead to some variance in the final performance.
 
 We executed some experiment up to 7 agents, 
 but discarded the runs as the performance was too heavily impacted to perform the 3 runs with different seeds. Scaling the number of agents has two main effects:
-1. It becomes easier to discover action that lead to rewards, in this sense, the environment become less sparse.
-2. It becomes more difficult to coordinate between the agents. 
-For the dispersion environment 2. it seems to be the main factor limiting the performance.
-For the transport environment 1. it seems to be the main factor pushing the agents to perform better.
+1) It becomes easier to discover action that lead to rewards, in this sense, the environment become less sparse.
+2) It becomes more difficult to coordinate between the agents to achieve the goal. 
+For the dispersion environment 2) it seems to be the main factor limiting the performance.
+For the transport environment 1) it seems to be the main factor pushing the agents to perform better.
 
 > The paper mentions challenges in scenarios with partial observability, such as the Discovery task. Are there any planned modifications or extensions to SHAC++ to better handle these scenarios?
 
@@ -29,7 +29,7 @@ We believe that partial observability is an intrinsic property of some environme
 In SHAC++ also the reward and world model are initialized randomly. 
 This can lead to this model to learn different solutions that impact the final reward differently, leading to higher variance. 
 While a full analysis of the components that impact this variance would be definitely valuable, 
-we believe that the number of potential factors (NN arch., NN size, environment type, no. agents) would render this analysis too complex for the scope of this paper.
+we believe that the number of potential factors (NN architecture, NN size, environment type, number of agents) would render this analysis too complex for the scope of this paper.
 
 > What are the computational requirements and training times for SHAC++ compared to SHAC and PPO?
 
@@ -41,19 +41,29 @@ However, for a comparison consider that for the sampling environment (which is t
 > problematic claims that are misaligned with each other and with the supporting evidence. 
 
 We are sorry for the confusion. 
-We will revise the introduction to better reflect the goal of the paper. Briefly, we believe that SHAC demonstrated excellent performance in single-agent and differentiable scenarios. In this work, we aim to lift these requirements (single-agent and differentiability) to broaden the applicability of SHAC. This led us to develop SHAC++ that can handle multi-agent and non-differentiable environments while maintaining performance comparable to SHAC.
+We will revise the introduction to better reflect the goal of the paper. 
+Briefly, we believe that SHAC demonstrated excellent performance in single-agent and differentiable scenarios. 
+In this work, we aim to lift these requirements (single-agent and differentiability) to broaden the applicability of SHAC. 
+This led us to develop SHAC++ that can handle multi-agent and non-differentiable environments while maintaining performance comparable to SHAC.
 
 > lower performance in some cases
 
 **Goal**: We want to stress the fact that the goal is not to outperform SHAC, but to lift the requirements of the original framework (single-agent and differentiability) while maintaining comparable performance.
 
-**Skewed results**: In VMAS as in many other environments, the agents are able to experience only local observations and not the whole world state. While SHAC++ remains faithful to accessing only this partial information, SHAC access the whole global information through its gradients. This puts SHAC in a more favorable position. Despite this, SHAC++ and SHAC perform similarly.
+**Skewed results**: In VMAS as in many other environments, 
+the agents are able to experience only local observations and not the whole world state. While SHAC++ remains faithful to accessing only this partial information, 
+SHAC access the whole global information through its gradients. 
+This puts SHAC in a more favorable position. 
+Despite this, SHAC++ and SHAC perform similarly.
 
 **Early stopping** We also note that as soon as a run achieves the 90% of the maximum reward, we stop the training, this can lead to some variance in the final performance.  
 
 > The proposed method is not evaluated in such complex environments; the test environments are very simple.
 
-We believe that the chose environments offer a good degree of complexity especially when the number of agents is increased. This is also reflected by the poor performance achieved by PPO/MAPPO. Despite this, we recognize that the statement in the abstract may be misleading. We will revise the abstract and introduction to better reflect the complexity of the environments.
+We believe that the chose environments offer a good degree of complexity especially when the number of agents is increased. 
+This is also reflected by the poor performance achieved by PPO/MAPPO. 
+Despite this, we recognize that the statement in the abstract may be misleading. 
+We will revise the abstract and introduction to better reflect the complexity of the environments, and we will add more content to the discussion to better explain the choice of the environments.
 
 > The performance of SHAC++ is questionable in more complex MARL.
 
@@ -111,7 +121,7 @@ We believe that SHAC has demonstrated excellent performance in single-agent sett
 
 > Not convincing evaluation
 
-We choose VMAS because it offers differentiable and single/multi-agent environments. Further, these environments are able to scale in complexity by increasing the number of agents. Ultimately, we believe VMAS to be a good testbed to assess the scaling performance of RL algorithm in general. 
+We choose VMAS because it offers differentiable and single/multi-agent environments. Further, these environments are able to scale in complexity by increasing the number of agents. Ultimately, we believe VMAS to be a good testbed to assess the scaling performance of RL algorithm in general. We will add a discussion of the choice of the environments in the paper, comparing them to other environments that could be used for evaluation (e.g., PettingZoo, StarCraft II, etc.).
 
 > results do not seem significant enough to make a deep statement about SHAC/SHAC++ in multi-agent settings.
 
