@@ -133,7 +133,7 @@ We agree. While, we do explore the theoretical desirable property, Sect D.2 prov
 
 > why not using the full VMAS suite?
 
-The VMAS suite is fairly extensive offering 21 different environments. A full evaluation of this environments even with a small degree of statistical significance would require thousands of runs. Therefore, we limited ourselves to the 4 mentioned environment which we believe to be representative of the whole suite, 
+The VMAS suite is fairly extensive offering 21 different environments. A full evaluation of these environments even with a small degree of statistical significance would require thousands of runs. Therefore, we limited ourselves to the 4 mentioned environment which we believe to be representative of the whole suite, 
 and capture the main challenges we would like to address, like cooperation, partial observability, and stiff dynamics. 
 We will update Sect.A to offer more insight on this choice.
 
