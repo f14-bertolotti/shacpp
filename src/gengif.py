@@ -79,6 +79,7 @@ def run(
             print(world.scenario.max_rewards())
             observation = torch.stack(observation).transpose(0,1)
             total_reward += torch.stack(reward).sum().item()
+            
         
         print("total reward", total_reward, world.scenario.max_rewards().sum().item())
     

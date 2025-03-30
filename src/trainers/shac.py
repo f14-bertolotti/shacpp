@@ -76,7 +76,7 @@ def shac(
             world         = train_world,
             unroll_steps  = train_steps,
             policy_model  = policy_model.sample,
-            use_diffreward= use_diffreward,
+            use_diffreward= False,
         )
 
         episode_data["proxy_rewards"] = episode_data["rewards"]

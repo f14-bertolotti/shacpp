@@ -24,12 +24,11 @@ def train_policy(
     live_runs = dead_runs.logical_not()
     live_steps = dones[:,live_runs,0].logical_not().sum(0) - 1
 
-
     # compute loss
     optimizer.zero_grad()
     loss = -(
-        (episode_data["proxy_rewards"] * gammas * dones.logical_not()).sum() + 
-        ((gammas * episode_data["values"])[live_steps,live_runs]).sum()
+        (episode_data["proxy_rewards"] * gammas * dones.logical_not()).sum() 
+        # + ((gammas * episode_data["values"])[live_steps,live_runs]).sum()
     ) / (steps * envs)
 
     # add action space loss

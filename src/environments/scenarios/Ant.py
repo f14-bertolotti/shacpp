@@ -23,19 +23,7 @@ except ModuleNotFoundError:
 
 class AntEnv(DFlexEnv):
 
-    def __init__(
-            self, 
-            render               = False    ,
-            device               = 'cuda:0' ,
-            num_envs             = 4096     ,
-            seed                 = 0        ,
-            episode_length       = 1000     ,
-            no_grad              = True     ,
-            stochastic_init      = False    ,
-            MM_caching_frequency = 1        ,
-            early_termination    = True
-        ):
-
+    def __init__(self, render=False, device='cuda:0', num_envs=4096, seed=0, episode_length=1000, no_grad=True, stochastic_init=False, MM_caching_frequency = 16, early_termination = True):
         num_obs = 37
         num_act = 8
     
@@ -233,7 +221,7 @@ class AntEnv(DFlexEnv):
     '''
     cut off the gradient from the current state to previous states
     '''
-    def zero_grad(self, checkpoint = None):
+    def clear_grad(self, checkpoint = None):
         with torch.no_grad():
             if checkpoint is None:
                 checkpoint = {}
@@ -250,12 +238,15 @@ class AntEnv(DFlexEnv):
             self.actions = checkpoint['actions'].clone()
             self.progress_buf = checkpoint['progress_buf'].clone()
 
+    def zero_grad(self):
+        self.clear_grad()
+
     '''
     This function starts collecting a new trajectory from the current states but cuts off the computation graph to the previous states.
     It has to be called every time the algorithm starts an episode and it returns the observation vectors
     '''
     def initialize_trajectory(self):
-        self.zero_grad()
+        self.clear_grad()
         self.calculateObservations()
 
         return self.obs_buf
@@ -349,4 +340,4 @@ class Ant:
 
     def step(self, actions):
         obs, rew, done, _ = self.world.step(actions[0])
-        return [obs], [rew], done, {}
+        return [obs.clone()], [rew.clone()], done.clone(), {}

@@ -178,25 +178,25 @@ def shacwm(
             clip_coefficient = reward_clip_coefficient ,
         )
 
-        # train value model ###########################################
-        trainers.routines.train_value(
-            episode          = episode               ,
-            model            = value_model           ,
-            optimizer        = value_model_optimizer ,
-            episode_data     = episode_data          ,
-            cached_data      = value_cache           ,
-            training_epochs  = value_epochs          ,
-            batch_size       = value_batch_size      ,
-            cache_size       = value_cache_size      ,
-            slam             = lambda_factor         ,
-            gamma            = gamma_factor          ,
-            bins             = value_bins            ,
-            logger           = value_logger          ,
-            ett              = value_ett             ,
-            stop_threshold   = value_stop_threshold  ,
-            tolerance        = value_tolerance       ,
-            clip_coefficient = value_clip_coefficient
-        )
+        # # train value model ###########################################
+        # trainers.routines.train_value(
+        #     episode          = episode               ,
+        #     model            = value_model           ,
+        #     optimizer        = value_model_optimizer ,
+        #     episode_data     = episode_data          ,
+        #     cached_data      = value_cache           ,
+        #     training_epochs  = value_epochs          ,
+        #     batch_size       = value_batch_size      ,
+        #     cache_size       = value_cache_size      ,
+        #     slam             = lambda_factor         ,
+        #     gamma            = gamma_factor          ,
+        #     bins             = value_bins            ,
+        #     logger           = value_logger          ,
+        #     ett              = value_ett             ,
+        #     stop_threshold   = value_stop_threshold  ,
+        #     tolerance        = value_tolerance       ,
+        #     clip_coefficient = value_clip_coefficient
+        # )
 
         # checkpoint ##################################################
         if episode % etv == 0:

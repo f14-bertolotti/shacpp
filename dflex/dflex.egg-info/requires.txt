@@ -1,5 +1,0 @@
-ninja
-torch
-numpy
-urchin
-usd-core
