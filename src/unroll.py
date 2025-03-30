@@ -17,16 +17,13 @@ def unroll(
         for i in dones[:,0].nonzero():
             observations[i] = torch.stack(world.reset_at(i)).transpose(0,1)[i]
 
-    if observations is not None and dones is not None:
-        observations = world.world.reset(env_ids=torch.arange(world.batch_dim, device=world.device)[dones[:,0]]).unsqueeze(1)
-
     if observations is None and dones is None: 
         observations = torch.stack(world.reset()).transpose(0,1)
         dones        = torch.zeros(observations.size(0), observations.size(1), device=observations.device).bool()
 
     max_reward   = world.scenario.max_rewards() if max_reward else torch.zeros(world.batch_dim, device=world.device)
 
-    observations = world.world.initialize_trajectory().unsqueeze(1)
+    observations = observations.detach()
 
     observation_cache = []
     action_cache      = []
@@ -40,7 +37,7 @@ def unroll(
         observation_cache.append(observations)
         done_cache       .append(dones)
         policy_result = policy_model(observations)
-        actions  = torch.nn.functional.tanh( policy_result["actions"] )
+        actions  = policy_result["actions"]
         logprobs = policy_result.get("logprobs",torch.empty(0))
         entropy  = policy_result.get("entropy" ,torch.empty(0))
         logits   = policy_result.get("logits"  ,torch.empty(0))
@@ -63,8 +60,6 @@ def unroll(
     logprobs_cache    = torch.stack(logprobs_cache)
     entropy_cache     = torch.stack(entropy_cache)
     logits_cache      = torch.stack(logits_cache)
-
-    print(world.world.state.joint_q.view(world.batch_dim, -1)[0].mean())
 
     return { 
             "logprobs"      : logprobs_cache    ,
