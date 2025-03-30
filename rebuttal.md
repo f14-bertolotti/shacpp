@@ -67,7 +67,9 @@ We will revise the abstract and introduction to better reflect the complexity of
 
 > The performance of SHAC++ is questionable in more complex MARL.
 
-We understand that more complex environments with more agents may offer more challenging scenarios and more compelling results. However, we want to stress that these environments are already incapacitating for PPO. [RUN experiment with more agents]. Further, we will consider adding more complex environments for future revision, we kindly ask the reviewer to suggest a differentiable environment that can scale in the number of agents which he would believe to be adequate for the evaluation of SHAC++.
+We understand that more complex environments with more agents may offer more challenging scenarios and more compelling results. However, we want to stress that these environments are already incapacitating for PPO/MAPPO. 
+Further, we will consider adding more complex environments for future revision (with more agents) to better reflect the performance of SHAC++.
+Finally, we kindly ask the reviewer to suggest a differentiable environment that can scale in the number of agents which he would believe to be adequate for the evaluation of SHAC++.
 
 > Numerous practical algorithms already exist for such environments, for example MAPPO, HAPPO, and QMIX in multi-agent scenarios.
 
@@ -84,7 +86,7 @@ We will provide a more detailed explanation in the paper.
 
 > The authors estimate the reward function and state transition using only local agent states and actions as input. This approach may limit the method's generality and correctness.
 
-Yes, this is a deliberate choice on our part. Since in some environment their state may be only partially observable then a broad algorithm need to be able to handle this. While with SHAC this is not possible, since for gradient computation the global state is needed, SHAC++ can handle this by using the local information available to the agents. Despite this choice may skew the performance in favor of SHAC, we believe that this is a more realistic scenario. We will include this discussion in the paper.
+Yes, this is intentional for realistic, partially observable environments. SHAC++ can use local information, unlike SHAC (needing global state). We prioritize this realism (details in paper).
 
 > The parameters for the policy, value, reward, and state transition networks are all denoted by $\theta$. 
 
