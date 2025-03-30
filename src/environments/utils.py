@@ -83,12 +83,5 @@ def get_environment(name:str, envs:int, agents:int, device:str, grad_enabled:boo
                 dict_spaces        = False        ,
                 seed               = seed         ,
             )
-        case "ant" :
-            return environments.scenarios.Ant(
-                device       = device       ,
-                num_envs     = envs         ,
-                seed         = seed         ,
-                grad_enabled = grad_enabled ,
-            )
         case _:
             raise ValueError(f"Unknown environment {name}.")
