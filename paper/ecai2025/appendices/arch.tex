@@ -1,22 +1,23 @@
 
 
+
+
+\section{Architectures}\label{apx:arch}
+
+
 \begin{figure}[t]
     \centering
     \includegraphics[width=.45\textwidth]{figs/attention.pdf} 
-    \caption{Attention matrix for the world model.}
+    \caption{Attention matrix for the world model.}\vspace{0.5cm}
     \label{apx:fig:attention}
 \end{figure}
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=.45\textwidth]{figs/grads-mlp-transport.pdf}
-    \caption{Gradient norm for a transformer architecture wrt. a MLP architecture.}
+    \caption{Gradient norm for a transformer architecture wrt. a MLP architecture.}\vspace{0.5cm}
     \label{fig:grads-mlp}
 \end{figure}
-
-
-\section{Architectures}\label{apx:arch}
-
 As mentioned earlier, we test PPO, SHAC, \fname{}, and \fnamer{} with two different architecture---Transformer and MLP. The former is a popular positional invariant architecture for sequence modeling~\cite{Vaswani17}. While the latter is a simple feed-forward neural network.
 
 The main advantage of the transformer architecture is its positional invariance property. In fact, the order in which the agent's observation are fed into the network should not affect the ultimate outcome, at least, for the tested environments. We believe that this leads to better sample efficiency that it is ultimately observed in policies achieving higher rewards (see \Cref{tab:max-rewards}). 

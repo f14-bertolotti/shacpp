@@ -5,6 +5,7 @@
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{caption}
 \usepackage{booktabs} % for professional tables
 \usepackage{paralist}
 \usepackage[dvipsnames]{xcolor}
@@ -12,16 +13,18 @@
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 % For theorems and such
 \usepackage{amsmath}
+%\usepackage[margin=1in]{geometry} % Optional for nicer margins
 \usepackage{amssymb}
 \usepackage{mathtools}
 \usepackage{amsthm}
-
+%\setlength{\marginparwidth}{2cm}
 \usepackage{cleveref}
-
+%\captionsetup[subfigure]{skip=4pt}         % space between subfigure image and its caption
+\captionsetup[figure]{skip=12pt} % space between figure and its caption  
 \Crefformat{figure}{#2Fig.~#1#3}
 \Crefmultiformat{figure}{Figs.~#2#1#3}{ and~#2#1#3}{, #2#1#3}{ and~#2#1#3}
 
-
+\newcommand{\BibTeX}{B\kern-.05em{\sc i\kern-.025em b}\kern-.08em\TeX}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MACROS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -110,7 +113,6 @@
 \input sects/related.tex
 \input sects/conclusion.tex
 \input sects/acknowledgements.tex
-%\input sects/statement.tex
 \input appendices/appendix.tex
 \bibliography{local.bib}
 

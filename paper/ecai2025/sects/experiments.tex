@@ -1,12 +1,13 @@
-\begin{figure*}[!t]
+\begin{figure*}
     \includegraphics[width=\textwidth]{figs/main-transformer.pdf}
     \caption{Performance comparison of \fname{}, PPO, and SHAC across different scenarios (Dispersion, Transport, Discovery, and Sampling) using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of rewards over 3 runs. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.}%
     \label{fig:experiments}
 \end{figure*}
 
-\begin{figure}[t]
+\begin{figure}
     \includegraphics[width=\columnwidth]{figs/grads-transformer-transport.pdf}
     \caption{Norm of policy gradients on the Transport environment across 5000 epochs. The raise in norm for SHAC (epoch 2700) corresponds with occurrence of generalization, where collision between agents and the packages become frequent. Also \fname{} experience a raise in norm, albeit more behaved, corresponds with the occurrence of generalization (epoch 3200).}\label{fig:grads-transformer-transport}
+
 \end{figure}
 
 \section{Experiments}\label{sect:experiments}
@@ -16,7 +17,7 @@ In this section, we test \fname{} with PPO and SHAC for a set of multi-agent sce
 \paragraph{Scenarios}
 As mentioned previously, we choose a few multi-agent scenarios from the VMAS package to test \fname{}, SHAC and PPO\@. In particular, we choose the scenarios Dispersion, Discovery, Transport, and Sampling. For details regarding each scenario, see \Cref{apx:scenarios}. Dispersion and Discovery have non-differentiable reward functions, thus SHAC is not applicable. Transport and Sampling have differentiable reward functions, thus SHAC is applicable. For Transport and Dispersion, the observation space is complete wrt.\ the state. For Discovery and Sampling, the observation space is incomplete wrt.\ the state. In these scenario, \fname{} is slightly disadvantaged as it does not have access to the full state of the environment compared to SHAC\@.
 
-\begin{table*}[!t]
+\begin{table*}[t]
     \centering
     \input tables/max.tex
     \caption{Normalized rewards (relative to the best performing model) for the different scenarios. Best results are in bold.}\label{tab:max-rewards}
