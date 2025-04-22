@@ -1,0 +1,25 @@
+\section{Introduction}\label{sect:introduction}
+Learning control policies has important applications in robotics~\cite{Singh22}, autonomous driving~\cite{Elallid22}, swarm intelligence~\cite{Tang21} and many other fields. These scenarios present a variety of different challenges, such as sparse rewards, complex dynamics, and multi-agent interactions. Current approaches often focus on either single- or multi-agent scenarios, lacking a unified solution that works effectively in both settings. Moreover, reinforcement learning algorithms tend to be \emph{sample inefficient}, namely requiring a large number of interactions with the environment to learn a good policy.
+A recently introduced method for the latter problem is SHAC~\cite{Xu22} which exploits differentiable simulators to provide precise gradient information, thereby expediting policy optimization and improving learning efficiency.
+
+Despite its effectiveness, SHAC has two main limitations. First, it requires both a differentiable simulator and a differentiable reward function to operate correctly. Obtaining these can be impractical, particularly in scenarios with inherently sparse rewards. Second, even when a differentiable simulator is available, SHAC has been found to be sensitive to complex dynamics, such as object collisions~\cite{Georgiev24} or interactions in multi-agent systems. Backpropagation through these dynamics has been found, in general, to lead to unstable gradients~\cite{Bengio94,Metz21}.
+
+In this work, we aim to address both limitations by approximating the gradients of the differentiable simulator inspired by model-based reinforcement learning algorithms~\cite{DBLP:conf/icml/HafnerLFVHLD19,DBLP:conf/iclr/HafnerLB020}.
+Specifically, we propose replacing both the simulator and the reward function with two neural networks trained alongside the policy and value networks. This approach is designed to create an algorithm that is more robust to complex dynamics and sparse rewards, enabling it to function effectively across a broader range of environments, including both single-agent and multi-agent scenarios. However, this method also introduces additional complexity and computational overhead due to the need for training these additional networks.
+
+We evaluate our framework, referred to as \fname{}, against two baseline algorithms: PPO~\cite{Schulman17}, a state-of-the-art approach for non-differentiable environments (also widely used in multi-agent scenarios through the MAPPO variant~\cite{DBLP:conf/nips/YuVVGWBW22}), and SHAC~\cite{Xu22}, which is tailored for differentiable simulators. Our goal is to outperform PPO and achieve performance comparable to SHAC in differentiable environments. The evaluation is conducted using VMAS, a state-of-the-art simulator designed for complex, physics-based multi-agent scenarios~\cite{DBLP:conf/dars/BettiniKBP22}. We compare these algorithms across cooperative tasks involving varying numbers of agents, providing a systematic analysis of how their performance scales with the increasing size of the search space.
+
+With this work, we aim to answer the following research questions:
+\begin{compactitem}
+    \item \RQ{1} Can we train a neural network to approximate the gradients of a differentiable simulator?
+    \item \RQ{2} How does our algorithm compare to PPO and SHAC in both single-agent and multi-agent settings?
+    \item \RQ{3} How does the performance of these algorithms change as the search space increases?
+\end{compactitem}
+
+We summarize our contributions as follows:
+\begin{compactitem}
+    \item We propose a new reinforcement learning framework that lifts the requirement for a differentiable simulator in SHAC\@.
+    \item We assess the SHAC algorithm in multi-agent scenarios, where it has not been previously evaluated.
+    \item We evaluate our algorithm against PPO and SHAC on a set of environments with increasing numbers of agents.
+    \item We demonstrate that our algorithm matches SHAC's performance in differentiable environments while significantly outperforming PPO in terms of sample efficiency, convergence speed, and final reward across both single-agent and complex multi-agent scenarios.
+\end{compactitem}

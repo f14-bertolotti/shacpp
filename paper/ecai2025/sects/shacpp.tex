@@ -1,0 +1,83 @@
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figs/shac.pdf}
+        \caption{SHAC}%
+        \label{fig:shac}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figs/shacpp.pdf}
+        \caption{\fname{}}%
+        \label{fig:shacpp}
+    \end{subfigure}
+    \caption{
+        Comparison between SHAC and \fname{} during a rollout of 4 steps.
+        Nodes with labels (such as $r_i$ or $r'_i$) values. Nodes without labels (such as $\pi$ or $R$) represent functions. Dashed lines are used to represent non differentiability. $a_i$ and $r_i$ represent the collection of actions and rewards for all agents}\label{fig:shac-shacpp}
+\end{figure*}
+
+
+\begin{algorithm}[t]
+    \begin{algorithmic}[1]
+    \STATE Initialize $\pi_\theta,V_\theta,R_\theta,F_\theta$ networks
+    \STATE Initialize learning rates $\eta_\pi, \eta_R, \eta_V, \eta_F$
+    \STATE Initialize environment $\mathcal{E}$
+    \STATE Initialize $\gamma, \alpha$
+    \FOR{episode in $1, \ldots, N_{\text{episodes}}$}
+    
+        
+        \STATE $s,a,r,v \sim \mathcal{E}(\pi)$
+        \STATE $\hat{s} = F_\theta(s_{:,0}, a)$
+        \STATE $\hat{r} = R_\theta(\hat{s})$
+        \STATE $\hat{v} = V_\theta(\hat{s})$
+        
+        \STATE $\theta \gets \theta - \eta_\pi \nabla \mathcal{L'}^\pi_\theta(\hat{r},\hat{v},\gamma,\alpha)$
+        \STATE $\theta \gets \theta - \eta_V \nabla \mathcal{L}^V_\theta(\hat{v},s,v)$
+        \STATE $\theta \gets \theta - \eta_R \nabla \mathcal{L}^R_\theta(\hat{r},s,a,r)$
+        \STATE $\theta \gets \theta - \eta_F \nabla \mathcal{L}^F_\theta(\hat{s},s,a)$
+    
+    \ENDFOR
+    
+    \end{algorithmic}
+    \caption{SHAC++ minimal (no cache and no cool-down) pseudocode. $s_{:,0}$ denotes the first step of each trajectory in $s$. $a$ and $r$ denote the actions and rewards for all agents.}
+    \label{alg:shacpp}
+\end{algorithm}
+
+
+\section{\fname{}}
+
+As mentioned previously, we aim to address the limitations of SHAC by approximating the gradients of a differentiable environment ($R$ and $F$) with neural networks ($R_\theta$ and $F_\theta$). In particular, we aim to train a neural network to approximate the reward function by minimizing: 
+\begin{align*}
+    \underset{\tau\sim\pi}{E}\left[\hspace{-.7cm}\sum_{\hspace{.7cm}\scriptscriptstyle s_i,a_{ij},s_{i+1}\in\tau} \hspace{-.8cm}\left( {\rewards{i}}_\theta(s_i, a_{ij}, s_{i+1}) -\rewards{i}(s_i, a_{ij}, s_{i+1}) \right)^2\right] 
+\end{align*}
+
+In practice, this is achieved by leveraging a \emph{replay buffer} to cache the state-action-reward triplets obtained from the simulator. The neural network is then trained to minimize the mean squared error (MSE) loss. Specifically, we minimize the loss $\mathcal{L}_\theta^{\rewards{i}}:(\states\times\actions{i}\times\states)^N\rightarrow\mathbb{R}$:
+$$ \mathcal{L}_\theta^{\rewards{i}}(\batch) = \frac{1}{\bs}\sum_{s,a,s',r \in \batch}\left( {\rewards{i}}_\theta(s, a) - r \right)^2 $$
+Where $B$ represents a batch of state-action-state-reward tuples sampled uniformly from the cache.
+
+Similarly, we aim to train a neural network to approximate the transition function. However, to avoid vanishing or exploding gradients, we employ a non-recursive approach similar to Action World Model~\cite{Ma24}. This corresponds to train a neural network that given a starting observation from $\mathcal{S}$ and a sequence of $\mh$ actions from $\alla^\mh$, predicts the next $\mh$ states from $\states^\mh$. We aim to minimize:
+\begin{align*}
+    \underset{\tau\sim\pi}{E}\left[\hspace{-1.2cm}\sum_{\scriptscriptstyle \hspace{1cm}\substack{s_t,\dots,s_{t+h+1},\\\hspace{.3cm}a_{t*},\dots,a_{t+h*}\in\tau}}\hspace{-1.2cm} \left\vert\left\vert \transition_{\theta}(s_t, a_{t*},\dots,a_{\scriptscriptstyle i+h*}) - [s_t,\dots,s_{\scriptscriptstyle t+h+1}] \right\vert\right\vert^2\right] 
+\end{align*}
+Where $a_{t*}=\{a_{ti}\}_{i\in\agents}$. In practice, this is achieved by caching trajectories and then training the neural network to minimize the MSE loss. That is, we minimize the loss $\mathcal{L}_\theta^{F}:\mathcal{T}^N\rightarrow\mathbb{R}$:
+$$ \frac{1}{\bs\mh}\sum_{\tau \in B}\left|\left| \transition_{\theta}(s_0^\tau, a_{1*}^\tau, \dots, a_{\mh*}) - \left[ s^\tau_1, \dots, s^\tau_\mh \right] \right|\right|^2 $$
+Where $B$ represents a batch of trajectories of length $\mh$ sampled uniformly from the cache.
+
+Further, we modify the SHAC policy loss, $\mathcal{L}_\theta^{\pi}$, to include a term that penalizes actions outside the action space. Suppose the action space is $(l,r)$ (with $l<r$) for all agents, we minimize the loss $\mathcal{L'}_\theta^\pi:$
+
+$$\mathcal{L'}_\theta^\pi(B) = \mathcal{L}_\theta^\pi(\batch) + \alpha \frac{1}{\bs\horizon}\sum_{\tau\in\batch}\sum_{a\in\tau} d(a^\tau,(l,r))$$
+$$d(x,(l,r)) = \begin{cases}(x-l)^2 & \text{if } x < l \\ (x-r)^2 & \text{if } x > r \\ 0 & \text{otherwise} \end{cases}$$
+
+    Where $\alpha$ is a hyper-parameter that controls the strength of the penalty. In our experiments, we set $\alpha=1$. Usually, actions are either clipped to the allowed action space or, an activation function (such as hyperbolic tangent or sigmoid) is used to ensure that the actions are within the allowed range. While this approach is acceptable for algorithms like PPO and SHAC, the penalty we employ is crucial in our specific scenario. This necessity arises from the fact that we are training the policy to optimize two neural networks that serve as environment approximations. Because these networks are never trained with data outside the permissible action space, they are likely to be maximized beyond these bounds. Consequently, the policy may generate actions far outside the allowed range. This can ultimately result in 0-gradients when action clipping is applied or high pre-activation actions when activation function is used. 
+
+To summarize, our algorithm, aims to minimize the 4 presented losses, $\mathcal{L'}_\theta^{\pi}$, $\mathcal{L}_\theta^V$, $\mathcal{L}_\theta^R$, and $\mathcal{L}_\theta^F$. A minimal pseudocode of our algorithm is presented in \Cref{alg:shacpp}. \Cref{fig:shacpp} presents an unrolled view of the \fname{} algorithm.
+
+However, consider that, to ensure fast convergence of the reward and transition networks, we employ a cache to store seen trajectories. To ensure that the cache is balanced, and not filled with $0$-reward trajectories (which are common in case of sparse rewards), we divide the cache in $K$ equally sized bins. Each bin is filled with trajectories that have a similar reward. 
+
+Additionally, to minimize the time spent between swapping among the different training procedures (policy, value, reward, transition), we apply a cool-down of $K^V$/$K^R$/$K^F$ episodes between running training procedure for the value/reward/transition networks. 
+
+The full implementation is openly available at \url{https://anonymous.4open.science/r/diffagents-8653}\footnote{The link of the original repository will be provided upon acceptance.}.
+
+
+
+
+

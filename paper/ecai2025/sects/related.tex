@@ -1,0 +1,34 @@
+\section{Related Work}
+
+\paragraph{Differentiable Engines}
+Game engines~\cite{Bellemare13,Balla23} and Physics engines~\cite{Todorov12,Coumans16} have been widely used in the field of policy learning. Recently, there has been a trend towards differentiable engines, which allows for the use of gradient-based optimization methods, such as backpropagation. Notable examples are~\cite{Freeman21,Howell22,Genesis24}. These frameworks may be built on top of auto differentiation libraries such~\cite{Bradbury18,Ansel24} (this is the case of VMAS) or directly with analytical gradients~\cite{Carpentier18,Werling21}. Further, several works tackle the challenge of the non-smoothness of the contact dynamics~\cite{Degrave19,Moritz20}
+
+\paragraph{Deep Reinforcement Learning}
+Deep reinforcement learning has revolutionized policy learning tasks by combining reinforcement learning with deep neural networks.
+Foundational works like DQN~\cite{Mnih13} (and its variants~\cite{DBLP:conf/aaai/HesselMHSODHPAS18})
+and AlphaZero~\cite{Silver17} demonstrated human-level performance in complex environments such as Atari games and chess.
+Over the years, several algorithms have been proposed to create more stable and efficient learning methods.
+Notable examples include A3C for asynchronous learning~\cite{DBLP:conf/icml/MnihBMGLHSK16},
+DDPG and PPO for continuous action spaces~\cite{DBLP:journals/corr/LillicrapHPHETS15,Schulman17} (also used in modern chatbot like ChatGPT),
+and SAC for continuous action spaces with off-policy learning~\cite{DBLP:conf/icml/HaarnojaZAL18}.
+Following the initial era of model-free algorithms,
+model-based algorithms have been introduced to enhance sample efficiency.
+Early works such as Dreamer~\cite{DBLP:conf/iclr/HafnerLB020} and PlaNet~\cite{DBLP:conf/icml/HafnerLFVHLD19} have demonstrated promising results in terms of both sample efficiency and performance.
+
+\paragraph{Multi-Agent Reinforcement Learning}
+Multi-Agent Reinforcement Learning (MARL) is a subfield of reinforcement learning that focuses on learning policies for multiple agents that interact with each other~\cite{albrecht2024multi}.
+This field has a wide range of applications,
+including robotics~\cite{DBLP:journals/air/ChungFYN24},
+traffic control~\cite{DBLP:journals/tits/ChuWCL20},
+and game playing~\cite{DBLP:conf/iclr/BakerKMWPMM20,jaderberg2019human},
+and involves different types of agents such as cooperative, competitive, and mixed.
+In this paper, we primarily focus on cooperative multi-agent scenarios,
+where agents need to collaborate to achieve a common goal.
+Prominent works in this area include extensions of single-agent algorithms to multi-agent settings,
+such as MADDPG~\cite{DBLP:conf/nips/LoweWTHAM17} and MAPPO~\cite{DBLP:conf/nips/YuVVGWBW22},
+as well as novel solutions to unique challenges in multi-agent settings. Examples of these solutions are COMA~\cite{DBLP:conf/aaai/FoersterFANW18} for multi-agent credit assignment,
+QMIX~\cite{DBLP:conf/icml/RashidSWFFW18} for coordination in cooperative multi-agent settings,
+and Mean Field MARL~\cite{DBLP:conf/icml/YangLLZZW18} for handling a large number of agents.
+
+\paragraph{Reinforcement Learning on Differentiable Engines}
+Precursors of SHAC with similar intuition are PODS~\cite{Mora21} and CE-APG~\cite{Gillen22}. In~\cite{Lv23}, the authors introduce rendering to enhance model-based RL\@.\ \citet{Zheng24} employ a differentiable symbolic expression search engine. Trajectory optimization approach is taken in~\cite{Wan24}.\ \citet{Georgiev24} tackles unstable gradient due to stiff dynamics by adaptively truncating trajectories when these occur. With respect to this approach, we take a substantially different method, by emulating the differentiable environment with a trained neural network.
