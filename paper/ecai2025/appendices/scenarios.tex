@@ -1,6 +1,34 @@
 
 
 \section{Environments}\label{apx:scenarios}
+\begin{table}[htbp]
+  \centering
+  \caption{Comparison of Multi-Agent Reinforcement Learning Environments/Frameworks}
+  \label{tab:marl_comparison}
+  % Optional: resizebox to fit width if needed
+  \resizebox{\textwidth}{!}{% 
+  \begin{tabular}{@{}l l l l l l l l@{}}
+    \toprule % Use booktabs rule, or \hline\hline
+    \textbf{Feature} & \textbf{VMAS} & \textbf{PettingZoo} & \textbf{SMAC} & \textbf{MA-MuJoCo} & \textbf{PyBullet} & \textbf{Neural MMO} & \textbf{Melting Pot} \\
+    \midrule % Use booktabs rule, or \hline
+    Key Focus & Fast, Vectorized & Standardized & StarCraft II & Multi-Agent & General 3D & Large-Scale Agent & Social Dilemmas \\
+     & 2D Physics & MARL API & Micromanagement & Robotics (MuJoCo & Physics & Survival/Econ. & / Cooperation \\
+     & (PyTorch) & (Collection) & & tasks) & Engine & & \\
+    \midrule % Separator line
+    Single/Multi & Primarily Multi & Primarily Multi & Multi Only & Primarily Multi & Both & Multi Only & Multi Only \\
+     & (can do Single) & (API standard) & & (adaptations) & & (Massively) & \\
+    \midrule % Separator line
+    Differentiable & Yes & No & No & No & No (standard & No & No \\
+     & & & & & use) & & \\
+    \midrule % Separator line
+    Generality & Medium & Very High (via & Low (Specific game & Medium (MuJoCo & High & Medium (Large- & Medium (Social \\
+     & (Physics-based, & wrapped envs) & benchmark) & robotics) & (General & scale agent focus) & dilemmas focus) \\
+     & PyTorch) & & & & physics) & & \\
+    \bottomrule % Use booktabs rule, or \hline
+  \end{tabular}
+  } % Closing bracket for resizebox, if used
+\end{table}
+
 \begin{figure}
     \centering
     \begin{subfigure}{0.24\textwidth}
@@ -26,11 +54,23 @@
     \caption{VMAS environments used in the experiments.}\label{fig:scenarios}\vspace{0.5cm}
 \end{figure}
 
-In this section, we provide a detailed discussion of the environment and scenarios used to test the \fname{} algorithm. Specifically, we utilize four vectorized environments available as part of VMAS.
+In this section, we provide a detailed overview of the environments used to evaluate the \fname{} algorithm. For our experiments, we selected four vectorized scenarios from VMAS (Vectorized Multi-Agent Simulator), which offers an ideal balance of features for our research objectives.
 
-VMAS is a differentiable simulator designed for various multi-agent tasks. These tasks are built on top of a differentiable physics engine, resulting in differentiable transition functions for all tasks. However, the reward function is non-differentiable. To address this limitation, we created custom reward functions, where possible, to replicate the non-differentiable ones provided by VMAS. Consequently, some scenarios are compatible with all tested algorithms (PPO, SHAC, and \fname{}), while others are only applicable to PPO and \fname{}.
+VMAS stands out among alternative multi-agent reinforcement learning frameworks such as PettingZoo~\cite{DBLP:conf/icml/PettingZoo}, SMAC~\cite{DBLP:conf/icml/ZhangZLZ20}, MA-MuJoCo~\cite{DBLP:conf/aaai/GuptaK0G20}, PyBullet~\cite{DBLP:journals/corr/abs-1710-06347}, Neural MMO~\cite{DBLP:conf/aaai/DiehlB21}, and Melting Pot~\cite{DBLP:conf/icml/GuptaK0G20}. As summarized in Table~\ref{tab:marl_comparison}, VMAS provides several key advantages for our work:
 
-Furthermore, the observations produced by VMAS are often only partial representations of the full state. While in some cases these observations are sufficient to predict the next observations, in others they are not. In such cases, \fname{} is expected to face challenges, as the world model is trained using only partial information. In contrast, SHAC computes gradients using access to the full world state. We chose to retain this limitation to better reflect the behavior of \fname{} in more realistic environments.
+\begin{compactitem}
+    \item \textbf{Multi-Agent Framework}: VMAS is specifically designed for multi-agent scenarios, making it appropriate for our experimental setup.
+    \item \textbf{Differentiable Physics}: Unlike most alternatives, VMAS offers a differentiable physics engine that enables gradient-based optimization techniques.
+    \item \textbf{Vectorized Implementation}: The framework supports parallel execution of multiple environments, significantly improving training efficiency.
+    \item \textbf{Physics-based Simulation}: VMAS provides realistic modeling of agent interactions and dynamics through its physics engine.
+    \item \textbf{Open Source Accessibility}: The codebase is fully accessible, allowing necessary modifications for our experiments.
+\end{compactitem}
+
+While VMAS provides differentiable transition functions across all tasks, its reward functions are generally non-differentiable. To address this limitation, we implemented custom differentiable reward functions where possible to replicate the original VMAS behavior. Consequently, some scenarios are compatible with all tested algorithms (PPO, SHAC, and \fname{}), while others can only be used with PPO and \fname{}.
+
+An additional consideration is that VMAS often provides agents with partial observations rather than complete state information. In some scenarios, these observations contain sufficient information to predict subsequent states, while in others they do not. This partial observability presents a particular challenge for \fname{}, as its world model must operate with incomplete information. In contrast, SHAC computes gradients with access to the full world state. We deliberately maintained these observability constraints to assess \fname{}'s performance under more realistic conditions.
+
+Figure~\ref{fig:scenarios} illustrates the four VMAS environments used in our experiments, which are detailed in the following subsections.
 
 \subsection{Dispersion}
 In the Dispersion task, $n$ agents must reach $n$ randomly placed goals. In \Cref{fig:dispersion}, the agents are represented by blue dots, while the goals are depicted as green dots.

@@ -4,6 +4,7 @@
 \usepackage{microtype}
 \usepackage{multirow}
 \usepackage{graphicx}
+\usepackage{bibunits}
 \usepackage{subcaption}
 \usepackage{caption}
 \usepackage{booktabs} % for professional tables
@@ -83,7 +84,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\defaultbibliography{local} 
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,6 +107,7 @@
 \end{frontmatter}
 
 \input sects/abstract.tex
+\begin{bibunit}
 \input sects/introduction.tex
 \input sects/background.tex
 \input sects/experiments.tex
@@ -113,8 +115,18 @@
 \input sects/related.tex
 \input sects/conclusion.tex
 \input sects/acknowledgements.tex
+
+%\bibliography{local.bib}
+\putbib
+\end{bibunit}
+\clearpage
+\begin{bibunit}
+
 \input appendices/appendix.tex
-\bibliography{local.bib}
+%% How to duplicate the bibliography here? TODO
+\putbib
+%\bibliography{appendix.bib}
+\end{bibunit}
 
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

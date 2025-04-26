@@ -1,21 +1,53 @@
-\begin{figure*}
+\begin{figure*}[t]
     \includegraphics[width=\textwidth]{figs/main-transformer.pdf}
     \caption{Performance comparison of \fname{}, PPO, and SHAC across different scenarios (Dispersion, Transport, Discovery, and Sampling) using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of rewards over 3 runs. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.}%
     \label{fig:experiments}
 \end{figure*}
 
-\begin{figure}
+\begin{figure}[t]
+    \centering
     \includegraphics[width=\columnwidth]{figs/grads-transformer-transport.pdf}
     \caption{Norm of policy gradients on the Transport environment across 5000 epochs. The raise in norm for SHAC (epoch 2700) corresponds with occurrence of generalization, where collision between agents and the packages become frequent. Also \fname{} experience a raise in norm, albeit more behaved, corresponds with the occurrence of generalization (epoch 3200).}\label{fig:grads-transformer-transport}
-
+    \vspace{0.5cm}
 \end{figure}
-
 \section{Experiments}\label{sect:experiments}
 
-In this section, we test \fname{} with PPO and SHAC for a set of multi-agent scenarios and architectures. An ablation study when replacing only the transition function (meaning that the reward function is assumed differentiable) is also conducted in \Cref{apx:ablation}.
+In this section, we test \fname{} with PPO and SHAC for a set of multi-agent scenarios and architectures. An ablation study when replacing only the transition function (SHAC+,meaning that the reward function is assumed differentiable) is also conducted in \Cref{apx:ablation}.
 
 \paragraph{Scenarios}
-As mentioned previously, we choose a few multi-agent scenarios from the VMAS package to test \fname{}, SHAC and PPO\@. In particular, we choose the scenarios Dispersion, Discovery, Transport, and Sampling. For details regarding each scenario, see \Cref{apx:scenarios}. Dispersion and Discovery have non-differentiable reward functions, thus SHAC is not applicable. Transport and Sampling have differentiable reward functions, thus SHAC is applicable. For Transport and Dispersion, the observation space is complete wrt.\ the state. For Discovery and Sampling, the observation space is incomplete wrt.\ the state. In these scenario, \fname{} is slightly disadvantaged as it does not have access to the full state of the environment compared to SHAC\@.
+\begin{figure*}
+    \centering
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{figs/dispersion.png}
+        \caption{Dispersion}
+        \label{fig:dispersion}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{figs/transport.png}
+        \caption{Transport}
+        \label{fig:transport}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{figs/discovery.png}
+        \caption{Discovery}
+        \label{fig:discovery}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{figs/sampling.png}
+        \caption{Sampling}
+        \label{fig:sampling}
+    \end{subfigure}
+    \caption{VMAS environments used in the experiments.}\label{fig:scenarios}\vspace{0.5cm}
+\end{figure*}
+We evaluate our algorithms on several multi-agent scenarios from VMAS~\cite{DBLP:conf/dars/BettiniKBP22}, which we selected over alternatives like PettingZoo~\cite{DBLP:conf/icml/PettingZoo}, SMAC~\cite{DBLP:conf/icml/ZhangZLZ20}, MA-MuJoCo~\cite{DBLP:conf/aaai/GuptaK0G20}, and others due to its key advantages: differentiable physics (enabling gradient-based optimization), multi-agent design, vectorized implementation (for efficient parallel training), realistic physics-based simulation, and open-source accessibility.
+For more details about the choice of environments, see \Cref{apx:scenarios}.
+We selected four distinct scenarios: Dispersion, Discovery, Transport, and Sampling, specifically for their cooperative nature and varying levels of required coordination (see \Cref{fig:scenarios} and \Cref{apx:scenarios} for details). These scenarios can be categorized along two dimensions:
+\begin{compactitem}
+    \item \textbf{Reward differentiability:} Dispersion and Discovery feature non-differentiable reward functions (making SHAC inapplicable), while Transport and Sampling have differentiable rewards (allowing for SHAC implementation).
+    \item \textbf{Observation completeness:} Transport and Dispersion provide agents with complete observation spaces relative to the environment state. In contrast, Discovery and Sampling have incomplete observation spaces, which presents an additional challenge for \fname{} compared to SHAC, as \fname{} lacks access to the complete environmental state.
+\end{compactitem}
+
+This selection of scenarios enables a thorough evaluation of how each algorithm handles different types of multi-agent cooperation challenges.
 
 \begin{table*}[t]
     \centering
