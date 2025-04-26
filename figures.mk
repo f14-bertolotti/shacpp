@@ -299,6 +299,22 @@ data/grads-mlp-transport.pdf:
 		--line "scha++ mlp" .2 .2 1 1 "-" \
 	jet plot --show False --output-path $@
 
+data/transport-high-agents.pdf:
+	jet init --shape 1 2 --font-size 14 \
+	jet line --ax 0 0 --input-path data/shac/transport/10/transformer/42/eval.log   --x message/episode --y message/reward --legend none --color $(SHAC_COLOR) \
+	jet line --ax 0 0 --input-path data/shacwm/transport/10/transformer/42/eval.log --x message/episode --y message/reward --legend none --color $(SHACWM_COLOR) \
+	jet line --ax 0 1 --input-path data/shac/transport/20/transformer/42/eval.log   --x message/episode --y message/reward --legend none --color $(SHAC_COLOR) \
+	jet line --ax 0 1 --input-path data/shacwm/transport/20/transformer/42/eval.log --x message/episode --y message/reward --legend none --color $(SHACWM_COLOR) \
+	jet mod  --ax 0 0 --right-spine False --top-spine False --x-label "Episode" --title "10 agents" --y-label "Transport" \
+	jet mod  --ax 0 1 --right-spine False --top-spine False --x-label "Episode" --title "20 agents" --y-label "" \
+	jet legend --ax 0 1 --frameon False \
+		--cols 2 \
+		--loc "upper center" \
+		--shift 0 1.15 \
+		--line "shac" $(SHAC_COLOR) 1 "-" \
+		--line "shac++" $(SHACWM_COLOR) 1 "-" \
+	jet plot --show False --output-path $@ --figsize 6 12
+
 all: \
 	data/main-transformer.pdf \
 	data/main-mlp.pdf \
