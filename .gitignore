@@ -17,3 +17,4 @@ venv
 *.tex~
 *.synctex.gz
 paper/icml25/first/main.pdf
+paper/ecai25/main.pdf

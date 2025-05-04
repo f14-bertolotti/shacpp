@@ -11,6 +11,8 @@
 \usepackage{caption}
 \usepackage{booktabs} % for professional tables
 \usepackage{paralist}
+\usepackage{tcolorbox}
+\usepackage{framed} % For framed boxes
 \usepackage[dvipsnames]{xcolor}
 \usepackage{hyperref}
 %\newcommand{\theHalgorithm}{\arabic{algorithm}}
@@ -22,6 +24,31 @@
 \usepackage{amsthm}
 %\setlength{\marginparwidth}{2cm}
 \usepackage{cleveref}
+\tcbuselibrary{skins} % Needed for enhanced look
+\newtcolorbox{rqbox}{
+    colback=blue!5!white,
+    colframe=blue!75!black,
+    fonttitle=\footnotesize\bfseries,
+    title=Research Question,
+    enhanced,
+    top=0.5mm, bottom=0.5mm, left=1.5mm, right=1.5mm, % Reduced padding further
+    attach boxed title to top left={yshift=-1.2mm, xshift=2mm}, % Tighter attachment
+    boxed title style={colback=blue!75!black, sharp corners=all, size=small},
+    before skip=4pt, after skip=4pt, % Reduced vertical spacing
+    fontupper=\small % Smaller font in the box
+}
+\newtcolorbox{replybox}{
+    colback=green!5!white,
+    colframe=green!60!black,
+    fonttitle=\footnotesize\bfseries,
+    title=Reply Summary,
+    enhanced,
+    top=0.5mm, bottom=0.5mm, left=1.5mm, right=1.5mm, % Reduced padding further
+    attach boxed title to top left={yshift=-1.2mm, xshift=2mm}, % Tighter attachment
+    boxed title style={colback=green!60!black, sharp corners=all, size=small},
+    before skip=4pt, after skip=4pt, % Reduced vertical spacing
+    fontupper=\small % Smaller font in the box
+}
 %\captionsetup[subfigure]{skip=4pt}         % space between subfigure image and its caption
 \captionsetup[figure]{skip=12pt} % space between figure and its caption  
 \Crefformat{figure}{#2Fig.~#1#3}

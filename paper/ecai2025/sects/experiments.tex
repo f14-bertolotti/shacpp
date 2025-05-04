@@ -1,13 +1,14 @@
 \begin{figure*}[t]
-    \includegraphics[width=\textwidth]{figs/main-transformer.pdf}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figs/main-transformer.pdf}
     \caption{Performance comparison of \fname{}, PPO, and SHAC across different scenarios (Dispersion, Transport, Discovery, and Sampling) using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of rewards over 3 runs. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.}%
     \label{fig:experiments}
 \end{figure*}
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\columnwidth]{figs/grads-transformer-transport.pdf}
-    \caption{Norm of policy gradients on the Transport environment across 5000 epochs. The raise in norm for SHAC (epoch 2700) corresponds with occurrence of generalization, where collision between agents and the packages become frequent. Also \fname{} experience a raise in norm, albeit more behaved, corresponds with the occurrence of generalization (epoch 3200).}\label{fig:grads-transformer-transport}
+    \includegraphics[width=0.9\columnwidth]{figs/grads-transformer-transport.pdf}
+    \caption{Policy gradient norms in the Transport environment over 5000 epochs. Spikes in gradient norm for SHAC (epoch 2700) and \fname{} (epoch 3200) correspond to generalization events when agents begin frequent interactions with the package and each other.}\label{fig:grads-transformer-transport}
     \vspace{0.5cm}
 \end{figure}
 \section{Experiments}\label{sect:experiments}
@@ -51,7 +52,7 @@ Our experiments were conducted on a cluster of machines composed of 2 computatio
     \includegraphics[width=0.32\columnwidth]{figs/step-1.png}
     \includegraphics[width=0.32\columnwidth]{figs/step-2.png}
     \includegraphics[width=0.32\columnwidth]{figs/step-3.png}
-    \caption{Snapshots of the result of the Transport scenario. The agents are represented as colored circles, the package as a red square, and the goal as a green circle. The agents are trained to push the package to the goal.}\label{fig:transport-trained}
+    \caption{Snapshots of trained agents with \fname{} in the Transport scenario. Colored circles represent agents pushing a red package (square) toward the green goal.}\label{fig:transport-trained}
     \vspace{0.5cm}
 \end{figure}
 In this section, we compare the performance of \fname{}, PPO, and SHAC across different scenarios using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of achieved rewards over 3 runs. An overview of the results is shown in \Cref{fig:experiments} and \Cref{tab:max-rewards}. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.

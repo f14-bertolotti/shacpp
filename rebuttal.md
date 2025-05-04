@@ -125,7 +125,7 @@ We will update Sect.A to offer more insight on this choice.
 
 > The most convincing evaluation would be in comparison to exactly the settings from the original SHAC paper
 
-We understand the author point of view. In this revision, we mainly focused on a multi-agent evaluation. We believe that an evaluation with respect to some original environment would be valuable. We will work towards this direction for the next revision. [Ci penso io a questo] 
+We understand the author point of view. In this revision, we mainly focused on a multi-agent evaluation. We believe that an evaluation with respect to some original environment would be valuable. We will work towards this direction for the next revision.
 
 > Omitted references
 

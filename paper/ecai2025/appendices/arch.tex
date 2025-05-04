@@ -7,16 +7,22 @@
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=.45\textwidth]{figs/attention.pdf} 
-    \caption{Attention matrix for the world model.}\vspace{0.5cm}
-    \label{apx:fig:attention}
-\end{figure}
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=.45\textwidth]{figs/grads-mlp-transport.pdf}
-    \caption{Gradient norm for a transformer architecture wrt. a MLP architecture.}\vspace{0.5cm}
-    \label{fig:grads-mlp}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figs/attention.pdf}
+        \caption{Attention matrix for the world model.}
+        \label{apx:fig:attention}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figs/grads-mlp-transport.pdf}
+        \caption{Gradient norm for a transformer architecture wrt. a MLP architecture.}
+        \label{fig:grads-mlp}
+    \end{subfigure}
+    \caption{Network architecture visualizations: (left) attention pattern in the world model; (right) gradient norm comparison between transformer and MLP architectures.}
+    \label{fig:combined-arch}
+    \vspace{0.5cm}
 \end{figure}
 As mentioned earlier, we test PPO, SHAC, \fname{}, and \fnamer{} with two different architecture---Transformer and MLP. The former is a popular positional invariant architecture for sequence modeling~\cite{Vaswani17}. While the latter is a simple feed-forward neural network.
 
