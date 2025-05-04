@@ -35,18 +35,19 @@ In contrast, for the MLP architecture, the results are more mixed. This could be
     \caption{Comparison between \fname{} with and without transition network, labelled \fnamer{}, for increasing number of agents for Dispersion, Transport, Discovery, and Sampling scenarios. MLP architecture.}
     \label{fig:ablation-mlp}\vspace{0.5cm}
 \end{figure}
-
 \begin{table}[t]
+    \begin{minipage}{0.48\textwidth}
         \centering
         \input{tables/shacwm.tex}
         \caption{SHAC/\fname{}/\fnamer{} Hyperparameters}
-        \label{apx:tab:shac}\vspace{0.5cm}
-\end{table}
-
-\begin{table}[t]
+        \label{apx:tab:shac}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.48\textwidth}
         \centering
         \input{tables/ppo.tex}
         \caption{PPO Hyperparmeters}
-        \label{apx:tab:ppo}\vspace{0.5cm}
+        \label{apx:tab:ppo}
+    \end{minipage}
+    \vspace{0.5cm}
 \end{table}
-
