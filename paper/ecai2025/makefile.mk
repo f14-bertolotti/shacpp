@@ -15,6 +15,8 @@ main.pdf: \
 	local.bib
 	pdflatex --shell-escape main.tex
 	bibtex main
+	bibtex bu1
+	bibtex bu2
 	pdflatex --shell-escape main.tex
 	pdflatex --shell-escape main.tex
 
