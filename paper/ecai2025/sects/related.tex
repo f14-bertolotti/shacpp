@@ -5,10 +5,10 @@ Game engines~\cite{Bellemare13,Balla23} and Physics engines~\cite{Todorov12,Coum
 
 \paragraph{Deep Reinforcement Learning}
 Deep reinforcement learning has revolutionized policy learning tasks by combining reinforcement learning with deep neural networks.
-Foundational works like DQN~\cite{Mnih13} (and its variants~\cite{DBLP:conf/aaai/HesselMHSODHPAS18})
+Foundational works like DQN~\cite{Mnih13} (and its variants~\cite{Hessel18})
 and AlphaZero~\cite{Silver17} demonstrated human-level performance in complex environments such as Atari games and chess.
 Over the years, several algorithms have been proposed to create more stable and efficient learning methods.
-Notable examples include A3C for asynchronous learning~\cite{DBLP:conf/icml/MnihBMGLHSK16},
+Notable examples include A3C for asynchronous learning~\cite{Mnih16},
 DDPG and PPO for continuous action spaces~\cite{DBLP:journals/corr/LillicrapHPHETS15,Schulman17} (also used in modern chatbot like ChatGPT),
 and SAC for continuous action spaces with off-policy learning~\cite{DBLP:conf/icml/HaarnojaZAL18}.
 Following the initial era of model-free algorithms,
@@ -28,7 +28,7 @@ Prominent works in this area include extensions of single-agent algorithms to mu
 such as MADDPG~\cite{DBLP:conf/nips/LoweWTHAM17} and MAPPO~\cite{DBLP:conf/nips/YuVVGWBW22},
 as well as novel solutions to unique challenges in multi-agent settings. Examples of these solutions are COMA~\cite{DBLP:conf/aaai/FoersterFANW18} for multi-agent credit assignment,
 QMIX~\cite{DBLP:conf/icml/RashidSWFFW18} for coordination in cooperative multi-agent settings,
-and Mean Field MARL~\cite{DBLP:conf/icml/YangLLZZW18} for handling a large number of agents.
+and Mean Field MARL~\cite{Yang18} for handling a large number of agents.
 
 \paragraph{Reinforcement Learning on Differentiable Engines}
 Precursors of SHAC with similar intuition are PODS~\cite{Mora21} and CE-APG~\cite{Gillen22}. In~\cite{Lv23}, the authors introduce rendering to enhance model-based RL\@.\ In~\cite{Zheng24} authors employ a differentiable symbolic expression search engine. Trajectory optimization approach is taken in~\cite{Wan24}. In~\cite{Georgiev24} authors tackle unstable gradient due to stiff dynamics by adaptively truncating trajectories when these occur. With respect to this approach, we take a substantially different method, by emulating the differentiable environment with a trained neural network.
