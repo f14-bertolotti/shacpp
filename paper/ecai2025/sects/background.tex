@@ -24,7 +24,7 @@ For simplicity, we formally consider only the case where policies have access to
 
 \subsection{SHAC}
 
-In its trivial multi-agent extension, SHAC trains policies ${\pi_1}_\theta,\dots,{\pi_\na}_\theta$ by minimizing the loss function $\mathcal{L}_\theta^{\pi}:\trajectories^\bs\rightarrow\mathbb{R}$ for a batch of $\bs$ trajectories $\batch = \{\tau_1, \ldots, \tau_\bs\}$ sampled usin $\pi$. The loss $\mathcal{L}_\theta^{\pi}(\batch)$ is defined as:  
+In its trivial multi-agent extension, SHAC trains policies ${\pi_1}_\theta,\dots,{\pi_\na}_\theta$ by minimizing the loss function $\mathcal{L}_\theta^{\pi}:\trajectories^\bs\rightarrow\mathbb{R}$ for a batch of $\bs$ trajectories $\batch = \{\tau_1, \ldots, \tau_\bs\}$ sampled using $\pi$. The loss $\mathcal{L}_\theta^{\pi}(\batch)$ is defined as:  
 \begin{equation*}\label{eq:shac}
     \frac{1}{\bs\na\mh}\sum_{\tau\in\batch} \sum_{t=t_0}^{t_0+\mh-1} \sum_{i\in\agents} \discount^{t-t_0} R(s_{t}^\tau, a_{ti}^\tau) + \discount^\mh \valuef_\theta(s^\tau_{t_0+\mh})
 \end{equation*}
