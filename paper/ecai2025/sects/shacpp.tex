@@ -12,7 +12,8 @@
     \end{subfigure}
     \caption{
         Comparison between SHAC and \fname{} during a rollout of 4 steps.
-        Nodes with labels (such as $r_i$ or $r'_i$) values. Nodes without labels (such as $\pi$ or $R$) represent functions. Dashed lines are used to represent non differentiability. $a_i$ and $r_i$ represent the collection of actions and rewards for all agents}\label{fig:shac-shacpp}
+        Nodes with labels (such as $r_i$ or $r'_i$) indicate values, while nodes without labels (such as $\pi$ or $R$) represent functions. Dashed lines denote non-differentiability. $a_i$ and $r_i$ refer to the collection of actions and rewards for all agents. Note that the main advantage of \fname{} is that the transition function $F$ on the right can be non-differentiable, unlike the left $F$ in SHAC, which must be differentiable.
+        }\label{fig:shac-shacpp}
 \end{figure*}
 
 
