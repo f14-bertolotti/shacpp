@@ -38,7 +38,7 @@ All experiments were conducted on a cluster with two nodes, each equipped with a
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\columnwidth]{figs/grads-transformer-transport.pdf}
+    \includegraphics[width=0.7\columnwidth]{figs/grads-transformer-transport.pdf}
     \caption{Policy gradient norms in the Transport environment over 5000 epochs. Spikes in gradient norm for SHAC (epoch 2700) and \fname{} (epoch 3200) correspond to generalization events when agents begin frequent interactions with the package and each other.}\label{fig:grads-transformer-transport}
     \vspace{0.5cm}
 \end{figure}
@@ -59,18 +59,18 @@ The third row of \Cref{fig:experiments} presents a differentiable scenario, tran
 \paragraph{Sampling}
 The fourth row of \Cref{fig:experiments} illustrates the sampling scenario, which is differentiable and thus applicable to SHAC\@. In the first column (single agent), PPO fails to converge, while \fname{} outperforms SHAC\@. In the second and third columns (3 and 5 agents), PPO again fails to converge, while SHAC and \fname{} both complete training in fewer than 5,000 episodes. Notably, SHAC does not exhibit the same stability advantage it displayed in other scenarios, possibly because gradients derived directly from the environment are noisier compared to those learned by the transition network.
 
-\begin{figure*}
+\begin{figure*}[t]
     \centering
-    \includegraphics[width=0.9\textwidth]{figs/main-transformer.pdf}
+    \includegraphics[width=0.75\textwidth]{figs/main-transformer.pdf}
     \caption{Performance comparison of \fname{}, PPO/MAPPO, and SHAC across different scenarios (Dispersion, Transport, Discovery, and Sampling) using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of rewards over 3 runs. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.}%
     \label{fig:experiments}
 \end{figure*}
 
-\begin{table*}
+\begin{table}[t]
     \centering
     \input tables/max.tex
     \vspace{0.2cm}
-    \caption{Normalized rewards (relative to the best performing model) for the different scenarios. Best results are in bold.}\label{tab:max-rewards}
-\end{table*}
+    \caption{Normalized rewards (relative to the best performing model) for the different scenarios. Best results are in bold. \textsc{D} stands for Dispersion, \textsc{T} for Transport, \textsc{Di} for Discovery, and \textsc{S} for Sampling.}\label{tab:max-rewards}.
+\end{table}
 
 
