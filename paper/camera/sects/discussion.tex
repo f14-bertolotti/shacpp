@@ -2,20 +2,20 @@
 In the following, we discuss the results obtained in \Cref{sect:experiments} and provide some insights into the performance of \fname{} compared to SHAC and PPO, addressing the research questions posed in \Cref{sect:introduction}. Note that \fname{} does not aim to outperform SHAC, but rather to perform comparably while being applicable even in non-differentiable environments.
 
 \subsection{Gradient Approximation with Neural Networks}
-\begin{rqbox}
-\textbf{Can we train a neural network to approximate the gradients of a differentiable simulator?}
-\end{rqbox}
+%\begin{rqbox}
+\textbf{RQ:} \emph{Can we train a neural network to approximate the gradients of a differentiable simulator?}
+%\end{rqbox}
 
 The proposed framework, \fname{}, appears to be successful in emulating the behavior of SHAC in differentiable environments such as transport and sampling. Therefore, we can conclude that it is definitely possible to approximate the gradients of a differentiable environment with a neural network. However, we note that this approach, while obtaining comparable results in most setups, tends to display higher variance. Both neural networks representing the reward and transition functions require sufficient training before becoming effective, which may entail multiple episodes. Interestingly, \fname{} outperforms SHAC in the Sampling scenario. A possible explanation is that the complex dynamics of the environment may lead to unstable gradients.
 
-\begin{replybox}
-Yes, \fname{} approximates simulator gradients, achieving comparable performance to SHAC in differentiable settings, occasionally outperforming it despite initially higher variance.
-\end{replybox}
+%\begin{replybox}
+%Yes, \fname{} approximates simulator gradients, achieving comparable performance to SHAC in differentiable settings, occasionally outperforming it despite initially higher variance.
+%\end{replybox}
 
 \subsection{Comparison to PPO and SHAC}
-\begin{rqbox}
-\textbf{How does our algorithm compare to PPO and SHAC in both single-agent and multi-agent settings?}
-\end{rqbox}
+%\begin{rqbox}
+\textbf{RQ:} \emph{How does our algorithm compare to PPO and SHAC in both single-agent and multi-agent settings?}
+%\end{rqbox}
 
 The proposed algorithm appears capable of outperforming PPO across all scenarios, also showing better sample efficiency.
 
@@ -24,19 +24,19 @@ The proposed algorithm appears capable of outperforming PPO across all scenarios
 \noindent\paragraph{Multi-agent:} This pattern becomes even more evident in multi-agent scenarios. In these cases, PPO often struggles to find even marginally good policies. \fname{}, on the other hand, eventually succeeds in understanding the environment and subsequently improves the policy to enable cooperation---see both \Cref{tab:max-rewards} and \Cref{fig:experiments}. Its performance remains comparable to SHAC where SHAC can be applied.
 Overall, despite having to train multiple networks, \fname{} converges much faster to optimal policies than PPO, as gradient guidance enables quicker and more accurate convergence to the desired outcome.
 
-\begin{replybox}
-\fname{} outperforms PPO across all scenarios, with PPO struggling especially in multi-agent settings. When compared to SHAC (where applicable), \fname{} achieves comparable performance while enabling emergent cooperative behaviors.
-\end{replybox}
+%\begin{replybox}
+%\fname{} outperforms PPO across all scenarios, with PPO struggling especially in multi-agent settings. When compared to SHAC (where applicable), \fname{} achieves comparable performance while enabling emergent cooperative behaviors.
+%\end{replybox}
 
 \subsection{Scaling with Search Space}
-\begin{rqbox}
-\textbf{How does the performance of these algorithms change as the search space increases?}
-\end{rqbox}
+%\begin{rqbox}
+\textbf{RQ:} \emph{How does the performance of these algorithms change as the search space increases?}
+%\end{rqbox}
 
 To analyze the impact of increasing search spaces, we primarily focused on scenarios with varying numbers of agents (up to 5 in the main experiments). The results demonstrate that performance patterns differ across scenarios. In the Dispersion scenario, \fname{} shows increasing difficulty in finding optimal policies as the number of agents grows. Conversely, in Transport and Sampling scenarios, the system appears to converge more quickly with more agents. This counterintuitive behavior likely stems from the fact that, despite larger search spaces, the fundamental tasks in Sampling and Transport become relatively easier to solve with multiple agents, making policy discovery more straightforward. Even with approximated world dynamics (transition and reward functions), the guidance provided is sufficient to lead policies toward optimal behavior.
 
 This scaling advantage is not observed in the Dispersion scenario, where complexity increases quadratically with agent count. Nevertheless, we observe consistent emergence of cooperative behavior patterns across all experimental scenarios, suggesting potential scalability to larger agent populations (quantitative analysis with up to 20 agents is provided in \Cref{apx:experiments}). The primary computational constraint lies in the transformer architecture employed for the action world model, where sequence length scales linearly with the number of agents (specifically, sequence length = $n \times s$, where $n$ is the number of agents and $s$ is the number of training steps). With agent populations exceeding approximately 50 agents, the self-attention mechanism's $O(n^2)$ complexity leads to prohibitive memory requirements. For such large-scale multi-agent systems, linear attention mechanisms (e.g.,~\cite{Beltagy20}) represent a viable architectural alternative.
 
-\begin{replybox}
-Performance varies with scale: Transport/Sampling converge faster with more agents, while Dispersion becomes harder. Cooperation emerges across scenarios. Main scalability limitation is transformer attention complexity, becoming prohibitive at large agent counts ($~$50), though moderate populations remain feasible.
-\end{replybox}
+%\begin{replybox}
+%Performance varies with scale: Transport/Sampling improve with more agents, while Dispersion degrades. Cooperation emerges consistently. Transformer attention limits scalability beyond ~50 agents.
+%\end{replybox}
