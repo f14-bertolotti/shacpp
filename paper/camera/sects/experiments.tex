@@ -2,7 +2,7 @@
 \section{Experiments}\label{sect:experiments}
 
 In this section, we evaluate \fname{} against both PPO (for single agent settings), MAPPO (for multi-agent settings), and SHAC across various multi-agent scenarios and architectures. An ablation study replacing only the transition function (SHAC+, where the reward function remains differentiable) is provided in \Cref{apx:ablation}.
-We select PPO as our baseline because, despite the emergence of more recent algorithms HAPPO \cite{Kuba2021TrustRM}, and SAC \cite{Haarnoja2018SoftAA}, it remains one of the few approaches that scales effectively to multi-agent settings without substantial modifications (e.g., MAPPO~\cite{DBLP:conf/nips/YuVVGWBW22}). This makes PPO a representative benchmark for state-of-the-art performance in non-differentiable environments.
+We select PPO as our baseline because, despite the emergence of more recent algorithms HAPPO \cite{Kuba2021TrustRM}, and SAC~\cite{DBLP:conf/icml/HaarnojaZAL18}, it remains one of the few approaches that scales effectively to multi-agent settings without substantial modifications (e.g., MAPPO~\cite{DBLP:conf/nips/YuVVGWBW22}). This makes PPO a representative benchmark for state-of-the-art performance in non-differentiable environments.
 
 \paragraph{Scenarios}
 We evaluate our algorithms on several multi-agent scenarios from VMAS~\cite{DBLP:conf/dars/BettiniKBP22}, which we selected over alternatives like PettingZoo~\cite{DBLP:conf/icml/PettingZoo}, SMAC~\cite{DBLP:conf/icml/ZhangZLZ20}, MA-MuJoCo~\cite{DBLP:conf/aaai/GuptaK0G20}, and others due to its key advantages: differentiable physics (enabling gradient-based optimization), multi-agent design, vectorized implementation (for efficient parallel training), realistic physics-based simulation, and open-source accessibility.
@@ -40,7 +40,7 @@ All experiments were conducted on a cluster with two nodes, each equipped with a
     \centering
     \includegraphics[width=0.65\columnwidth]{figs/grads-transformer-transport.pdf}
     \caption{Policy gradient norms in the Transport environment over 5000 epochs. Spikes in gradient norm for SHAC (epoch 2700) and \fname{} (epoch 3200) correspond to generalization events when agents begin frequent interactions with the package and each other.}\label{fig:grads-transformer-transport}
-    \vspace{0.5cm}
+    \vspace{0.1cm}
 \end{figure}
 
 \subsection{Results}
@@ -64,13 +64,13 @@ The fourth row of \Cref{fig:experiments} illustrates the sampling scenario, whic
     \includegraphics[width=0.75\textwidth]{figs/main-transformer.pdf}
     \caption{Performance comparison of \fname{}, PPO/MAPPO, and SHAC across different scenarios (Dispersion, Transport, Discovery, and Sampling) using the Transformer architecture for multi-agent settings and the MLP architecture for single-agent settings. The results show the mean and standard deviation of rewards over 3 runs. For results using the MLP architecture in all scenarios, refer to \Cref{apx:fig:experiments-mlp}.}%
     \label{fig:experiments}
-    \vspace{0.2cm}
+    \vspace{0.1cm}
 \end{figure*}
 
 \begin{table}[t]
     \centering
     \input tables/max.tex
-    \vspace{0.2cm}
+    \vspace{0.1cm}
     \caption{Normalized rewards (relative to the best performing model) for the different scenarios. Best results are in bold. \textsc{D} stands for Dispersion, \textsc{T} for Transport, \textsc{Di} for Discovery, and \textsc{S} for Sampling.}\label{tab:max-rewards}.
 \end{table}
 

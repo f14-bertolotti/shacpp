@@ -3,7 +3,7 @@
 While the proposed method shows promise, it is not a one-size-fits-all solution. Environments vary significantly in complexity and dynamics, and several limitations must be acknowledged.
 
 \paragraph{World Model Learning and Cold-Start Problem}
-A central challenge lies in learning the world model, which depends on rich agent-environment interactions. Sparse or delayed rewards create a cold-start problem: until the world model is sufficiently trained, agents struggle to explore effectively. This can be addressed by seeding with a cold-start dataset---manually designed or generated using algorithms like PPO or MPPI~\cite{Alvarez24}---to bootstrap the world model and provide a stable training foundation.
+A central challenge lies in learning the world model from agent-environment interactions. Sparse or delayed rewards create a cold-start problem: until sufficiently trained, agents struggle to explore effectively. This can be addressed by seeding with a cold-start dataset---manually designed or generated using algorithms like PPO or MPPI~\cite{Alvarez24}---to bootstrap the world model and provide stable training foundation.
 
 \paragraph{Baseline Performance and Implementation}
 Despite careful attention to implementation, including reference to best practices (e.g., the well-known ``37 Implementation Details of Proximal Policy Optimization'' blog~\cite{Shengyi22}), we observed that PPO and MAPPO performed suboptimally in our experiments. To ensure the validity of these findings, we cross-verified results using a third-party implementation~\cite{Bettini24}, which yielded consistent outcomes.
@@ -15,7 +15,7 @@ Although early stopping is primarily used to conserve computational resources, i
 The discovery scenario poses considerable difficulty for all algorithms due to inherent partial observability. Agents rely solely on simulated LiDAR for perception, providing only a narrow, local view. This makes it difficult for any method---including \fname{}---to construct accurate world models, often resulting in suboptimal performance and suggesting that partial observability remains challenging for the current approach.
 
 \paragraph{Computational Overhead}
-\fname{} addresses SHAC's limitations by adding transition and reward networks, but this increases computational overhead. Training burden is especially pronounced with many agents, where the transition network must capture complex inter-agent dynamics. While this trade-off is often acceptable, it significantly slows training and demands substantial computational resources.
+\fname{} addresses SHAC's limitations by adding transition and reward networks, increasing computational overhead. Training burden is especially pronounced with many agents, where the transition network must capture complex inter-agent dynamics. While often acceptable, this significantly slows training and demands substantial resources.
 
 \paragraph{Interpretability}
 Regarding interpretability, \fname{} does not offer significant advantages over its predecessors. As the policy is governed by a neural network, understanding or explaining its behavior remains a challenging task. This limitation is inherent to most deep reinforcement learning methods and highlights the ongoing need for techniques that enhance policy transparency and interpretability.
