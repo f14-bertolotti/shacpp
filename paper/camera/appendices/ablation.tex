@@ -16,7 +16,7 @@ For the transformer architecture, \fname{} generally appears to generate better 
 For the MLP architecture, the results are more mixed. In the Dispersion environment, \fname{} appears to achieve better policies. Conversely, in the Transport environment, \fnamer{} leads to substantially better policies. In the Discovery environment, both policies struggle to produce meaningful results. Finally, in the Sampling environment, \fname{} performs on par with \fnamer{}, except in the single-agent case, where \fnamer{} struggles.
 
 \subsection{Discussion}
-We can easily observe that the transformer architecture leads, generally speaking, to better policies. This is also evident by inspecting \Cref{tab:max-rewards}. This may be due to the positional invariance property of the transformers leading to more sample efficient networks. 
+We can easily observe that the transformer architecture leads, generally speaking, to better policies. This may be due to the positional invariance property of the transformers leading to more sample efficient networks. 
 
 Furthermore, with the transformer architecture, we observe a tendency for \fname{} to produce better results. This may be attributed to the generated gradients being more stable, as shown in \Cref{fig:grads-mlp}.
 
