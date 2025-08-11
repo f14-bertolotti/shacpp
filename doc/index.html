@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- Meta tags for social media banners, these should be filled in appropriatly as they are your "business card" -->
+  <!-- Replace the content tag with appropriate information -->
+  <meta name="description" content="SHAC++ extends SHAC by using neural networks to approximate simulator gradients, enabling efficient reinforcement learning in non-differentiable and multi-agent environments.">
+  <meta property="og:title" content="SHAC++: A Neural Network to Rule All Differentiable Simulators"/>
+  <meta property="og:description" content="SHAC++ extends SHAC by using neural networks to approximate simulator gradients, enabling efficient reinforcement learning in non-differentiable and multi-agent environments."/>
+  <meta property="og:url" content="https://f14-bertolotti.github.io/diffagents/"/>
+  <!-- Path to banner image, should be in the path listed below. Optimal dimensions are 1200X630-->
+  <meta property="og:image" content="static/images/shacpp.png" />
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+
+
+  <meta name="twitter:title" content="SHAC++: A Neural Network to Rule All Differentiable Simulators">
+  <meta name="twitter:description" content="SHAC++ extends SHAC by using neural networks to approximate simulator gradients, enabling efficient reinforcement learning in non-differentiable and multi-agent environments.">
+  <!-- Path to banner image, should be in the path listed below. Optimal dimensions are 1200X600-->
+  <meta name="twitter:image" content="static/images/shacpp.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- Keywords for your paper to be indexed by-->
+  <meta name="keywords" content="reinforcement learning, multi-agent systems, differentiable simulation, neural networks, SHAC, policy optimization, robotics">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+  <title>SHAC++: A Neural Network to Rule All Differentiable Simulators</title>
+  <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+  rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/index.js"></script>
+</head>
+<body>
+
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">SHAC++: A Neural Network to Rule All Differentiable Simulators</h1>
+            <div class="is-size-5 publication-authors">
+              <!-- Paper authors -->
+              <span class="author-block">Francesco Bertolotti<sup>1,*</sup>,</span>
+              <span class="author-block">Gianluca Aguzzi<sup>2,*</sup>,</span>
+              <span class="author-block">Walter Cazzola<sup>3</sup>,</span>
+              <span class="author-block">Mirko Viroli<sup>2</sup></span>
+              </div>
+
+              <div class="is-size-5 publication-authors">
+                <span class="author-block"><sup>1</sup>Domyn, Milan, Italy</span><br>
+                <span class="author-block"><sup>2</sup>University of Bologna, Bologna, Italy</span><br>
+                <span class="author-block"><sup>3</sup>University of Milano, Milano, Italy</span><br>
+                <span class="author-block"><strong>ECAI 2025</strong></span><br>
+                <span class="eql-cntrb"><small><sup>*</sup>Indicates Equal Contribution</small></span>
+              </div>
+
+              <div class="column has-text-centered">
+                <div class="publication-links">
+                     <!-- Arxiv PDF link -->
+                  <span class="link-block">
+                    <a href="https://raw.githubusercontent.com/f14-bertolotti/diffagents/main/paper/ecai2025/main.pdf" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+
+                <!-- Supplementary PDF link -->
+                <span class="link-block">
+                  <a href="static/pdfs/sample.pdf" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Supplementary</span>
+                </a>
+              </span>
+
+              <!-- Github link -->
+              <span class="link-block">
+                <a href="https://github.com/f14-bertolotti/shacpp" target="_blank"
+                class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                  <i class="fab fa-github"></i>
+                </span>
+                <span>Code</span>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Paper abstract -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Reinforcement learning (RL) algorithms show promise in robotics and multi-agent systems but often suffer from low sample efficiency. While methods like SHAC leverage differentiable simulators to improve efficiency, they are limited to specific settings: they require fully differentiable environments, including transition and reward functions, and have primarily been demonstrated in single-agent scenarios. To overcome these limitations, we introduce <strong>SHAC++</strong>, a novel framework inspired by SHAC. SHAC++ removes the need for differentiable simulator components by using neural networks to approximate the required gradients, training these networks alongside the standard policy and value networks. This enables the core SHAC approach to be applied in both non-differentiable and multi-agent environments. We evaluate SHAC++ on challenging multi-agent tasks from the VMAS suite, comparing it against SHAC (where applicable) and PPO, a standard algorithm for non-differentiable settings. Our results demonstrate that SHAC++ significantly outperforms PPO in both single- and multi-agent scenarios. Furthermore, in differentiable environments where SHAC operates, SHAC++ achieves comparable performance despite lacking direct access to simulator gradients, thus successfully extending SHAC's benefits to a broader class of problems.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End paper abstract -->
+
+<!-- Image Summary -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Research Overview</h2>
+        <div class="content has-text-justified">
+          <p>
+            This work introduces <strong>SHAC++</strong>, extending gradient-based reinforcement learning to non-differentiable and multi-agent environments. Our research demonstrates four key experimental scenarios from the VMAS simulator:
+          </p>
+          
+          <div class="columns is-multiline">
+            <div class="column is-half">
+              <div class="box">
+                <figure class="image is-square">
+                  <img src="static/images/dispersion.png" alt="Dispersion scenario">
+                </figure>
+                <h4 class="title is-6"><strong>Dispersion</strong></h4>
+                <p class="is-size-7">Non-differentiable rewards with complete observations. Agents learn cooperative spreading behavior to maximize coverage while avoiding collisions.</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <figure class="image is-square">
+                  <img src="static/images/discovery.png" alt="Discovery scenario">
+                </figure>
+                <h4 class="title is-6"><strong>Discovery</strong></h4>
+                <p class="is-size-7">Non-differentiable rewards with partial observations. Agents explore and discover targets in an environment with limited sensory information.</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <figure class="image is-square">
+                  <img src="static/images/transport.png" alt="Transport scenario">
+                </figure>
+                <h4 class="title is-6"><strong>Transport</strong></h4>
+                <p class="is-size-7">Differentiable rewards with complete observations. Multiple agents coordinate to push a package to a target location, demonstrating emergent cooperation.</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <figure class="image is-square">
+                  <img src="static/images/sampling.png" alt="Sampling scenario">
+                </figure>
+                <h4 class="title is-6"><strong>Sampling</strong></h4>
+                <p class="is-size-7">Differentiable rewards with partial observations. Agents collect samples from the environment through coordinated exploration and collection strategies.</p>
+              </div>
+            </div>
+          </div>
+          
+          <p>
+            These scenarios test SHAC++ across varying levels of <em>reward differentiability</em> and <em>observation completeness</em>, demonstrating the framework's versatility and superiority over traditional methods like PPO while maintaining comparable performance to SHAC where applicable.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End image summary -->
+
+<!-- Key Contributions -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Key Contributions</h2>
+        <div class="content has-text-left">
+          <ul>
+            <li><strong>Novel RL Framework:</strong> SHAC++ employs learned gradient approximations, eliminating the need for differentiable simulators while maintaining the benefits of gradient-based optimization.</li>
+            <li><strong>Multi-Agent Extension:</strong> First empirical evaluation of SHAC in multi-agent environments, establishing a baseline for differentiable multi-agent reinforcement learning (MARL).</li>
+            <li><strong>Comprehensive Evaluation:</strong> Systematic comparison across environments with varying agent counts and differentiability properties using the VMAS simulator.</li>
+            <li><strong>Superior Performance:</strong> Experimental evidence demonstrating that SHAC++ matches SHAC's performance in differentiable settings while substantially outperforming PPO in sample efficiency across both single-agent and complex multi-agent scenarios.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End key contributions -->
+
+<!-- Video Results -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-4">Visual Results: Transport Scenario</h2>
+        <div class="content has-text-centered">
+          <p class="subtitle is-6">
+            The Transport scenario demonstrates emergent cooperative behavior where multiple agents coordinate to push a package to the goal location.
+          </p>
+          
+          <div class="column is-4 is-offset-4">
+            <video controls muted loop autoplay width="100%">
+              <source src="static/video/transport-shac-20.gif.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p class="is-size-7">SHAC++ agents learning coordinated transport behavior</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End video results -->
+
+<!-- SHAC++ Method, Approach & Technical Implementation -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">SHAC++ Method & Technical Implementation</h2>
+        <div class="content">
+          <div class="columns">
+            <div class="column">
+              <figure class="image">
+                <img src="static/images/shac.png" alt="SHAC algorithm flow" style="max-width: 100%;">
+                <figcaption class="has-text-weight-bold">SHAC: Requires differentiable environment components</figcaption>
+              </figure>
+            </div>
+            <div class="column">
+              <figure class="image">
+                <img src="static/images/shacpp.png" alt="SHAC++ algorithm flow" style="max-width: 100%;">
+                <figcaption class="has-text-weight-bold">SHAC++: Uses neural networks to approximate gradients</figcaption>
+              </figure>
+            </div>
+          </div>
+          <div class="content has-text-justified">
+            <p>
+              <strong>Key Innovation:</strong> SHAC++ replaces direct simulator differentiation with learned gradient approximations. While SHAC requires both differentiable transition function <em>F</em> and reward function <em>R</em>, SHAC++ approximates these with neural networks <em>F<sub>θ</sub></em> and <em>R<sub>θ</sub></em>, enabling application to non-differentiable environments.
+            </p>
+            <p>
+              SHAC++ addresses the limitations of SHAC by approximating gradients from non-differentiable simulators using neural networks. The key insight is to train networks F<sub>θ</sub> and R<sub>θ</sub> to approximate the transition and reward functions, respectively, alongside the policy and value networks.
+            </p>
+            
+            <div class="columns is-multiline">
+              <div class="column is-half">
+                <div class="box">
+                  <h4 class="title is-5">SHAC Limitations</h4>
+                  <ul>
+                    <li>Requires fully differentiable environments</li>
+                    <li>Limited to single-agent scenarios</li>
+                    <li>Unstable gradients in complex dynamics</li>
+                    <li>Inapplicable to sparse reward functions</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="box">
+                  <h4 class="title is-5">SHAC++ Advantages</h4>
+                  <ul>
+                    <li>Works with non-differentiable simulators</li>
+                    <li>Extends to multi-agent environments</li>
+                    <li>Robust gradient approximations</li>
+                    <li>Handles complex reward structures</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div class="columns is-multiline">
+              <div class="column is-half">
+                <div class="box">
+                  <h4 class="title is-5">🧠 Neural Networks</h4>
+                  <ul>
+                    <li><strong>Policy Networks:</strong> π<sub>θ</sub> for action selection</li>
+                    <li><strong>Value Network:</strong> V<sub>θ</sub> for state evaluation</li>
+                    <li><strong>Transition Network:</strong> F<sub>θ</sub> for dynamics approximation</li>
+                    <li><strong>Reward Network:</strong> R<sub>θ</sub> for reward prediction</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="box">
+                  <h4 class="title is-5">⚙️ Training Details</h4>
+                  <ul>
+                    <li><strong>Optimizer:</strong> Adam with learning rate 1e-3</li>
+                    <li><strong>Episodes:</strong> 512 environments × 32 steps</li>
+                    <li><strong>Early Stopping:</strong> 90% reward in 90% episodes</li>
+                    <li><strong>Hardware:</strong> V100/A100 GPUs, 1-8 hours per run</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <h4 class="title is-4">Multi-Agent Extensions</h4>
+            <p>
+              SHAC++ extends naturally to multi-agent settings through:
+            </p>
+            <ul>
+              <li><strong>Shared Parameters:</strong> Policy networks share parameters across agents</li>
+              <li><strong>Transformer Architecture:</strong> Handles variable agent numbers with positional invariance</li>
+              <li><strong>Cooperative Learning:</strong> Joint optimization enables emergent coordination</li>
+              <li><strong>Scalable Design:</strong> Linear complexity with respect to agent count (up to attention limits)</li>
+            </ul>
+            
+            <p>
+              The framework trains four neural networks simultaneously: <strong>policy networks π<sub>θ</sub></strong>, <strong>value network V<sub>θ</sub></strong>, <strong>transition network F<sub>θ</sub></strong>, and <strong>reward network R<sub>θ</sub></strong>. This enables gradient-based policy optimization even when the underlying simulator components are non-differentiable.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- End method overview -->
+
+<!-- Research Questions -->
+
+<!-- Research Questions -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Research Questions</h2>
+        <div class="content">
+          <div class="columns is-multiline">
+            <div class="column is-full">
+              <div class="box has-background-info-light">
+                <h4 class="title is-5">RQ₁: Neural Gradient Approximation</h4>
+                <p class="has-text-left">Can we train a neural network to approximate the gradients of a differentiable simulator?</p>
+              </div>
+            </div>
+            <div class="column is-full">
+              <div class="box has-background-success-light">
+                <h4 class="title is-5">RQ₂: Comparative Performance</h4>
+                <p class="has-text-left">How does our algorithm compare to PPO/MAPPO and SHAC in both single-agent and multi-agent settings?</p>
+              </div>
+            </div>
+            <div class="column is-full">
+              <div class="box has-background-warning-light">
+                <h4 class="title is-5">RQ₃: Scalability Analysis</h4>
+                <p class="has-text-left">How does the performance of these algorithms change as the search space increases with more agents?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End research questions -->
+
+<!-- Experimental Setup -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Experimental Setup</h2>
+        <div class="content has-text-justified">
+          <p>
+            We evaluate SHAC++ on four multi-agent scenarios from the <strong>VMAS simulator</strong>, selected for its differentiable physics, multi-agent design, and realistic simulation capabilities. Our experiments span 254 runs across different algorithms, architectures, and scenarios.
+          </p>
+          
+          <div class="columns is-multiline">
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">📍 Scenarios</h4>
+                <ul>
+                  <li><strong>Dispersion:</strong> Non-differentiable rewards, complete observations</li>
+                  <li><strong>Discovery:</strong> Non-differentiable rewards, partial observations</li>
+                  <li><strong>Transport:</strong> Differentiable rewards, complete observations</li>
+                  <li><strong>Sampling:</strong> Differentiable rewards, partial observations</li>
+                </ul>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">🏗️ Architectures</h4>
+                <ul>
+                  <li><strong>MLP:</strong> 1-layer for single-agent scenarios</li>
+                  <li><strong>Transformer:</strong> 1-layer single-head for multi-agent</li>
+                  <li><strong>Transition Network:</strong> 3-layer Transformer</li>
+                  <li><strong>Agent Counts:</strong> 1, 3, and 5 agents</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <p>
+            <strong>Hardware:</strong> Experiments conducted on V100 GPUs (32GB) and A100 GPUs (40GB) with extensive compute resources. Each run lasted 1-8 hours with rigorous early stopping criteria and hyperparameter optimization.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End experimental setup -->
+
+
+<!-- Results Overview -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Key Results & Findings</h2>
+        <div class="content has-text-justified">
+          <div class="columns is-multiline">
+            <div class="column is-full">
+              <div class="box has-background-success-light">
+                <h4 class="title is-5">✅ RQ₁: Successful Gradient Approximation</h4>
+                <p>SHAC++ successfully approximates simulator gradients using neural networks, achieving comparable performance to SHAC in differentiable environments while enabling application to non-differentiable settings.</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box has-background-info-light">
+                <h4 class="title is-5">📈 Superior to PPO</h4>
+                <p><strong>Single-agent:</strong> SHAC++ outperforms PPO across all scenarios with better sample efficiency.<br>
+                <strong>Multi-agent:</strong> PPO often fails to converge while SHAC++ succeeds in learning cooperative behaviors.</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box has-background-warning-light">
+                <h4 class="title is-5">⚖️ Comparable to SHAC</h4>
+                <p>In differentiable environments (Transport, Sampling), SHAC++ achieves performance comparable to SHAC despite lacking direct simulator access, sometimes even outperforming it.</p>
+              </div>
+            </div>
+            <div class="column is-full">
+              <div class="box has-background-primary-light">
+                <h4 class="title is-5">🔗 Emergent Cooperation</h4>
+                <p>SHAC++ consistently demonstrates emergent cooperative behaviors across all multi-agent scenarios. Analysis of gradient norms reveals generalization events when agents learn to coordinate and avoid collisions.</p>
+              </div>
+            </div>
+          </div>
+          
+          <h4 class="title is-4">Scaling Analysis</h4>
+          <p>
+            Performance varies with agent count: Transport and Sampling scenarios actually <em>improve</em> with more agents (tasks become easier), while Dispersion shows increased difficulty. The framework demonstrates consistent cooperation emergence, suggesting scalability to larger agent populations. Current limitations arise from transformer attention complexity (~50 agents), addressable with linear attention mechanisms.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End results overview -->
+
+<!-- Performance Metrics -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Performance Analysis</h2>
+        <div class="content">
+          <figure class="image">
+            <img src="static/images/main-transformer.png" alt="Main experimental results" style="max-width: 100%;">
+            <figcaption><strong>Comprehensive Results:</strong> Performance comparison across all scenarios with Transformer architecture for multi-agent settings and MLP for single-agent scenarios. Results show mean ± standard deviation over 3 runs.</figcaption>
+          </figure>
+          
+          <div class="columns is-multiline">
+            <div class="column is-half">
+              <div class="box has-background-success-light">
+                <h4 class="title is-5">🎯 Sample Efficiency</h4>
+                <p>SHAC++ consistently converges faster than PPO across all scenarios, often achieving target performance in &lt;10,000 episodes vs PPO's frequent failures.</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box has-background-info-light">
+                <h4 class="title is-5">🤝 Cooperation Emergence</h4>
+                <p>Multi-agent scenarios show clear cooperative behavior development, with gradient norm analysis revealing coordination learning phases.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End performance metrics -->
+
+
+
+
+<!-- Paper poster -->
+<section class="hero is-small is-light">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title">Paper Access</h2>
+      <div class="content">
+        <div class="columns">
+          <div class="column is-half">
+            <div class="box">
+              <h4 class="title is-5">📄 Read the Paper</h4>
+              <p>Access the full ECAI 2025 paper for complete technical details, proofs, and extended experimental results.</p>
+              <a href="https://raw.githubusercontent.com/f14-bertolotti/diffagents/main/paper/ecai2025/main.pdf" 
+                 class="button is-primary is-large" target="_blank">
+                <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                <span>Full Paper (PDF)</span>
+              </a>
+            </div>
+          </div>
+          <div class="column is-half">
+            <div class="box">
+              <h4 class="title is-5">💻 Code Implementation</h4>
+              <p>Open-source implementation available on GitHub with full experimental setup and reproducible results.</p>
+              <a href="https://github.com/f14-bertolotti/shacpp" 
+                 class="button is-info is-large" target="_blank">
+                <span class="icon"><i class="fab fa-github"></i></span>
+                <span>GitHub Repository</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!--End paper poster -->
+
+<!-- Future Work -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Future Directions</h2>
+        <div class="content has-text-justified">
+          <p>
+            Several promising avenues remain for extending SHAC++ beyond its current capabilities:
+          </p>
+          
+          <div class="columns is-multiline">
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">🔄 Scalability Improvements</h4>
+                <ul>
+                  <li>Linear attention mechanisms (Performer, Mamba)</li>
+                  <li>Scaling beyond 50+ agents</li>
+                  <li>Memory-efficient architectures</li>
+                </ul>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">🎯 Cold-Start Solutions</h4>
+                <ul>
+                  <li>World model pre-training</li>
+                  <li>Model Predictive Path Integral (MPPI) integration</li>
+                  <li>Human demonstration seeding</li>
+                </ul>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">🌍 Broader Environments</h4>
+                <ul>
+                  <li>Cooperative AI community tasks</li>
+                  <li>Adversarial multi-agent settings</li>
+                  <li>Extreme partial observability</li>
+                </ul>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">🧬 Advanced Techniques</h4>
+                <ul>
+                  <li>Curriculum learning integration</li>
+                  <li>Meta-learning for faster adaptation</li>
+                  <li>Hierarchical multi-agent coordination</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End future work -->
+
+
+<!--BibTex citation -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>@inproceedings{Bertolotti25,
+  title={SHAC++: A Neural Network to Rule All Differentiable Simulators},
+  author={Bertolotti, Francesco and Aguzzi, Gianluca and Cazzola, Walter and Viroli, Mirko},
+  booktitle={European Conference on Artificial Intelligence (ECAI)},
+  year={2025},
+  url={https://github.com/f14-bertolotti/shacpp}
+}</code></pre>
+    </div>
+</section>
+<!--End BibTex citation -->
+
+
+  <footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+
+          <p>
+            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license"  href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Statcounter tracking code -->
+  
+<!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
+
+    <!-- End of Statcounter Code -->
+
+  </body>
+  </html>
