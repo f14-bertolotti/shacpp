@@ -13,7 +13,6 @@
 \usepackage{tcolorbox}
 \usepackage{framed} % For framed boxes
 \usepackage{xcolor}
-\usepackage{xr-hyper}
 \usepackage{hyperref}
 \usepackage[inline]{enumitem}
 %\newcommand{\theHalgorithm}{\arabic{algorithm}}
@@ -26,7 +25,6 @@
 \usepackage{subfiles}
 %\setlength{\marginparwidth}{2cm}
 \usepackage{cleveref}
-\externaldocument{appendix}
 \tcbuselibrary{skins} % Needed for enhanced look
 \newtcolorbox{rqbox}{
     colback=blue!5!white,
@@ -127,47 +125,9 @@
 \begin{document}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\ifmain
-\begin{frontmatter}
 
-\paperid{6464}
-
-\title{SHAC++: A Neural Network to Rule All Differentiable Simulators}
-
-\author[A]{Francesco Bertolotti}
-\author[B]{Gianluca Aguzzi}
-\author[C]{Walter Cazzola}
-\author[B]{Mirko Viroli}
-\address[A]{Domyn, Milan, Italy}
-\address[B]{Department of Computer Science and Engineering, University of Bologna, Bologna, Italy}
-\address[C]{Department of Computer Science, University of Milano, Milano, Italy}
-
-
-\input sects/abstract.tex
-\end{frontmatter}
-
-\input sects/abstract.tex
-\input sects/introduction.tex
-\input sects/background.tex
-\input sects/shacpp.tex
-\input sects/experiments.tex
-\input sects/discussion.tex
-\input sects/related.tex
-\input sects/limitations.tex
-\input sects/conclusion.tex
-\input sects/acknowledgements.tex
-
+\input appendices/appendix.tex
 \bibliography{local.bib}
-%\fi
-
-%\ifappendixonly
-%\input appendices/appendix.tex
-%\ifmain\else
-%\clearpage
-%\bibliography{local.bib}
-%\fi
-%\fi
 
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
