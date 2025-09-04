@@ -1,5 +1,5 @@
 
-This repository contains the code for the ICML2025 submission titled "SHAC++: A Neural Network to Rule All Differentiable Simulators".
+This repository contains the code for the ECAI2025 submission titled "SHAC++: A Neural Network to Rule All Differentiable Simulators".
 
 ### Pre-requisites
 The prerequisites are contained in the file `requirements.txt`. You can install them by running `pip install -r requirements.txt`. However, we suggest using a virtual environment to avoid conflicts with other packages.
