@@ -4,7 +4,6 @@ venv
 .task
 *.pyc
 *.pkl
-*.gif
 *.log
 *.tmp
 *.aux
