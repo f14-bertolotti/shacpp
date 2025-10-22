@@ -1,8 +1,8 @@
 # SHAC++
 
-This repository contains the code for the [paper](https://ecai2025.org/accepted-papers/) titled "SHAC++: A Neural Network to Rule All Differentiable Simulators".
+This repository contains the code for the titled "SHAC++: A Neural Network to Rule All Differentiable Simulators".
 =======
-This repository contains the code for the ECAI2025 submission titled "SHAC++: A Neural Network to Rule All Differentiable Simulators". [paper][]
+This repository contains the code for the ECAI2025 submission titled "SHAC++: A Neural Network to Rule All Differentiable Simulators".
 
 ## tldr
 We present SHAC++, an extension of the SHAC reinforcement learning algorithm. Unlike [SHAC](https://arxiv.org/abs/2204.07137), which relies on differentiable environments for backpropagation through time, SHAC++ leverages neural networks trained alongside the policy to model the environment.
@@ -10,7 +10,7 @@ We present SHAC++, an extension of the SHAC reinforcement learning algorithm. Un
 ## Useful Resources:
 
 - *Web Page*: [link](https://f14-bertolotti.github.io/shacpp/)
-- *Paper*: [link](TODO)
+- *Paper*: [link](https://ebooks.iospress.nl/doi/10.3233/FAIA251138)
 
 ## Pre-requisites
 The prerequisites are contained in the file `requirements.txt`. You can install them by running `pip install -r requirements.txt`. However, we suggest using a virtual environment to avoid conflicts with other packages.
