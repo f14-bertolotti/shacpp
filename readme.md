@@ -1,6 +1,8 @@
 # SHAC++
 
-This repository contains the code for the [ECAI2025 submission](https://ecai2025.org/accepted-papers/) titled "SHAC++: A Neural Network to Rule All Differentiable Simulators".
+This repository contains the code for the [paper](https://ecai2025.org/accepted-papers/) titled "SHAC++: A Neural Network to Rule All Differentiable Simulators".
+=======
+This repository contains the code for the ECAI2025 submission titled "SHAC++: A Neural Network to Rule All Differentiable Simulators". [paper][]
 
 ## tldr
 We present SHAC++, an extension of the SHAC reinforcement learning algorithm. Unlike [SHAC](https://arxiv.org/abs/2204.07137), which relies on differentiable environments for backpropagation through time, SHAC++ leverages neural networks trained alongside the policy to model the environment.
