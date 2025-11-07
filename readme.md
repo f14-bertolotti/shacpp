@@ -25,11 +25,21 @@ The experiments are all generated in the makefile `makefile.mk`. You can simply 
 
 ### BibTeX
 ```
-@inproceedings{shacpp,
-  title={SHAC++: A Neural Network to Rule All Differentiable Simulators},
-  author={Bertolotti, Francesco and Aguzzi, Gianluca and Cazzola, Walter and Viroli, Mirko},
-  booktitle={European Conference on Artificial Intelligence (ECAI)},
-  year={2025},
-  url={https://github.com/f14-bertolotti/shacpp}
+@INPROCEEDINGS{shacpp,
+  author = {Bertolotti, Francesco and Aguzzi, Gianluca and Cazzola, Walter and Viroli, Mirko},
+  title = {{SHAC++: A Neural Network to Rule All Differentiable Simulators}},
+  booktitle = {{Proceedings of the 28th European Conference on Artificial Intelligence (ECAI'25)}},
+  year = 2025,
+  editor = {Lynce, In\^es and Murano, Aniello},
+  pages = {2818--2825},
+  address = {Bologna, Italy},
+  organization = {},
+  publisher = {IOS Press},
+  volume = {},
+  number = {},
+  series = {},
+  month = "on 25th-30th of "#oct,
+  url={https://github.com/f14-bertolotti/shacpp},
+  note = {}
 }
 ```
